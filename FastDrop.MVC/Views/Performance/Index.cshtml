@@ -1,0 +1,36 @@
+@model IEnumerable<FastDrop.MVC.Models.PerformanceScore>
+
+@{
+    ViewData["Title"] = "Overall Performance Scores";
+}
+
+<h1>Overall Driver Performance</h1>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Driver.Name)</th>
+            <th>@Html.DisplayNameFor(model => model.DailyScore)</th>
+            <th>@Html.DisplayNameFor(model => model.Tier)</th>
+            <th>@Html.DisplayNameFor(model => model.RecordedAt)</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>@Html.DisplayFor(modelItem => item.Driver.Name)</td>
+            <td>@Html.DisplayFor(modelItem => item.DailyScore)</td>
+            <td>
+                @if(item.Tier == "Gold") { <span class="badge bg-warning text-dark">Gold</span> }
+                else if(item.Tier == "Silver") { <span class="badge bg-secondary">Silver</span> }
+                else { <span class="badge bg-dark text-white">Bronze</span> }
+            </td>
+            <td>@Html.DisplayFor(modelItem => item.RecordedAt)</td>
+            <td>
+                <a asp-action="Driver" asp-route-id="@item.DriverId" class="btn btn-sm btn-info">View History</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

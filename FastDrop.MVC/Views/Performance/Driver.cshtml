@@ -1,0 +1,37 @@
+@model IEnumerable<FastDrop.MVC.Models.PerformanceScore>
+
+@{
+    ViewData["Title"] = "Driver Performance History";
+}
+
+<h1>Performance History</h1>
+<p>
+    <form asp-action="Calculate" method="post" style="display:inline;">
+        <input type="hidden" name="driverId" value="@ViewBag.DriverId" />
+        <button type="submit" class="btn btn-primary">Calculate Latest Score</button>
+    </form>
+    <a asp-action="Index" class="btn btn-secondary">Back to Overall</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.DailyScore)</th>
+            <th>@Html.DisplayNameFor(model => model.Tier)</th>
+            <th>@Html.DisplayNameFor(model => model.RecordedAt)</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>@Html.DisplayFor(modelItem => item.DailyScore) / 100</td>
+            <td>
+                @if(item.Tier == "Gold") { <span class="badge bg-warning text-dark">Gold</span> }
+                else if(item.Tier == "Silver") { <span class="badge bg-secondary">Silver</span> }
+                else { <span class="badge bg-dark text-white">Bronze</span> }
+            </td>
+            <td>@item.RecordedAt.ToLocalTime().ToString("g")</td>
+        </tr>
+}
+    </tbody>
+</table>
