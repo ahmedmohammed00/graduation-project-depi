@@ -7,49 +7,41 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Services;
 
 namespace FastDrop.MVC.Controllers
 {
     [Authorize]
     public class ShipmentsController : Controller
     {
-        private readonly DmsDbContext _context;
+        private readonly IShipmentService _shipmentService;
 
-        public ShipmentsController(DmsDbContext context)
+        public ShipmentsController(IShipmentService shipmentService)
         {
-            _context = context;
+            _shipmentService = shipmentService;
         }
 
         // GET: Shipments
         public async Task<IActionResult> Index()
         {
-            var query = _context.Shipments
-                .Include(s => s.Address)
-                .Include(s => s.Merchant)
-                .Include(s => s.Route)
-                .Include(s => s.Warehouse)
-                .AsQueryable();
-
-            if (User.IsInRole("Merchant"))
+            string role = User.IsInRole("Merchant") ? "Merchant" : User.IsInRole("Driver") ? "Driver" : "Employee";
+            
+            int? merchantId = null;
+            if (role == "Merchant")
             {
                 var merchantIdStr = User.Claims.FirstOrDefault(c => c.Type == "MerchantId")?.Value;
-                if (int.TryParse(merchantIdStr, out int merchantId))
-                {
-                    query = query.Where(s => s.MerchantId == merchantId);
-                }
-            }
-            else if (User.IsInRole("Driver"))
-            {
-                var driverIdStr = User.Claims.FirstOrDefault(c => c.Type == "DriverId")?.Value;
-                if (int.TryParse(driverIdStr, out int driverId))
-                {
-                    // For driver, we show shipments on their assigned routes
-                    var assignedRoutes = _context.DriverRoutes.Where(dr => dr.DriverId == driverId).Select(dr => dr.RouteId).ToList();
-                    query = query.Where(s => s.RouteId.HasValue && assignedRoutes.Contains(s.RouteId.Value));
-                }
+                if (int.TryParse(merchantIdStr, out int mId)) merchantId = mId;
             }
 
-            return View(await query.ToListAsync());
+            int? driverId = null;
+            if (role == "Driver")
+            {
+                var driverIdStr = User.Claims.FirstOrDefault(c => c.Type == "DriverId")?.Value;
+                if (int.TryParse(driverIdStr, out int dId)) driverId = dId;
+            }
+
+            var shipments = await _shipmentService.GetShipmentsAsync(role, merchantId, driverId);
+            return View(shipments);
         }
 
         // GET: Shipments/Details/5
@@ -60,13 +52,7 @@ namespace FastDrop.MVC.Controllers
                 return NotFound();
             }
 
-            var shipment = await _context.Shipments
-                .Include(s => s.Address)
-                .Include(s => s.Merchant)
-                .Include(s => s.Route)
-                .Include(s => s.Warehouse)
-                .Include(s => s.ShipmentStatuses)
-                .FirstOrDefaultAsync(m => m.ShipmentId == id);
+            var shipment = await _shipmentService.GetShipmentByIdAsync(id.Value);
             if (shipment == null)
             {
                 return NotFound();
@@ -76,15 +62,15 @@ namespace FastDrop.MVC.Controllers
         }
 
         [Authorize(Roles = "Employee,Merchant")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId");
+            ViewData["AddressId"] = new SelectList(await _shipmentService.GetAddressesAsync(), "AddressId", "AddressId");
             if (!User.IsInRole("Merchant"))
             {
-                ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "ShopName");
+                ViewData["MerchantId"] = new SelectList(await _shipmentService.GetMerchantsAsync(), "MerchantId", "ShopName");
             }
-            ViewData["RouteId"] = new SelectList(_context.Routes, "RouteId", "RouteName");
-            ViewData["WarehouseId"] = new SelectList(_context.Warehouses, "WarehouseId", "WarehouseName");
+            ViewData["RouteId"] = new SelectList(await _shipmentService.GetRoutesAsync(), "RouteId", "RouteName");
+            ViewData["WarehouseId"] = new SelectList(await _shipmentService.GetWarehousesAsync(), "WarehouseId", "WarehouseName");
             return View();
         }
 
@@ -94,12 +80,13 @@ namespace FastDrop.MVC.Controllers
         [Authorize(Roles = "Employee,Merchant")]
         public async Task<IActionResult> Create([Bind("ShipmentId,CreationDate,CodAmount,WeightKg,WarehouseId,MerchantId,RouteId,AddressId")] Shipment shipment)
         {
+            int? merchantId = null;
             if (User.IsInRole("Merchant"))
             {
                 var merchantIdStr = User.Claims.FirstOrDefault(c => c.Type == "MerchantId")?.Value;
-                if (int.TryParse(merchantIdStr, out int merchantId))
+                if (int.TryParse(merchantIdStr, out int mId))
                 {
-                    shipment.MerchantId = merchantId;
+                    merchantId = mId;
                 }
                 // Clear validation state for MerchantId since we manually assign it
                 ModelState.Remove("MerchantId");
@@ -107,26 +94,16 @@ namespace FastDrop.MVC.Controllers
 
             if (ModelState.IsValid)
             {
-                _context.Add(shipment);
-                
-                // Add initial pending status
-                _context.ShipmentStatuses.Add(new ShipmentStatus
-                {
-                    Shipment = shipment,
-                    Status = "Pending",
-                    UpdatedAt = DateTime.UtcNow
-                });
-
-                await _context.SaveChangesAsync();
+                await _shipmentService.CreateShipmentAsync(shipment, merchantId);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", shipment.AddressId);
+            ViewData["AddressId"] = new SelectList(await _shipmentService.GetAddressesAsync(), "AddressId", "AddressId", shipment.AddressId);
             if (!User.IsInRole("Merchant"))
             {
-                ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "ShopName", shipment.MerchantId);
+                ViewData["MerchantId"] = new SelectList(await _shipmentService.GetMerchantsAsync(), "MerchantId", "ShopName", shipment.MerchantId);
             }
-            ViewData["RouteId"] = new SelectList(_context.Routes, "RouteId", "RouteName", shipment.RouteId);
-            ViewData["WarehouseId"] = new SelectList(_context.Warehouses, "WarehouseId", "WarehouseName", shipment.WarehouseId);
+            ViewData["RouteId"] = new SelectList(await _shipmentService.GetRoutesAsync(), "RouteId", "RouteName", shipment.RouteId);
+            ViewData["WarehouseId"] = new SelectList(await _shipmentService.GetWarehousesAsync(), "WarehouseId", "WarehouseName", shipment.WarehouseId);
             return View(shipment);
         }
 
@@ -138,15 +115,15 @@ namespace FastDrop.MVC.Controllers
                 return NotFound();
             }
 
-            var shipment = await _context.Shipments.FindAsync(id);
+            var shipment = await _shipmentService.GetShipmentByIdAsync(id.Value);
             if (shipment == null)
             {
                 return NotFound();
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", shipment.AddressId);
-            ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "ShopName", shipment.MerchantId);
-            ViewData["RouteId"] = new SelectList(_context.Routes, "RouteId", "RouteName", shipment.RouteId);
-            ViewData["WarehouseId"] = new SelectList(_context.Warehouses, "WarehouseId", "WarehouseName", shipment.WarehouseId);
+            ViewData["AddressId"] = new SelectList(await _shipmentService.GetAddressesAsync(), "AddressId", "AddressId", shipment.AddressId);
+            ViewData["MerchantId"] = new SelectList(await _shipmentService.GetMerchantsAsync(), "MerchantId", "ShopName", shipment.MerchantId);
+            ViewData["RouteId"] = new SelectList(await _shipmentService.GetRoutesAsync(), "RouteId", "RouteName", shipment.RouteId);
+            ViewData["WarehouseId"] = new SelectList(await _shipmentService.GetWarehousesAsync(), "WarehouseId", "WarehouseName", shipment.WarehouseId);
             return View(shipment);
         }
 
@@ -164,8 +141,7 @@ namespace FastDrop.MVC.Controllers
             {
                 try
                 {
-                    _context.Update(shipment);
-                    await _context.SaveChangesAsync();
+                    await _shipmentService.UpdateShipmentAsync(shipment);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -180,10 +156,10 @@ namespace FastDrop.MVC.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", shipment.AddressId);
-            ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "ShopName", shipment.MerchantId);
-            ViewData["RouteId"] = new SelectList(_context.Routes, "RouteId", "RouteName", shipment.RouteId);
-            ViewData["WarehouseId"] = new SelectList(_context.Warehouses, "WarehouseId", "WarehouseName", shipment.WarehouseId);
+            ViewData["AddressId"] = new SelectList(await _shipmentService.GetAddressesAsync(), "AddressId", "AddressId", shipment.AddressId);
+            ViewData["MerchantId"] = new SelectList(await _shipmentService.GetMerchantsAsync(), "MerchantId", "ShopName", shipment.MerchantId);
+            ViewData["RouteId"] = new SelectList(await _shipmentService.GetRoutesAsync(), "RouteId", "RouteName", shipment.RouteId);
+            ViewData["WarehouseId"] = new SelectList(await _shipmentService.GetWarehousesAsync(), "WarehouseId", "WarehouseName", shipment.WarehouseId);
             return View(shipment);
         }
 
@@ -195,12 +171,7 @@ namespace FastDrop.MVC.Controllers
                 return NotFound();
             }
 
-            var shipment = await _context.Shipments
-                .Include(s => s.Address)
-                .Include(s => s.Merchant)
-                .Include(s => s.Route)
-                .Include(s => s.Warehouse)
-                .FirstOrDefaultAsync(m => m.ShipmentId == id);
+            var shipment = await _shipmentService.GetShipmentForDeleteAsync(id.Value);
             if (shipment == null)
             {
                 return NotFound();
@@ -214,19 +185,13 @@ namespace FastDrop.MVC.Controllers
         [Authorize(Roles = "Employee")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var shipment = await _context.Shipments.FindAsync(id);
-            if (shipment != null)
-            {
-                _context.Shipments.Remove(shipment);
-            }
-
-            await _context.SaveChangesAsync();
+            await _shipmentService.DeleteShipmentAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
         private bool ShipmentExists(int id)
         {
-            return _context.Shipments.Any(e => e.ShipmentId == id);
+            return _shipmentService.ShipmentExists(id);
         }
 
         // POST: Shipments/UpdateStatus/5
@@ -235,55 +200,30 @@ namespace FastDrop.MVC.Controllers
         [Authorize(Roles = "Driver,Employee")]
         public async Task<IActionResult> UpdateStatus(int id, string status, string? comments = null)
         {
-            var shipment = await _context.Shipments.FindAsync(id);
-            if (shipment == null)
-            {
-                return NotFound();
-            }
-
-            // If user is a driver, verify it is assigned to their route
-            if (User.IsInRole("Driver"))
+            string role = User.IsInRole("Driver") ? "Driver" : "Employee";
+            int? driverId = null;
+            
+            if (role == "Driver")
             {
                 var driverIdStr = User.Claims.FirstOrDefault(c => c.Type == "DriverId")?.Value;
-                if (int.TryParse(driverIdStr, out int driverId))
+                if (int.TryParse(driverIdStr, out int dId))
                 {
-                    var isAssigned = await _context.DriverRoutes.AnyAsync(dr => dr.DriverId == driverId && dr.RouteId == shipment.RouteId);
-                    if (!isAssigned)
-                    {
-                        return Forbid();
-                    }
+                    driverId = dId;
                 }
             }
 
-            _context.ShipmentStatuses.Add(new ShipmentStatus
+            var result = await _shipmentService.UpdateStatusAsync(id, status, comments, role, driverId);
+
+            if (!result.IsSuccess && !result.IsForbidden)
             {
-                Shipment = shipment,
-                Status = status,
-                UpdatedAt = DateTime.UtcNow
-            });
-
-            if (status == "Delivered")
+                return NotFound();
+            }
+            
+            if (result.IsForbidden)
             {
-                var attempt = new ShipmentAttempt
-                {
-                    Shipment = shipment,
-                    AttemptNumber = 1,
-                    Status = "Success",
-                    AttemptTime = DateTime.UtcNow
-                };
-
-                _context.ShipmentAttempts.Add(attempt);
-
-                _context.PodEvidences.Add(new PodEvidence
-                {
-                    ShipmentAttempt = attempt,
-                    PhotoUrl = "signature.png", // Mocked for now
-                    OtpVerified = true,
-                    Notes = comments
-                });
+                return Forbid();
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Details), new { id = id });
         }
     }

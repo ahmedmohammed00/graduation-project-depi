@@ -1,28 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Services;
 
-namespace FastDrop.MVC
+namespace FastDrop.MVC.Controllers
 {
     public class MerchantsController : Controller
     {
-        private readonly DmsDbContext _context;
+        private readonly IMerchantService _merchantService;
 
-        public MerchantsController(DmsDbContext context)
+        public MerchantsController(IMerchantService merchantService)
         {
-            _context = context;
+            _merchantService = merchantService;
         }
 
         // GET: Merchants
         public async Task<IActionResult> Index()
         {
-            var dmsDbContext = _context.Merchants.Include(m => m.Address);
-            return View(await dmsDbContext.ToListAsync());
+            var merchants = await _merchantService.GetMerchantsAsync();
+            return View(merchants);
         }
 
         // GET: Merchants/Details/5
@@ -33,9 +31,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var merchant = await _context.Merchants
-                .Include(m => m.Address)
-                .FirstOrDefaultAsync(m => m.MerchantId == id);
+            var merchant = await _merchantService.GetMerchantByIdAsync(id.Value);
             if (merchant == null)
             {
                 return NotFound();
@@ -45,9 +41,9 @@ namespace FastDrop.MVC
         }
 
         // GET: Merchants/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId");
+            ViewData["AddressId"] = new SelectList(await _merchantService.GetAddressesAsync(), "AddressId", "AddressId");
             return View();
         }
 
@@ -60,11 +56,10 @@ namespace FastDrop.MVC
         {
             if (ModelState.IsValid)
             {
-                _context.Add(merchant);
-                await _context.SaveChangesAsync();
+                await _merchantService.CreateMerchantAsync(merchant);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", merchant.AddressId);
+            ViewData["AddressId"] = new SelectList(await _merchantService.GetAddressesAsync(), "AddressId", "AddressId", merchant.AddressId);
             return View(merchant);
         }
 
@@ -76,12 +71,12 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var merchant = await _context.Merchants.FindAsync(id);
+            var merchant = await _merchantService.GetMerchantByIdAsync(id.Value);
             if (merchant == null)
             {
                 return NotFound();
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", merchant.AddressId);
+            ViewData["AddressId"] = new SelectList(await _merchantService.GetAddressesAsync(), "AddressId", "AddressId", merchant.AddressId);
             return View(merchant);
         }
 
@@ -101,8 +96,7 @@ namespace FastDrop.MVC
             {
                 try
                 {
-                    _context.Update(merchant);
-                    await _context.SaveChangesAsync();
+                    await _merchantService.UpdateMerchantAsync(merchant);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -117,7 +111,7 @@ namespace FastDrop.MVC
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", merchant.AddressId);
+            ViewData["AddressId"] = new SelectList(await _merchantService.GetAddressesAsync(), "AddressId", "AddressId", merchant.AddressId);
             return View(merchant);
         }
 
@@ -129,9 +123,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var merchant = await _context.Merchants
-                .Include(m => m.Address)
-                .FirstOrDefaultAsync(m => m.MerchantId == id);
+            var merchant = await _merchantService.GetMerchantForDeleteAsync(id.Value);
             if (merchant == null)
             {
                 return NotFound();
@@ -145,19 +137,13 @@ namespace FastDrop.MVC
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var merchant = await _context.Merchants.FindAsync(id);
-            if (merchant != null)
-            {
-                _context.Merchants.Remove(merchant);
-            }
-
-            await _context.SaveChangesAsync();
+            await _merchantService.DeleteMerchantAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
         private bool MerchantExists(int id)
         {
-            return _context.Merchants.Any(e => e.MerchantId == id);
+            return _merchantService.MerchantExists(id);
         }
     }
 }

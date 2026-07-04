@@ -1,27 +1,25 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Services;
+using Route = FastDrop.MVC.Models.Route;
 
-namespace FastDrop.MVC
+namespace FastDrop.MVC.Controllers
 {
     public class RoutesController : Controller
     {
-        private readonly DmsDbContext _context;
+        private readonly IRouteService _routeService;
 
-        public RoutesController(DmsDbContext context)
+        public RoutesController(IRouteService routeService)
         {
-            _context = context;
+            _routeService = routeService;
         }
 
         // GET: Routes
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Routes.ToListAsync());
+            return View(await _routeService.GetRoutesAsync());
         }
 
         // GET: Routes/Details/5
@@ -32,8 +30,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var route = await _context.Routes
-                .FirstOrDefaultAsync(m => m.RouteId == id);
+            var route = await _routeService.GetRouteByIdAsync(id.Value);
             if (route == null)
             {
                 return NotFound();
@@ -53,12 +50,11 @@ namespace FastDrop.MVC
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("RouteId,RouteName,Status")] FastDrop.MVC.Models.Route route)
+        public async Task<IActionResult> Create([Bind("RouteId,RouteName,Status")] Route route)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(route);
-                await _context.SaveChangesAsync();
+                await _routeService.CreateRouteAsync(route);
                 return RedirectToAction(nameof(Index));
             }
             return View(route);
@@ -72,7 +68,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var route = await _context.Routes.FindAsync(id);
+            var route = await _routeService.GetRouteByIdAsync(id.Value);
             if (route == null)
             {
                 return NotFound();
@@ -85,7 +81,7 @@ namespace FastDrop.MVC
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("RouteId,RouteName,Status")] FastDrop.MVC.Models.Route route)
+        public async Task<IActionResult> Edit(int id, [Bind("RouteId,RouteName,Status")] Route route)
         {
             if (id != route.RouteId)
             {
@@ -96,8 +92,7 @@ namespace FastDrop.MVC
             {
                 try
                 {
-                    _context.Update(route);
-                    await _context.SaveChangesAsync();
+                    await _routeService.UpdateRouteAsync(route);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -123,8 +118,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var route = await _context.Routes
-                .FirstOrDefaultAsync(m => m.RouteId == id);
+            var route = await _routeService.GetRouteForDeleteAsync(id.Value);
             if (route == null)
             {
                 return NotFound();
@@ -138,19 +132,13 @@ namespace FastDrop.MVC
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var route = await _context.Routes.FindAsync(id);
-            if (route != null)
-            {
-                _context.Routes.Remove(route);
-            }
-
-            await _context.SaveChangesAsync();
+            await _routeService.DeleteRouteAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
         private bool RouteExists(int id)
         {
-            return _context.Routes.Any(e => e.RouteId == id);
+            return _routeService.RouteExists(id);
         }
     }
 }

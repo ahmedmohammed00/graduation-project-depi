@@ -1,30 +1,28 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Services;
 
 namespace FastDrop.MVC.Controllers
 {
     [Authorize(Roles = "Employee")]
     public class InvoicesController : Controller
     {
-        private readonly DmsDbContext _context;
+        private readonly IInvoiceService _invoiceService;
 
-        public InvoicesController(DmsDbContext context)
+        public InvoicesController(IInvoiceService invoiceService)
         {
-            _context = context;
+            _invoiceService = invoiceService;
         }
 
         // GET: Invoices
         public async Task<IActionResult> Index()
         {
-            var dmsDbContext = _context.Invoices.Include(i => i.Merchant).Include(i => i.Shipment);
-            return View(await dmsDbContext.ToListAsync());
+            var invoices = await _invoiceService.GetInvoicesAsync();
+            return View(invoices);
         }
 
         // GET: Invoices/Details/5
@@ -35,10 +33,7 @@ namespace FastDrop.MVC.Controllers
                 return NotFound();
             }
 
-            var invoice = await _context.Invoices
-                .Include(i => i.Merchant)
-                .Include(i => i.Shipment)
-                .FirstOrDefaultAsync(m => m.InvoiceId == id);
+            var invoice = await _invoiceService.GetInvoiceByIdAsync(id.Value);
             if (invoice == null)
             {
                 return NotFound();
@@ -48,9 +43,9 @@ namespace FastDrop.MVC.Controllers
         }
 
         // GET: Invoices/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "ShopName");
+            ViewData["MerchantId"] = new SelectList(await _invoiceService.GetMerchantsAsync(), "MerchantId", "ShopName");
             return View();
         }
 
@@ -59,31 +54,13 @@ namespace FastDrop.MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Generate(int merchantId, int shipmentCount)
         {
-            var shipments = await _context.Shipments
-                .Where(s => s.MerchantId == merchantId)
-                .OrderByDescending(s => s.CreationDate)
-                .Take(shipmentCount)
-                .ToListAsync();
-
-            if (!shipments.Any())
+            var invoice = await _invoiceService.GenerateInvoiceAsync(merchantId, shipmentCount);
+            
+            if (invoice == null)
             {
                 ModelState.AddModelError("", "No shipments found for this merchant.");
                 return RedirectToAction(nameof(Create));
             }
-
-            decimal totalAmount = shipments.Sum(s => s.CodAmount);
-
-            var invoice = new Invoice
-            {
-                MerchantId = merchantId,
-                AmountDue = totalAmount,
-                PaymentStatus = "Unpaid",
-                PeriodStart = shipments.Min(s => s.CreationDate),
-                PeriodEnd = shipments.Max(s => s.CreationDate)
-            };
-
-            _context.Invoices.Add(invoice);
-            await _context.SaveChangesAsync();
 
             return RedirectToAction(nameof(Details), new { id = invoice.InvoiceId });
         }
@@ -97,12 +74,11 @@ namespace FastDrop.MVC.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(invoice);
-                await _context.SaveChangesAsync();
+                await _invoiceService.CreateInvoiceAsync(invoice);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "MerchantId", invoice.MerchantId);
-            ViewData["ShipmentId"] = new SelectList(_context.Shipments, "ShipmentId", "ShipmentId", invoice.ShipmentId);
+            ViewData["MerchantId"] = new SelectList(await _invoiceService.GetMerchantsAsync(), "MerchantId", "MerchantId", invoice.MerchantId);
+            ViewData["ShipmentId"] = new SelectList(await _invoiceService.GetShipmentsAsync(), "ShipmentId", "ShipmentId", invoice.ShipmentId);
             return View(invoice);
         }
 
@@ -114,13 +90,13 @@ namespace FastDrop.MVC.Controllers
                 return NotFound();
             }
 
-            var invoice = await _context.Invoices.FindAsync(id);
+            var invoice = await _invoiceService.GetInvoiceByIdAsync(id.Value);
             if (invoice == null)
             {
                 return NotFound();
             }
-            ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "MerchantId", invoice.MerchantId);
-            ViewData["ShipmentId"] = new SelectList(_context.Shipments, "ShipmentId", "ShipmentId", invoice.ShipmentId);
+            ViewData["MerchantId"] = new SelectList(await _invoiceService.GetMerchantsAsync(), "MerchantId", "MerchantId", invoice.MerchantId);
+            ViewData["ShipmentId"] = new SelectList(await _invoiceService.GetShipmentsAsync(), "ShipmentId", "ShipmentId", invoice.ShipmentId);
             return View(invoice);
         }
 
@@ -140,8 +116,7 @@ namespace FastDrop.MVC.Controllers
             {
                 try
                 {
-                    _context.Update(invoice);
-                    await _context.SaveChangesAsync();
+                    await _invoiceService.UpdateInvoiceAsync(invoice);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -156,8 +131,8 @@ namespace FastDrop.MVC.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "MerchantId", invoice.MerchantId);
-            ViewData["ShipmentId"] = new SelectList(_context.Shipments, "ShipmentId", "ShipmentId", invoice.ShipmentId);
+            ViewData["MerchantId"] = new SelectList(await _invoiceService.GetMerchantsAsync(), "MerchantId", "MerchantId", invoice.MerchantId);
+            ViewData["ShipmentId"] = new SelectList(await _invoiceService.GetShipmentsAsync(), "ShipmentId", "ShipmentId", invoice.ShipmentId);
             return View(invoice);
         }
 
@@ -169,10 +144,7 @@ namespace FastDrop.MVC.Controllers
                 return NotFound();
             }
 
-            var invoice = await _context.Invoices
-                .Include(i => i.Merchant)
-                .Include(i => i.Shipment)
-                .FirstOrDefaultAsync(m => m.InvoiceId == id);
+            var invoice = await _invoiceService.GetInvoiceForDeleteAsync(id.Value);
             if (invoice == null)
             {
                 return NotFound();
@@ -186,19 +158,13 @@ namespace FastDrop.MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var invoice = await _context.Invoices.FindAsync(id);
-            if (invoice != null)
-            {
-                _context.Invoices.Remove(invoice);
-            }
-
-            await _context.SaveChangesAsync();
+            await _invoiceService.DeleteInvoiceAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
         private bool InvoiceExists(int id)
         {
-            return _context.Invoices.Any(e => e.InvoiceId == id);
+            return _invoiceService.InvoiceExists(id);
         }
     }
 }

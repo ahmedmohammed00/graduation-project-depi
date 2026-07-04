@@ -1,27 +1,24 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Services;
 
-namespace FastDrop.MVC
+namespace FastDrop.MVC.Controllers
 {
     public class ZonesController : Controller
     {
-        private readonly DmsDbContext _context;
+        private readonly IZoneService _zoneService;
 
-        public ZonesController(DmsDbContext context)
+        public ZonesController(IZoneService zoneService)
         {
-            _context = context;
+            _zoneService = zoneService;
         }
 
         // GET: Zones
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Zones.ToListAsync());
+            return View(await _zoneService.GetZonesAsync());
         }
 
         // GET: Zones/Details/5
@@ -32,8 +29,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var zone = await _context.Zones
-                .FirstOrDefaultAsync(m => m.ZoneId == id);
+            var zone = await _zoneService.GetZoneByIdAsync(id.Value);
             if (zone == null)
             {
                 return NotFound();
@@ -57,8 +53,7 @@ namespace FastDrop.MVC
         {
             if (ModelState.IsValid)
             {
-                _context.Add(zone);
-                await _context.SaveChangesAsync();
+                await _zoneService.CreateZoneAsync(zone);
                 return RedirectToAction(nameof(Index));
             }
             return View(zone);
@@ -72,7 +67,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var zone = await _context.Zones.FindAsync(id);
+            var zone = await _zoneService.GetZoneByIdAsync(id.Value);
             if (zone == null)
             {
                 return NotFound();
@@ -96,8 +91,7 @@ namespace FastDrop.MVC
             {
                 try
                 {
-                    _context.Update(zone);
-                    await _context.SaveChangesAsync();
+                    await _zoneService.UpdateZoneAsync(zone);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -123,8 +117,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var zone = await _context.Zones
-                .FirstOrDefaultAsync(m => m.ZoneId == id);
+            var zone = await _zoneService.GetZoneForDeleteAsync(id.Value);
             if (zone == null)
             {
                 return NotFound();
@@ -138,19 +131,13 @@ namespace FastDrop.MVC
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var zone = await _context.Zones.FindAsync(id);
-            if (zone != null)
-            {
-                _context.Zones.Remove(zone);
-            }
-
-            await _context.SaveChangesAsync();
+            await _zoneService.DeleteZoneAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
         private bool ZoneExists(int id)
         {
-            return _context.Zones.Any(e => e.ZoneId == id);
+            return _zoneService.ZoneExists(id);
         }
     }
 }

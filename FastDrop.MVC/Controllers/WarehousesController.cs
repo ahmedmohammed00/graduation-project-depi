@@ -1,28 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Services;
 
-namespace FastDrop.MVC
+namespace FastDrop.MVC.Controllers
 {
     public class WarehousesController : Controller
     {
-        private readonly DmsDbContext _context;
+        private readonly IWarehouseService _warehouseService;
 
-        public WarehousesController(DmsDbContext context)
+        public WarehousesController(IWarehouseService warehouseService)
         {
-            _context = context;
+            _warehouseService = warehouseService;
         }
 
         // GET: Warehouses
         public async Task<IActionResult> Index()
         {
-            var dmsDbContext = _context.Warehouses.Include(w => w.Address);
-            return View(await dmsDbContext.ToListAsync());
+            var warehouses = await _warehouseService.GetWarehousesAsync();
+            return View(warehouses);
         }
 
         // GET: Warehouses/Details/5
@@ -33,9 +31,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var warehouse = await _context.Warehouses
-                .Include(w => w.Address)
-                .FirstOrDefaultAsync(m => m.WarehouseId == id);
+            var warehouse = await _warehouseService.GetWarehouseByIdAsync(id.Value);
             if (warehouse == null)
             {
                 return NotFound();
@@ -45,9 +41,9 @@ namespace FastDrop.MVC
         }
 
         // GET: Warehouses/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId");
+            ViewData["AddressId"] = new SelectList(await _warehouseService.GetAddressesAsync(), "AddressId", "AddressId");
             return View();
         }
 
@@ -60,11 +56,10 @@ namespace FastDrop.MVC
         {
             if (ModelState.IsValid)
             {
-                _context.Add(warehouse);
-                await _context.SaveChangesAsync();
+                await _warehouseService.CreateWarehouseAsync(warehouse);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", warehouse.AddressId);
+            ViewData["AddressId"] = new SelectList(await _warehouseService.GetAddressesAsync(), "AddressId", "AddressId", warehouse.AddressId);
             return View(warehouse);
         }
 
@@ -76,12 +71,12 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var warehouse = await _context.Warehouses.FindAsync(id);
+            var warehouse = await _warehouseService.GetWarehouseByIdAsync(id.Value);
             if (warehouse == null)
             {
                 return NotFound();
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", warehouse.AddressId);
+            ViewData["AddressId"] = new SelectList(await _warehouseService.GetAddressesAsync(), "AddressId", "AddressId", warehouse.AddressId);
             return View(warehouse);
         }
 
@@ -101,8 +96,7 @@ namespace FastDrop.MVC
             {
                 try
                 {
-                    _context.Update(warehouse);
-                    await _context.SaveChangesAsync();
+                    await _warehouseService.UpdateWarehouseAsync(warehouse);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -117,7 +111,7 @@ namespace FastDrop.MVC
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", warehouse.AddressId);
+            ViewData["AddressId"] = new SelectList(await _warehouseService.GetAddressesAsync(), "AddressId", "AddressId", warehouse.AddressId);
             return View(warehouse);
         }
 
@@ -129,9 +123,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var warehouse = await _context.Warehouses
-                .Include(w => w.Address)
-                .FirstOrDefaultAsync(m => m.WarehouseId == id);
+            var warehouse = await _warehouseService.GetWarehouseForDeleteAsync(id.Value);
             if (warehouse == null)
             {
                 return NotFound();
@@ -145,19 +137,13 @@ namespace FastDrop.MVC
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var warehouse = await _context.Warehouses.FindAsync(id);
-            if (warehouse != null)
-            {
-                _context.Warehouses.Remove(warehouse);
-            }
-
-            await _context.SaveChangesAsync();
+            await _warehouseService.DeleteWarehouseAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
         private bool WarehouseExists(int id)
         {
-            return _context.Warehouses.Any(e => e.WarehouseId == id);
+            return _warehouseService.WarehouseExists(id);
         }
     }
 }

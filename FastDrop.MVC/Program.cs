@@ -13,6 +13,16 @@ builder.Services.AddDbContext<DmsDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<IPerformanceCalculationService, PerformanceCalculationService>();
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IShipmentService, ShipmentService>();
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<IDriverService, DriverService>();
+builder.Services.AddScoped<IDriverPaymentService, DriverPaymentService>();
+builder.Services.AddScoped<IMerchantService, MerchantService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IRouteService, RouteService>();
+builder.Services.AddScoped<IWarehouseService, WarehouseService>();
+builder.Services.AddScoped<IZoneService, ZoneService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

@@ -1,28 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Services;
 
-namespace FastDrop.MVC
+namespace FastDrop.MVC.Controllers
 {
     public class ProductsController : Controller
     {
-        private readonly DmsDbContext _context;
+        private readonly IProductService _productService;
 
-        public ProductsController(DmsDbContext context)
+        public ProductsController(IProductService productService)
         {
-            _context = context;
+            _productService = productService;
         }
 
         // GET: Products
         public async Task<IActionResult> Index()
         {
-            var dmsDbContext = _context.Products.Include(p => p.Merchant);
-            return View(await dmsDbContext.ToListAsync());
+            var products = await _productService.GetProductsAsync();
+            return View(products);
         }
 
         // GET: Products/Details/5
@@ -33,9 +31,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var product = await _context.Products
-                .Include(p => p.Merchant)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
+            var product = await _productService.GetProductByIdAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -45,9 +41,9 @@ namespace FastDrop.MVC
         }
 
         // GET: Products/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "MerchantId");
+            ViewData["MerchantId"] = new SelectList(await _productService.GetMerchantsAsync(), "MerchantId", "MerchantId");
             return View();
         }
 
@@ -60,11 +56,10 @@ namespace FastDrop.MVC
         {
             if (ModelState.IsValid)
             {
-                _context.Add(product);
-                await _context.SaveChangesAsync();
+                await _productService.CreateProductAsync(product);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "MerchantId", product.MerchantId);
+            ViewData["MerchantId"] = new SelectList(await _productService.GetMerchantsAsync(), "MerchantId", "MerchantId", product.MerchantId);
             return View(product);
         }
 
@@ -76,12 +71,12 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var product = await _context.Products.FindAsync(id);
+            var product = await _productService.GetProductByIdAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
             }
-            ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "MerchantId", product.MerchantId);
+            ViewData["MerchantId"] = new SelectList(await _productService.GetMerchantsAsync(), "MerchantId", "MerchantId", product.MerchantId);
             return View(product);
         }
 
@@ -101,8 +96,7 @@ namespace FastDrop.MVC
             {
                 try
                 {
-                    _context.Update(product);
-                    await _context.SaveChangesAsync();
+                    await _productService.UpdateProductAsync(product);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -117,7 +111,7 @@ namespace FastDrop.MVC
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["MerchantId"] = new SelectList(_context.Merchants, "MerchantId", "MerchantId", product.MerchantId);
+            ViewData["MerchantId"] = new SelectList(await _productService.GetMerchantsAsync(), "MerchantId", "MerchantId", product.MerchantId);
             return View(product);
         }
 
@@ -129,9 +123,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var product = await _context.Products
-                .Include(p => p.Merchant)
-                .FirstOrDefaultAsync(m => m.ProductId == id);
+            var product = await _productService.GetProductForDeleteAsync(id.Value);
             if (product == null)
             {
                 return NotFound();
@@ -145,19 +137,13 @@ namespace FastDrop.MVC
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product != null)
-            {
-                _context.Products.Remove(product);
-            }
-
-            await _context.SaveChangesAsync();
+            await _productService.DeleteProductAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
         private bool ProductExists(int id)
         {
-            return _context.Products.Any(e => e.ProductId == id);
+            return _productService.ProductExists(id);
         }
     }
 }

@@ -1,28 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Services;
 
-namespace FastDrop.MVC
+namespace FastDrop.MVC.Controllers
 {
     public class DriversController : Controller
     {
-        private readonly DmsDbContext _context;
+        private readonly IDriverService _driverService;
 
-        public DriversController(DmsDbContext context)
+        public DriversController(IDriverService driverService)
         {
-            _context = context;
+            _driverService = driverService;
         }
 
         // GET: Drivers
         public async Task<IActionResult> Index()
         {
-            var dmsDbContext = _context.Drivers.Include(d => d.Address).Include(d => d.Employee).Include(d => d.Zone);
-            return View(await dmsDbContext.ToListAsync());
+            var drivers = await _driverService.GetDriversAsync();
+            return View(drivers);
         }
 
         // GET: Drivers/Details/5
@@ -33,11 +31,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var driver = await _context.Drivers
-                .Include(d => d.Address)
-                .Include(d => d.Employee)
-                .Include(d => d.Zone)
-                .FirstOrDefaultAsync(m => m.DriverId == id);
+            var driver = await _driverService.GetDriverByIdAsync(id.Value);
             if (driver == null)
             {
                 return NotFound();
@@ -47,11 +41,11 @@ namespace FastDrop.MVC
         }
 
         // GET: Drivers/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId");
-            ViewData["EmployeeId"] = new SelectList(_context.Employees, "EmployeeId", "EmployeeId");
-            ViewData["ZoneId"] = new SelectList(_context.Zones, "ZoneId", "ZoneId");
+            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "AddressId");
+            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "EmployeeId");
+            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "ZoneId");
             return View();
         }
 
@@ -64,13 +58,12 @@ namespace FastDrop.MVC
         {
             if (ModelState.IsValid)
             {
-                _context.Add(driver);
-                await _context.SaveChangesAsync();
+                await _driverService.CreateDriverAsync(driver);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", driver.AddressId);
-            ViewData["EmployeeId"] = new SelectList(_context.Employees, "EmployeeId", "EmployeeId", driver.EmployeeId);
-            ViewData["ZoneId"] = new SelectList(_context.Zones, "ZoneId", "ZoneId", driver.ZoneId);
+            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "AddressId", driver.AddressId);
+            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "EmployeeId", driver.EmployeeId);
+            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "ZoneId", driver.ZoneId);
             return View(driver);
         }
 
@@ -82,14 +75,14 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var driver = await _context.Drivers.FindAsync(id);
+            var driver = await _driverService.GetDriverByIdAsync(id.Value);
             if (driver == null)
             {
                 return NotFound();
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", driver.AddressId);
-            ViewData["EmployeeId"] = new SelectList(_context.Employees, "EmployeeId", "EmployeeId", driver.EmployeeId);
-            ViewData["ZoneId"] = new SelectList(_context.Zones, "ZoneId", "ZoneId", driver.ZoneId);
+            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "AddressId", driver.AddressId);
+            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "EmployeeId", driver.EmployeeId);
+            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "ZoneId", driver.ZoneId);
             return View(driver);
         }
 
@@ -109,8 +102,7 @@ namespace FastDrop.MVC
             {
                 try
                 {
-                    _context.Update(driver);
-                    await _context.SaveChangesAsync();
+                    await _driverService.UpdateDriverAsync(driver);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -125,9 +117,9 @@ namespace FastDrop.MVC
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(_context.Addresses, "AddressId", "AddressId", driver.AddressId);
-            ViewData["EmployeeId"] = new SelectList(_context.Employees, "EmployeeId", "EmployeeId", driver.EmployeeId);
-            ViewData["ZoneId"] = new SelectList(_context.Zones, "ZoneId", "ZoneId", driver.ZoneId);
+            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "AddressId", driver.AddressId);
+            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "EmployeeId", driver.EmployeeId);
+            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "ZoneId", driver.ZoneId);
             return View(driver);
         }
 
@@ -139,11 +131,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var driver = await _context.Drivers
-                .Include(d => d.Address)
-                .Include(d => d.Employee)
-                .Include(d => d.Zone)
-                .FirstOrDefaultAsync(m => m.DriverId == id);
+            var driver = await _driverService.GetDriverForDeleteAsync(id.Value);
             if (driver == null)
             {
                 return NotFound();
@@ -157,19 +145,13 @@ namespace FastDrop.MVC
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var driver = await _context.Drivers.FindAsync(id);
-            if (driver != null)
-            {
-                _context.Drivers.Remove(driver);
-            }
-
-            await _context.SaveChangesAsync();
+            await _driverService.DeleteDriverAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
         private bool DriverExists(int id)
         {
-            return _context.Drivers.Any(e => e.DriverId == id);
+            return _driverService.DriverExists(id);
         }
     }
 }

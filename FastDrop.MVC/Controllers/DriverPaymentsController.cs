@@ -1,28 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Services;
 
-namespace FastDrop.MVC
+namespace FastDrop.MVC.Controllers
 {
     public class DriverPaymentsController : Controller
     {
-        private readonly DmsDbContext _context;
+        private readonly IDriverPaymentService _driverPaymentService;
 
-        public DriverPaymentsController(DmsDbContext context)
+        public DriverPaymentsController(IDriverPaymentService driverPaymentService)
         {
-            _context = context;
+            _driverPaymentService = driverPaymentService;
         }
 
         // GET: DriverPayments
         public async Task<IActionResult> Index()
         {
-            var dmsDbContext = _context.DriverPayments.Include(d => d.Driver);
-            return View(await dmsDbContext.ToListAsync());
+            var payments = await _driverPaymentService.GetDriverPaymentsAsync();
+            return View(payments);
         }
 
         // GET: DriverPayments/Details/5
@@ -33,9 +31,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var driverPayment = await _context.DriverPayments
-                .Include(d => d.Driver)
-                .FirstOrDefaultAsync(m => m.PaymentId == id);
+            var driverPayment = await _driverPaymentService.GetDriverPaymentByIdAsync(id.Value);
             if (driverPayment == null)
             {
                 return NotFound();
@@ -45,9 +41,9 @@ namespace FastDrop.MVC
         }
 
         // GET: DriverPayments/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["DriverId"] = new SelectList(_context.Drivers, "DriverId", "DriverId");
+            ViewData["DriverId"] = new SelectList(await _driverPaymentService.GetDriversAsync(), "DriverId", "DriverId");
             return View();
         }
 
@@ -60,11 +56,10 @@ namespace FastDrop.MVC
         {
             if (ModelState.IsValid)
             {
-                _context.Add(driverPayment);
-                await _context.SaveChangesAsync();
+                await _driverPaymentService.CreateDriverPaymentAsync(driverPayment);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DriverId"] = new SelectList(_context.Drivers, "DriverId", "DriverId", driverPayment.DriverId);
+            ViewData["DriverId"] = new SelectList(await _driverPaymentService.GetDriversAsync(), "DriverId", "DriverId", driverPayment.DriverId);
             return View(driverPayment);
         }
 
@@ -76,12 +71,12 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var driverPayment = await _context.DriverPayments.FindAsync(id);
+            var driverPayment = await _driverPaymentService.GetDriverPaymentByIdAsync(id.Value);
             if (driverPayment == null)
             {
                 return NotFound();
             }
-            ViewData["DriverId"] = new SelectList(_context.Drivers, "DriverId", "DriverId", driverPayment.DriverId);
+            ViewData["DriverId"] = new SelectList(await _driverPaymentService.GetDriversAsync(), "DriverId", "DriverId", driverPayment.DriverId);
             return View(driverPayment);
         }
 
@@ -101,8 +96,7 @@ namespace FastDrop.MVC
             {
                 try
                 {
-                    _context.Update(driverPayment);
-                    await _context.SaveChangesAsync();
+                    await _driverPaymentService.UpdateDriverPaymentAsync(driverPayment);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -117,7 +111,7 @@ namespace FastDrop.MVC
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["DriverId"] = new SelectList(_context.Drivers, "DriverId", "DriverId", driverPayment.DriverId);
+            ViewData["DriverId"] = new SelectList(await _driverPaymentService.GetDriversAsync(), "DriverId", "DriverId", driverPayment.DriverId);
             return View(driverPayment);
         }
 
@@ -129,9 +123,7 @@ namespace FastDrop.MVC
                 return NotFound();
             }
 
-            var driverPayment = await _context.DriverPayments
-                .Include(d => d.Driver)
-                .FirstOrDefaultAsync(m => m.PaymentId == id);
+            var driverPayment = await _driverPaymentService.GetDriverPaymentForDeleteAsync(id.Value);
             if (driverPayment == null)
             {
                 return NotFound();
@@ -145,19 +137,13 @@ namespace FastDrop.MVC
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var driverPayment = await _context.DriverPayments.FindAsync(id);
-            if (driverPayment != null)
-            {
-                _context.DriverPayments.Remove(driverPayment);
-            }
-
-            await _context.SaveChangesAsync();
+            await _driverPaymentService.DeleteDriverPaymentAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
         private bool DriverPaymentExists(int id)
         {
-            return _context.DriverPayments.Any(e => e.PaymentId == id);
+            return _driverPaymentService.DriverPaymentExists(id);
         }
     }
 }
