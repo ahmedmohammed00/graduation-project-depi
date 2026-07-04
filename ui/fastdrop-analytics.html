@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Drop – Analytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#00c9a7;--primary-dark:#00a98a;--primary-light:#e6faf6;--primary-mid:#ccfbf1;
+  --sidebar-bg:#0a1628;--sidebar-hover:#111e35;
+  --page-bg:#f4f7f9;--card-bg:#ffffff;
+  --text-dark:#0d1b2a;--text-mid:#374151;--text-muted:#6b7280;--text-light:#9ca3af;
+  --border:#e8ecf0;--border-light:#f1f5f9;
+  --warning:#f59e0b;--warning-light:#fffbeb;
+  --error:#ef4444;--error-light:#fef2f2;
+  --info:#3b82f6;--info-light:#eff6ff;
+  --success:#10b981;--success-light:#ecfdf5;
+  --purple:#8b5cf6;--purple-light:#f5f3ff;
+  --orange:#f97316;
+  --sidebar-w:240px;--topbar-h:64px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--page-bg);color:var(--text-dark);min-height:100vh;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.06);text-decoration:none}
+.logo-mark{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:20px;height:20px;fill:white}
+.logo-text{font-size:16px;font-weight:800;color:white}
+.logo-badge{font-size:9px;font-weight:700;background:var(--primary);color:white;border-radius:4px;padding:1px 5px;margin-left:auto;letter-spacing:.04em}
+.sidebar-section{padding:18px 12px 8px}
+.sidebar-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.45);font-size:13px;font-weight:500;transition:all .18s;text-decoration:none;margin-bottom:2px}
+.nav-item:hover{background:var(--sidebar-hover);color:rgba(255,255,255,.8)}
+.nav-item.active{background:linear-gradient(135deg,rgba(0,201,167,.18),rgba(0,201,167,.08));color:var(--primary);border:1px solid rgba(0,201,167,.2)}
+.nav-icon{width:16px;height:16px;flex-shrink:0}.nav-icon svg{width:16px;height:16px;fill:currentColor}
+.nav-badge{margin-left:auto;background:var(--error);color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.nav-badge.teal{background:var(--primary)}.nav-badge.warn{background:var(--warning)}
+.sidebar-footer{margin-top:auto;padding:16px 12px;border-top:1px solid rgba(255,255,255,.06)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:background .18s}
+.user-card:hover{background:var(--sidebar-hover)}
+.u-avatar{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0}
+.u-name{font-size:12px;font-weight:700;color:white}.u-role{font-size:10px;color:rgba(255,255,255,.35)}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:var(--topbar-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px;flex:1}
+.page-title{font-size:18px;font-weight:800;color:var(--text-dark)}
+.page-subtitle{font-size:12px;color:var(--text-muted);font-weight:500}
+.topbar-divider{width:1px;height:24px;background:var(--border)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .2s}
+.icon-btn:hover{border-color:var(--primary)}
+.icon-btn svg{width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:2}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--error);border-radius:50%;border:1.5px solid white}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s}
+.btn-primary{background:var(--primary);color:white;box-shadow:0 4px 14px rgba(0,201,167,.25)}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn-secondary{background:white;color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+.btn svg{width:14px;height:14px;fill:currentColor}
+
+/* ── CONTENT ── */
+.content{padding:24px 28px;flex:1}
+
+/* ── SECTION TABS ── */
+.section-tabs{display:flex;gap:4px;background:white;border:1.5px solid var(--border-light);border-radius:14px;padding:5px;width:fit-content;margin-bottom:22px}
+.stab{padding:9px 22px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-muted);background:transparent;transition:all .2s;display:flex;align-items:center;gap:7px}
+.stab.active{background:var(--primary);color:white;box-shadow:0 4px 12px rgba(0,201,167,.25)}
+.stab svg{width:14px;height:14px;fill:currentColor}
+
+/* ── GLOBAL FILTER BAR ── */
+.filter-bar{background:white;border-radius:14px;border:1px solid var(--border-light);padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-group-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.fsel{border:1.5px solid var(--border);border-radius:8px;padding:7px 28px 7px 10px;font-size:12px;font-weight:500;color:var(--text-mid);background:var(--page-bg);cursor:pointer;appearance:none;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:120px;transition:border-color .2s}
+.fsel:focus{border-color:var(--primary)}
+.date-range{display:flex;align-items:center;gap:6px}
+.date-range input{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;outline:none;color:var(--text-mid);transition:border-color .2s;background:var(--page-bg)}
+.date-range input:focus{border-color:var(--primary)}
+.filter-divider{width:1px;height:24px;background:var(--border);flex-shrink:0}
+.export-btns{margin-left:auto;display:flex;gap:8px}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+.kpi-card{background:white;border-radius:14px;padding:18px;border:1px solid var(--border-light);position:relative;overflow:hidden;transition:all .2s;animation:fadeUp .35s ease both}
+.kpi-card:hover{box-shadow:0 6px 22px rgba(0,0,0,.07);transform:translateY(-1px)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,var(--primary));border-radius:14px 14px 0 0}
+.kpi-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.kpi-icon svg{width:17px;height:17px}
+.kpi-val{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:3px}
+.kpi-lbl{font-size:11px;color:var(--text-muted);font-weight:500}
+.kpi-trend{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;margin-top:6px}
+.trend-up{background:var(--success-light);color:var(--success)}
+.trend-down{background:var(--error-light);color:var(--error)}
+
+/* ── CHART CARDS ── */
+.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px}
+.chart-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:18px}
+.chart-grid-full{margin-bottom:18px}
+.chart-card{background:white;border-radius:16px;border:1px solid var(--border-light);overflow:hidden;animation:fadeUp .4s ease both}
+.chart-card:nth-child(1){animation-delay:.05s}.chart-card:nth-child(2){animation-delay:.1s}.chart-card:nth-child(3){animation-delay:.15s}
+.chart-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--border-light)}
+.chart-title{font-size:14px;font-weight:700;color:var(--text-dark)}
+.chart-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+.chart-head-actions{display:flex;gap:8px;align-items:center}
+.chart-body{padding:20px}
+.export-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text-muted);background:var(--border-light);border-radius:6px;padding:4px 10px;cursor:pointer;transition:all .18s;border:1px solid transparent}
+.export-chip:hover{background:var(--primary-light);color:var(--primary);border-color:rgba(0,201,167,.2)}
+.export-chip svg{width:11px;height:11px;fill:currentColor}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;color:var(--text-muted)}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* ── SVG CHART STYLES ── */
+.chart-svg{width:100%;overflow:visible}
+.axis-text{font-family:'Plus Jakarta Sans',sans-serif;font-size:10px;fill:#9ca3af;font-weight:500}
+.grid-line{stroke:#f1f5f9;stroke-width:1}
+.area-path{opacity:.15}
+.bar-rect{transition:opacity .2s;cursor:pointer}
+.bar-rect:hover{opacity:.8}
+.tooltip-group{pointer-events:none}
+
+/* ── ZONE TABLE ── */
+.zone-table{width:100%;border-collapse:collapse}
+.zone-table th{padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--border-light)}
+.zone-table td{padding:11px 14px;border-bottom:1px solid var(--border-light);font-size:12px;color:var(--text-mid)}
+.zone-table tr:last-child td{border-bottom:none}
+.zone-table tr:hover td{background:#f9fafb;cursor:pointer}
+.zone-bar-wrap{width:80px;height:6px;background:var(--border-light);border-radius:3px;display:inline-block}
+.zone-bar{height:6px;border-radius:3px;display:block}
+
+/* ── PEAK HEATMAP ── */
+.heatmap-grid{display:grid;grid-template-columns:40px repeat(7,1fr);gap:3px}
+.hm-label{font-size:10px;color:var(--text-muted);display:flex;align-items:center;justify-content:center;font-weight:600}
+.hm-cell{height:28px;border-radius:5px;cursor:pointer;transition:transform .15s;position:relative}
+.hm-cell:hover{transform:scale(1.1);z-index:1}
+.hm-cell[data-tip]:hover::before{content:attr(data-tip);position:absolute;bottom:calc(100%+5px);left:50%;transform:translateX(-50%);background:#1f2937;color:white;font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;white-space:nowrap;z-index:99;pointer-events:none}
+
+/* ── DONUT CHART ── */
+.donut-wrap{display:flex;align-items:center;gap:24px}
+.donut-legend{flex:1}
+.dl-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.dl-dot{width:12px;height:12px;border-radius:4px;flex-shrink:0}
+.dl-label{font-size:12px;color:var(--text-mid);flex:1;font-weight:500}
+.dl-val{font-size:12px;font-weight:800;color:var(--text-dark)}
+.dl-pct{font-size:11px;color:var(--text-muted)}
+
+/* ── OVERDUE TABLE ── */
+.overdue-table{width:100%;border-collapse:collapse}
+.overdue-table th{padding:9px 14px;font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--border-light);text-align:left}
+.overdue-table td{padding:11px 14px;border-bottom:1px solid var(--border-light);font-size:12px;color:var(--text-mid)}
+.overdue-table tr:last-child td{border-bottom:none}
+.overdue-table tr:hover td{background:rgba(239,68,68,.03)}
+.overdue-row td{animation:pulseRow 3s ease infinite}
+@keyframes pulseRow{0%,100%{background:transparent}50%{background:rgba(239,68,68,.04)}}
+
+/* ── MERCHANT BAR CHART ── */
+.merch-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border-light)}
+.merch-row:last-child{border-bottom:none}
+.merch-label{width:130px;font-size:12px;font-weight:600;color:var(--text-mid);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.merch-bar-bg{flex:1;height:16px;background:var(--border-light);border-radius:8px;position:relative;overflow:hidden}
+.merch-bar-fill{height:100%;border-radius:8px;transition:width .6s ease}
+.merch-val{width:60px;text-align:right;font-size:12px;font-weight:700;color:var(--text-dark);flex-shrink:0}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:#0a1628;color:white;border-left:4px solid var(--primary);border-radius:12px;padding:14px 20px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;animation:fadeUp .3s ease}
+.toast svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
+
+@media(max-width:1200px){.kpi-strip{grid-template-columns:repeat(3,1fr)}.chart-grid-3{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){:root{--sidebar-w:0px}.sidebar{transform:translateX(-240px)}.main{margin-left:0}.chart-grid-2,.chart-grid-3{grid-template-columns:1fr}.kpi-strip{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.kpi-strip{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></div>
+    <span class="logo-text">Fast Drop</span><span class="logo-badge">ADMIN</span>
+  </a>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Overview</div>
+    <a class="nav-item" href="fastdrop-admin-dashboard.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Shipments<span class="nav-badge teal">1,284</span></a>
+    <a class="nav-item" href="fastdrop-drivers.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></span>Drivers</a>
+    <a class="nav-item" href="fastdrop-dispatcher.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Fleet</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Business</div>
+    <a class="nav-item" href="fastdrop-merchants.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>Merchants</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></span>Zones</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg></span>Invoices<span class="nav-badge warn">5</span></a>
+    <a class="nav-item active" href="fastdrop-analytics.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg></span>Analytics</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">System</div>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg></span>User Roles</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg></span>Settings</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="u-avatar">SA</div>
+      <div style="flex:1"><div class="u-name">Sara Ahmed</div><div class="u-role">Super Admin</div></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,.3)"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title">Analytics</div>
+        <div class="page-subtitle" id="topbarSub">March 2026 · All Zones · All Merchants</div>
+      </div>
+      <div class="topbar-divider"></div>
+      <span style="font-size:11px;font-weight:600;color:var(--success);background:var(--success-light);padding:4px 10px;border-radius:20px;display:flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 1.4s infinite"></span>Live data</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="exportAll('pdf')">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export PDF
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="exportAll('excel')">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export Excel
+      </button>
+      <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-dot"></div></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- SECTION TABS -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div class="section-tabs">
+        <button class="stab active" id="tabZone" onclick="switchSection('zone',this)">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+          Zone Analytics
+        </button>
+        <button class="stab" id="tabFinancial" onclick="switchSection('financial',this)">
+          <svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg>
+          Financial Analytics
+        </button>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted)">Last updated: <strong style="color:var(--text-dark)">just now</strong></div>
+    </div>
+
+    <!-- GLOBAL FILTERS -->
+    <div class="filter-bar">
+      <div class="filter-group-label">Filters</div>
+      <div class="date-range">
+        <input type="date" value="2026-03-01" onchange="updateFilters()">
+        <span style="font-size:12px;color:var(--text-muted)">→</span>
+        <input type="date" value="2026-03-19" onchange="updateFilters()">
+      </div>
+      <div class="filter-divider"></div>
+      <select class="fsel" onchange="updateFilters()">
+        <option>All Zones</option><option>Downtown</option><option>Westside</option>
+        <option>East Hub</option><option>North Ring</option><option>South Bay</option><option>Airport</option>
+      </select>
+      <select class="fsel" onchange="updateFilters()">
+        <option>All Drivers</option><option>Ahmed Kamel</option><option>Mohamed Samir</option>
+        <option>Karim Youssef</option><option>Omar Fathy</option>
+      </select>
+      <select class="fsel" onchange="updateFilters()">
+        <option>All Merchants</option><option>SwiftMart</option><option>TechShop Cairo</option>
+        <option>HomeGoods</option><option>Pharmacy Plus</option><option>Fashion Hub</option>
+      </select>
+      <select class="fsel" onchange="updateFilters()">
+        <option>This Month</option><option>Last 7 Days</option><option>Last 30 Days</option>
+        <option>Last Quarter</option><option>This Year</option><option>Custom</option>
+      </select>
+      <div class="export-btns">
+        <div class="export-chip" onclick="exportAll('pdf')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> PDF</div>
+        <div class="export-chip" onclick="exportAll('excel')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Excel</div>
+      </div>
+    </div>
+
+    <!-- ══ ZONE ANALYTICS ══ -->
+    <div id="zoneSection">
+
+      <!-- KPI STRIP -->
+      <div class="kpi-strip">
+        <div class="kpi-card" style="--kc:var(--primary)">
+          <div class="kpi-icon" style="background:var(--primary-light)"><svg viewBox="0 0 24 24" fill="var(--primary-dark)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>
+          <div class="kpi-val" style="color:var(--primary)">6</div>
+          <div class="kpi-lbl">Active Zones</div>
+          <div class="kpi-trend trend-up">↑ +1 this month</div>
+        </div>
+        <div class="kpi-card" style="--kc:var(--success)">
+          <div class="kpi-icon" style="background:var(--success-light)"><svg viewBox="0 0 24 24" fill="var(--success)"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></div>
+          <div class="kpi-val" style="color:var(--success)">1,284</div>
+          <div class="kpi-lbl">Total Deliveries</div>
+          <div class="kpi-trend trend-up">↑ +12.4%</div>
+        </div>
+        <div class="kpi-card" style="--kc:var(--info)">
+          <div class="kpi-icon" style="background:var(--info-light)"><svg viewBox="0 0 24 24" fill="var(--info)"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg></div>
+          <div class="kpi-val" style="color:var(--info)">Downtown</div>
+          <div class="kpi-lbl">Top Zone</div>
+          <div class="kpi-trend trend-up">284 deliveries</div>
+        </div>
+        <div class="kpi-card" style="--kc:var(--warning)">
+          <div class="kpi-icon" style="background:var(--warning-light)"><svg viewBox="0 0 24 24" fill="var(--warning)"><path d="M13 3a9 9 0 10.001 18A9 9 0 0013 3zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm.5-11H12v5l4.25 2.52.75-1.23-3.5-2.08V8z"/></svg></div>
+          <div class="kpi-val" style="color:var(--warning)">14:00</div>
+          <div class="kpi-lbl">Peak Hour</div>
+          <div class="kpi-trend trend-up">Tue–Thu avg</div>
+        </div>
+        <div class="kpi-card" style="--kc:var(--purple)">
+          <div class="kpi-icon" style="background:var(--purple-light)"><svg viewBox="0 0 24 24" fill="var(--purple)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+          <div class="kpi-val" style="color:var(--purple)">94.8%</div>
+          <div class="kpi-lbl">Avg Zone Success</div>
+          <div class="kpi-trend trend-up">↑ +1.2%</div>
+        </div>
+      </div>
+
+      <!-- ROW 1: Revenue contribution + Forecast vs Actual -->
+      <div class="chart-grid-2">
+
+        <!-- Zone Revenue Contribution -->
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Zone Revenue Contribution</div><div class="chart-sub">March 2026 · Total $192,400</div></div>
+            <div class="chart-head-actions">
+              <div class="export-chip" onclick="exportChart('zone-revenue')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <div class="donut-wrap">
+              <svg width="130" height="130" viewBox="0 0 130 130">
+                <circle cx="65" cy="65" r="50" fill="none" stroke="#f1f5f9" stroke-width="18"/>
+                <!-- Downtown 35% -->
+                <circle cx="65" cy="65" r="50" fill="none" stroke="#00c9a7" stroke-width="18" stroke-dasharray="109.9 204.2" stroke-dashoffset="0" stroke-linecap="butt" transform="rotate(-90 65 65)"/>
+                <!-- Westside 22% -->
+                <circle cx="65" cy="65" r="50" fill="none" stroke="#3b82f6" stroke-width="18" stroke-dasharray="69.1 244.9" stroke-dashoffset="-109.9" stroke-linecap="butt" transform="rotate(-90 65 65)"/>
+                <!-- East Hub 18% -->
+                <circle cx="65" cy="65" r="50" fill="none" stroke="#8b5cf6" stroke-width="18" stroke-dasharray="56.5 257.6" stroke-dashoffset="-179" stroke-linecap="butt" transform="rotate(-90 65 65)"/>
+                <!-- North Ring 13% -->
+                <circle cx="65" cy="65" r="50" fill="none" stroke="#f59e0b" stroke-width="18" stroke-dasharray="40.8 273.2" stroke-dashoffset="-235.5" stroke-linecap="butt" transform="rotate(-90 65 65)"/>
+                <!-- South Bay 8% -->
+                <circle cx="65" cy="65" r="50" fill="none" stroke="#f97316" stroke-width="18" stroke-dasharray="25.1 289" stroke-dashoffset="-276.4" stroke-linecap="butt" transform="rotate(-90 65 65)"/>
+                <!-- Airport 4% -->
+                <circle cx="65" cy="65" r="50" fill="none" stroke="#10b981" stroke-width="18" stroke-dasharray="12.6 301.5" stroke-dashoffset="-301.5" stroke-linecap="butt" transform="rotate(-90 65 65)"/>
+                <text x="65" y="61" text-anchor="middle" font-size="14" font-weight="800" fill="#0d1b2a" font-family="Plus Jakarta Sans,sans-serif">$192k</text>
+                <text x="65" y="75" text-anchor="middle" font-size="10" fill="#9ca3af" font-family="Plus Jakarta Sans,sans-serif">Total</text>
+              </svg>
+              <div class="donut-legend">
+                <div class="dl-row"><div class="dl-dot" style="background:#00c9a7"></div><div class="dl-label">Downtown</div><div class="dl-val">$67,340</div><div class="dl-pct">35%</div></div>
+                <div class="dl-row"><div class="dl-dot" style="background:#3b82f6"></div><div class="dl-label">Westside</div><div class="dl-val">$42,328</div><div class="dl-pct">22%</div></div>
+                <div class="dl-row"><div class="dl-dot" style="background:#8b5cf6"></div><div class="dl-label">East Hub</div><div class="dl-val">$34,632</div><div class="dl-pct">18%</div></div>
+                <div class="dl-row"><div class="dl-dot" style="background:#f59e0b"></div><div class="dl-label">North Ring</div><div class="dl-val">$25,012</div><div class="dl-pct">13%</div></div>
+                <div class="dl-row"><div class="dl-dot" style="background:#f97316"></div><div class="dl-label">South Bay</div><div class="dl-val">$15,392</div><div class="dl-pct">8%</div></div>
+                <div class="dl-row"><div class="dl-dot" style="background:#10b981"></div><div class="dl-label">Airport</div><div class="dl-val">$7,696</div><div class="dl-pct">4%</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Demand Forecast vs Actual -->
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Demand Forecast vs Actual</div><div class="chart-sub">Per zone · March 2026</div></div>
+            <div class="chart-head-actions">
+              <div class="export-chip" onclick="exportChart('forecast')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <svg class="chart-svg" viewBox="0 0 520 180" style="height:180px">
+              <!-- grid -->
+              <line x1="60" y1="10" x2="60" y2="155" class="grid-line"/>
+              <line x1="60" y1="155" x2="520" y2="155" class="grid-line"/>
+              <line x1="60" y1="10" x2="520" y2="10" class="grid-line"/>
+              <line x1="60" y1="55" x2="520" y2="55" class="grid-line"/>
+              <line x1="60" y1="100" x2="520" y2="100" class="grid-line"/>
+              <!-- y axis labels -->
+              <text x="52" y="14" class="axis-text" text-anchor="end">300</text>
+              <text x="52" y="59" class="axis-text" text-anchor="end">200</text>
+              <text x="52" y="104" class="axis-text" text-anchor="end">100</text>
+              <text x="52" y="158" class="axis-text" text-anchor="end">0</text>
+              <!-- zones: Downtown, Westside, East Hub, N Ring, S Bay, Airport -->
+              <!-- Forecast bars (light) -->
+              <rect x="70" y="10" width="28" height="145" rx="4" fill="#00c9a7" opacity=".2" class="bar-rect"/>
+              <rect x="148" y="28" width="28" height="127" rx="4" fill="#3b82f6" opacity=".2" class="bar-rect"/>
+              <rect x="226" y="48" width="28" height="107" rx="4" fill="#8b5cf6" opacity=".2" class="bar-rect"/>
+              <rect x="304" y="75" width="28" height="80" rx="4" fill="#f59e0b" opacity=".2" class="bar-rect"/>
+              <rect x="382" y="103" width="28" height="52" rx="4" fill="#f97316" opacity=".2" class="bar-rect"/>
+              <rect x="460" y="128" width="28" height="27" rx="4" fill="#10b981" opacity=".2" class="bar-rect"/>
+              <!-- Actual bars (solid) -->
+              <rect x="100" y="13" width="28" height="142" rx="4" fill="#00c9a7" opacity=".9" class="bar-rect"/>
+              <rect x="178" y="33" width="28" height="122" rx="4" fill="#3b82f6" opacity=".9" class="bar-rect"/>
+              <rect x="256" y="58" width="28" height="97" rx="4" fill="#8b5cf6" opacity=".9" class="bar-rect"/>
+              <rect x="334" y="82" width="28" height="73" rx="4" fill="#f59e0b" opacity=".9" class="bar-rect"/>
+              <rect x="412" y="108" width="28" height="47" rx="4" fill="#f97316" opacity=".9" class="bar-rect"/>
+              <rect x="490" y="130" width="28" height="25" rx="4" fill="#10b981" opacity=".9" class="bar-rect"/>
+              <!-- x axis labels -->
+              <text x="97" y="170" class="axis-text" text-anchor="middle">Downtown</text>
+              <text x="175" y="170" class="axis-text" text-anchor="middle">Westside</text>
+              <text x="253" y="170" class="axis-text" text-anchor="middle">East Hub</text>
+              <text x="331" y="170" class="axis-text" text-anchor="middle">N. Ring</text>
+              <text x="409" y="170" class="axis-text" text-anchor="middle">S. Bay</text>
+              <text x="487" y="170" class="axis-text" text-anchor="middle">Airport</text>
+            </svg>
+            <div class="chart-legend" style="margin-top:8px">
+              <div class="legend-item"><div class="legend-dot" style="background:#e5e7eb"></div>Forecasted</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div>Actual</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 2: Peak delivery times heatmap -->
+      <div class="chart-grid-full">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Peak Delivery Times by Zone</div><div class="chart-sub">Hourly delivery volume · darker = more deliveries</div></div>
+            <div class="chart-head-actions">
+              <select class="fsel" style="font-size:11px;padding:5px 22px 5px 8px;min-width:100px">
+                <option>All Zones</option><option>Downtown</option><option>Westside</option>
+              </select>
+              <div class="export-chip" onclick="exportChart('heatmap')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</div>
+            </div>
+          </div>
+          <div class="chart-body" style="padding:16px 20px 20px" id="heatmapBody"></div>
+        </div>
+      </div>
+
+      <!-- ROW 3: Zone performance table -->
+      <div class="chart-grid-full">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Zone Performance Breakdown</div><div class="chart-sub">All metrics by zone · March 2026</div></div>
+            <div class="chart-head-actions">
+              <div class="export-chip" onclick="exportChart('zone-table')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="zone-table">
+              <thead><tr><th>Zone</th><th>Total Deliveries</th><th>Success Rate</th><th>Revenue</th><th>Avg Time</th><th>Drivers</th><th>Forecast Accuracy</th><th>vs Forecast</th></tr></thead>
+              <tbody>
+                <tr><td><strong style="color:var(--primary)">Downtown</strong></td><td><strong>284</strong> <div class="zone-bar-wrap"><div class="zone-bar" style="background:var(--primary);width:100%"></div></div></td><td style="color:var(--success);font-weight:700">97.5%</td><td style="font-weight:700">$67,340</td><td>42 min</td><td>18</td><td><span style="color:var(--success);font-weight:700">96%</span></td><td style="color:var(--success)">+2%</td></tr>
+                <tr><td><strong style="color:#3b82f6">Westside</strong></td><td><strong>238</strong> <div class="zone-bar-wrap"><div class="zone-bar" style="background:#3b82f6;width:84%"></div></div></td><td style="color:var(--success);font-weight:700">95.8%</td><td style="font-weight:700">$42,328</td><td>48 min</td><td>14</td><td><span style="color:var(--success);font-weight:700">94%</span></td><td style="color:var(--success)">+1%</td></tr>
+                <tr><td><strong style="color:#8b5cf6">East Hub</strong></td><td><strong>204</strong> <div class="zone-bar-wrap"><div class="zone-bar" style="background:#8b5cf6;width:72%"></div></div></td><td style="color:var(--success);font-weight:700">94.1%</td><td style="font-weight:700">$34,632</td><td>55 min</td><td>12</td><td><span style="color:var(--warning);font-weight:700">88%</span></td><td style="color:var(--error)">-3%</td></tr>
+                <tr><td><strong style="color:#f59e0b">North Ring</strong></td><td><strong>163</strong> <div class="zone-bar-wrap"><div class="zone-bar" style="background:#f59e0b;width:57%"></div></div></td><td style="color:var(--warning);font-weight:700">91.4%</td><td style="font-weight:700">$25,012</td><td>62 min</td><td>10</td><td><span style="color:var(--success);font-weight:700">92%</span></td><td style="color:var(--error)">-1%</td></tr>
+                <tr><td><strong style="color:#f97316">South Bay</strong></td><td><strong>135</strong> <div class="zone-bar-wrap"><div class="zone-bar" style="background:#f97316;width:48%"></div></div></td><td style="color:var(--warning);font-weight:700">90.4%</td><td style="font-weight:700">$15,392</td><td>68 min</td><td>8</td><td><span style="color:var(--warning);font-weight:700">86%</span></td><td style="color:var(--success)">+4%</td></tr>
+                <tr><td><strong style="color:#10b981">Airport</strong></td><td><strong>108</strong> <div class="zone-bar-wrap"><div class="zone-bar" style="background:#10b981;width:38%"></div></div></td><td style="color:var(--success);font-weight:700">96.3%</td><td style="font-weight:700">$7,696</td><td>38 min</td><td>6</td><td><span style="color:var(--success);font-weight:700">98%</span></td><td style="color:var(--success)">+1%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /zoneSection -->
+
+    <!-- ══ FINANCIAL ANALYTICS ══ -->
+    <div id="financialSection" style="display:none">
+
+      <!-- KPI STRIP -->
+      <div class="kpi-strip">
+        <div class="kpi-card" style="--kc:var(--primary)">
+          <div class="kpi-icon" style="background:var(--primary-light)"><svg viewBox="0 0 24 24" fill="var(--primary-dark)"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg></div>
+          <div class="kpi-val" style="color:var(--primary)">$192k</div>
+          <div class="kpi-lbl">Total Revenue</div>
+          <div class="kpi-trend trend-up">↑ +18.3%</div>
+        </div>
+        <div class="kpi-card" style="--kc:var(--success)">
+          <div class="kpi-icon" style="background:var(--success-light)"><svg viewBox="0 0 24 24" fill="var(--success)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+          <div class="kpi-val" style="color:var(--success)">$167k</div>
+          <div class="kpi-lbl">COD Collected</div>
+          <div class="kpi-trend trend-up">↑ +14.1%</div>
+        </div>
+        <div class="kpi-card" style="--kc:var(--purple)">
+          <div class="kpi-icon" style="background:var(--purple-light)"><svg viewBox="0 0 24 24" fill="var(--purple)"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg></div>
+          <div class="kpi-val" style="color:var(--purple)">$24.7k</div>
+          <div class="kpi-lbl">Invoices Paid</div>
+          <div class="kpi-trend trend-up">↑ +9.2%</div>
+        </div>
+        <div class="kpi-card" style="--kc:var(--warning)">
+          <div class="kpi-icon" style="background:var(--warning-light)"><svg viewBox="0 0 24 24" fill="var(--warning)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+          <div class="kpi-val" style="color:var(--warning)">$12.2k</div>
+          <div class="kpi-lbl">Pending</div>
+          <div class="kpi-trend trend-down">↑ 8 invoices</div>
+        </div>
+        <div class="kpi-card" style="--kc:var(--error)">
+          <div class="kpi-icon" style="background:var(--error-light)"><svg viewBox="0 0 24 24" fill="var(--error)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div>
+          <div class="kpi-val" style="color:var(--error)">$12.4k</div>
+          <div class="kpi-lbl">Overdue</div>
+          <div class="kpi-trend trend-down">5 invoices</div>
+        </div>
+      </div>
+
+      <!-- ROW 1: COD over time + Invoice status -->
+      <div class="chart-grid-2">
+
+        <!-- COD Over Time -->
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Total COD Collected Over Time</div><div class="chart-sub">Daily · March 2026</div></div>
+            <div class="chart-head-actions">
+              <div class="export-chip" onclick="exportChart('cod-time')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <svg class="chart-svg" viewBox="0 0 500 160" style="height:160px">
+              <defs>
+                <linearGradient id="codGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#00c9a7" stop-opacity=".3"/>
+                  <stop offset="100%" stop-color="#00c9a7" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- grid -->
+              <line x1="40" y1="10" x2="40" y2="130" class="grid-line"/>
+              <line x1="40" y1="130" x2="500" y2="130" class="grid-line"/>
+              <line x1="40" y1="10" x2="500" y2="10" class="grid-line"/>
+              <line x1="40" y1="50" x2="500" y2="50" class="grid-line"/>
+              <line x1="40" y1="90" x2="500" y2="90" class="grid-line"/>
+              <text x="34" y="14" class="axis-text" text-anchor="end">20k</text>
+              <text x="34" y="54" class="axis-text" text-anchor="end">13k</text>
+              <text x="34" y="94" class="axis-text" text-anchor="end">6k</text>
+              <text x="34" y="133" class="axis-text" text-anchor="end">0</text>
+              <!-- area path -->
+              <path d="M48,110 C60,105 72,95 84,88 C96,80 108,72 120,85 C132,98 144,70 156,65 C168,60 180,75 192,68 C204,60 216,45 228,40 C240,35 252,50 264,42 C276,35 288,28 300,32 C312,36 324,48 336,40 C348,32 360,20 372,18 C384,16 396,25 408,30 C420,35 432,22 444,20 C456,18 470,25 488,28 L488,130 L48,130 Z" fill="url(#codGrad)"/>
+              <path d="M48,110 C60,105 72,95 84,88 C96,80 108,72 120,85 C132,98 144,70 156,65 C168,60 180,75 192,68 C204,60 216,45 228,40 C240,35 252,50 264,42 C276,35 288,28 300,32 C312,36 324,48 336,40 C348,32 360,20 372,18 C384,16 396,25 408,30 C420,35 432,22 444,20 C456,18 470,25 488,28" fill="none" stroke="#00c9a7" stroke-width="2.5"/>
+              <!-- x axis labels -->
+              <text x="48" y="145" class="axis-text" text-anchor="middle">Mar 1</text>
+              <text x="158" y="145" class="axis-text" text-anchor="middle">Mar 5</text>
+              <text x="268" y="145" class="axis-text" text-anchor="middle">Mar 10</text>
+              <text x="378" y="145" class="axis-text" text-anchor="middle">Mar 15</text>
+              <text x="488" y="145" class="axis-text" text-anchor="middle">Mar 19</text>
+              <!-- peak annotation -->
+              <circle cx="372" cy="18" r="4" fill="#00c9a7"/>
+              <text x="380" y="14" class="axis-text" fill="#00c9a7" font-weight="700">Peak $18.4k</text>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Invoice Status Breakdown -->
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Invoice Payment Status</div><div class="chart-sub">42 total invoices · March 2026</div></div>
+            <div class="chart-head-actions">
+              <div class="export-chip" onclick="exportChart('invoice-status')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <!-- Stacked bar -->
+            <div style="margin-bottom:16px">
+              <div style="display:flex;height:32px;border-radius:8px;overflow:hidden;margin-bottom:8px">
+                <div style="width:69%;background:var(--success);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white">29 Paid</div>
+                <div style="width:19%;background:var(--warning);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white">8</div>
+                <div style="width:12%;background:var(--error);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white">5</div>
+              </div>
+              <div style="display:flex;gap:4px;font-size:10px;color:var(--text-muted)">
+                <span style="flex:0 0 69%;text-align:center">69% Paid</span>
+                <span style="flex:0 0 19%;text-align:center">19% Pending</span>
+                <span style="flex:0 0 12%;text-align:center">12% Overdue</span>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div style="background:var(--success-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--success)">$167,760</div><div style="font-size:10px;color:var(--success);font-weight:600;margin-top:2px;text-transform:uppercase;letter-spacing:.05em">Paid · 29 invoices</div></div>
+              <div style="background:var(--warning-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--warning)">$12,240</div><div style="font-size:10px;color:var(--warning);font-weight:600;margin-top:2px;text-transform:uppercase;letter-spacing:.05em">Pending · 8 invoices</div></div>
+              <div style="background:var(--error-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--error)">$12,400</div><div style="font-size:10px;color:var(--error);font-weight:600;margin-top:2px;text-transform:uppercase;letter-spacing:.05em">Overdue · 5 invoices</div></div>
+              <div style="background:var(--purple-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--purple)">42.3</div><div style="font-size:10px;color:var(--purple);font-weight:600;margin-top:2px;text-transform:uppercase;letter-spacing:.05em">Avg days to pay</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 2: Revenue by merchant + Overdue invoices -->
+      <div class="chart-grid-2">
+
+        <!-- Revenue by Merchant -->
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Revenue by Merchant</div><div class="chart-sub">Top 6 merchants · March 2026</div></div>
+            <div class="chart-head-actions">
+              <div class="export-chip" onclick="exportChart('merchant-revenue')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <div id="merchantBars"></div>
+          </div>
+        </div>
+
+        <!-- Overdue invoices table -->
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Outstanding Overdue Invoices</div><div class="chart-sub">Requires immediate follow-up</div></div>
+            <div class="chart-head-actions">
+              <div class="export-chip" onclick="exportChart('overdue')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</div>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="overdue-table">
+              <thead><tr><th>Invoice</th><th>Merchant</th><th>Amount</th><th>Due Date</th><th>Days Overdue</th><th>Action</th></tr></thead>
+              <tbody>
+                <tr class="overdue-row">
+                  <td style="font-weight:700;color:var(--error);font-size:12px">INV-3298</td>
+                  <td style="font-weight:600">HomeGoods</td>
+                  <td style="font-weight:800;color:var(--error)">$7,600</td>
+                  <td style="font-size:11px;color:var(--text-muted)">Mar 8, 2026</td>
+                  <td><span style="background:var(--error-light);color:var(--error);font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px">11 days</span></td>
+                  <td><button class="btn btn-danger btn-sm" onclick="showToast('Reminder sent to HomeGoods')">Remind</button></td>
+                </tr>
+                <tr class="overdue-row">
+                  <td style="font-weight:700;color:var(--error);font-size:12px">INV-3315</td>
+                  <td style="font-weight:600">TechShop Cairo</td>
+                  <td style="font-weight:800;color:var(--error)">$4,800</td>
+                  <td style="font-size:11px;color:var(--text-muted)">Mar 10, 2026</td>
+                  <td><span style="background:var(--error-light);color:var(--error);font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px">9 days</span></td>
+                  <td><button class="btn btn-danger btn-sm" onclick="showToast('Reminder sent to TechShop Cairo')">Remind</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:700;color:var(--warning);font-size:12px">INV-3290</td>
+                  <td style="font-weight:600">TechShop Cairo</td>
+                  <td style="font-weight:800;color:var(--warning)">$2,100</td>
+                  <td style="font-size:11px;color:var(--text-muted)">Feb 28, 2026</td>
+                  <td><span style="background:var(--warning-light);color:var(--warning);font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px">19 days</span></td>
+                  <td><button class="btn btn-warning btn-sm" onclick="showToast('Escalation sent for INV-3290')" style="background:var(--warning-light);color:var(--warning);border:1px solid rgba(245,158,11,.2)">Escalate</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:700;color:var(--warning);font-size:12px">INV-3285</td>
+                  <td style="font-weight:600">StyleCraft</td>
+                  <td style="font-weight:800;color:var(--warning)">$1,240</td>
+                  <td style="font-size:11px;color:var(--text-muted)">Feb 25, 2026</td>
+                  <td><span style="background:var(--warning-light);color:var(--warning);font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px">22 days</span></td>
+                  <td><button class="btn btn-warning btn-sm" onclick="showToast('Escalation sent for INV-3285')" style="background:var(--warning-light);color:var(--warning);border:1px solid rgba(245,158,11,.2)">Escalate</button></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:700;color:var(--error);font-size:12px">INV-3270</td>
+                  <td style="font-weight:600">BookWorld Egypt</td>
+                  <td style="font-weight:800;color:var(--error)">$660</td>
+                  <td style="font-size:11px;color:var(--text-muted)">Feb 15, 2026</td>
+                  <td><span style="background:var(--error-light);color:var(--error);font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px">32 days</span></td>
+                  <td><button class="btn btn-danger btn-sm" onclick="showToast('Legal notice initiated for INV-3270')">Legal</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="padding:12px 20px;border-top:1px solid var(--border-light);display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--error);font-weight:700">Total Overdue: $16,400</span>
+            <button class="btn btn-danger btn-sm" onclick="showToast('Bulk reminders sent to all overdue merchants')">Send All Reminders</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 3: Revenue trend full width -->
+      <div class="chart-grid-full">
+        <div class="chart-card">
+          <div class="chart-head">
+            <div><div class="chart-title">Monthly Revenue Trend</div><div class="chart-sub">COD + Invoice revenue · Jan–Mar 2026</div></div>
+            <div class="chart-head-actions">
+              <div class="export-chip" onclick="exportChart('revenue-trend')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</div>
+            </div>
+          </div>
+          <div class="chart-body">
+            <svg class="chart-svg" viewBox="0 0 900 180" style="height:180px">
+              <defs>
+                <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#00c9a7" stop-opacity=".25"/>
+                  <stop offset="100%" stop-color="#00c9a7" stop-opacity="0"/>
+                </linearGradient>
+                <linearGradient id="invGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#8b5cf6" stop-opacity=".2"/>
+                  <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <!-- grid -->
+              <line x1="60" y1="10" x2="60" y2="140" class="grid-line"/>
+              <line x1="60" y1="140" x2="900" y2="140" class="grid-line"/>
+              <line x1="60" y1="10" x2="900" y2="10" class="grid-line"/>
+              <line x1="60" y1="57" x2="900" y2="57" class="grid-line"/>
+              <line x1="60" y1="104" x2="900" y2="104" class="grid-line"/>
+              <text x="52" y="14" class="axis-text" text-anchor="end">200k</text>
+              <text x="52" y="61" class="axis-text" text-anchor="end">130k</text>
+              <text x="52" y="108" class="axis-text" text-anchor="end">60k</text>
+              <text x="52" y="144" class="axis-text" text-anchor="end">0</text>
+              <!-- COD area (Jan col 1-30, Feb 31-59, Mar 60-90 each spread across ~280px) -->
+              <!-- Jan: low, Feb: mid, Mar: high (current) -->
+              <!-- COD line -->
+              <path d="M80,130 L150,122 L220,118 L290,110 L360,105 L430,98 L500,92 L570,88 L640,82 L710,76 L780,68 L850,62" fill="none" stroke="#00c9a7" stroke-width="2.5"/>
+              <path d="M80,130 L150,122 L220,118 L290,110 L360,105 L430,98 L500,92 L570,88 L640,82 L710,76 L780,68 L850,62 L850,140 L80,140 Z" fill="url(#revGrad)"/>
+              <!-- Invoice line -->
+              <path d="M80,138 L150,135 L220,132 L290,128 L360,124 L430,120 L500,118 L570,115 L640,112 L710,108 L780,104 L850,100" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="5,3"/>
+              <!-- month separators -->
+              <line x1="360" y1="10" x2="360" y2="140" stroke="#e8ecf0" stroke-width="1" stroke-dasharray="4,3"/>
+              <line x1="660" y1="10" x2="660" y2="140" stroke="#e8ecf0" stroke-width="1" stroke-dasharray="4,3"/>
+              <!-- month labels -->
+              <text x="200" y="158" class="axis-text" text-anchor="middle" font-weight="600">January</text>
+              <text x="510" y="158" class="axis-text" text-anchor="middle" font-weight="600">February</text>
+              <text x="780" y="158" class="axis-text" text-anchor="middle" font-weight="600">March (partial)</text>
+              <!-- current dot -->
+              <circle cx="850" cy="62" r="5" fill="#00c9a7"/>
+              <circle cx="850" cy="62" r="9" fill="#00c9a7" fill-opacity=".2"/>
+            </svg>
+            <div class="chart-legend" style="margin-top:4px">
+              <div class="legend-item"><div class="legend-dot" style="background:var(--primary)"></div>COD Revenue</div>
+              <div class="legend-item"><div class="legend-dot" style="background:var(--purple)"></div>Invoice Revenue</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /financialSection -->
+
+  </div>
+</div>
+
+<style>
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.btn-warning{background:var(--warning-light);color:var(--warning);border:1px solid rgba(245,158,11,.2)}
+.btn-warning:hover{background:var(--warning);color:white}
+</style>
+
+<script>
+// ── SECTION SWITCH ──
+function switchSection(sec,el){
+  document.querySelectorAll('.stab').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('zoneSection').style.display=sec==='zone'?'block':'none';
+  document.getElementById('financialSection').style.display=sec==='financial'?'block':'none';
+}
+
+// ── HEATMAP ──
+const ZONES=['Downtown','Westside','East Hub','N.Ring','S.Bay','Airport'];
+const HOURS=['6am','7am','8am','9am','10am','11am','12pm','1pm','2pm','3pm','4pm','5pm','6pm','7pm','8pm'];
+const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+// intensity 0-10 per zone per hour (simulated)
+const heatData={
+  'Downtown':  [1,2,3,5,6,7,8,9,10,9,8,7,6,4,2],
+  'Westside':  [0,1,2,4,5,6,7,8,9,8,7,6,5,3,1],
+  'East Hub':  [1,2,3,4,5,5,6,7,8,7,6,5,4,2,1],
+  'N.Ring':    [0,1,2,3,4,5,5,6,7,6,5,4,3,2,0],
+  'S.Bay':     [0,1,1,2,3,4,4,5,6,5,4,3,2,1,0],
+  'Airport':   [2,3,4,3,4,4,3,4,5,4,3,3,2,2,1],
+};
+
+function getHeatColor(v){
+  if(v===0) return '#f1f5f9';
+  const palette=['#e6faf6','#ccfbf1','#99f6e4','#5eead4','#2dd4bf','#14b8a6','#0d9488','#0f766e','#115e59','#134e4a'];
+  return palette[Math.min(v-1,9)];
+}
+
+function buildHeatmap(){
+  const body=document.getElementById('heatmapBody');
+  let html='';
+  // Header row: days
+  html+='<div class="heatmap-grid" style="margin-bottom:6px">';
+  html+='<div></div>';
+  DAYS.forEach(d=>{html+=`<div class="hm-label" style="font-size:10px;color:var(--text-muted);font-weight:700;justify-content:center">${d}</div>`;});
+  html+='</div>';
+
+  // Each hour
+  HOURS.forEach((hr,hi)=>{
+    html+=`<div class="heatmap-grid" style="margin-bottom:3px">`;
+    html+=`<div class="hm-label" style="font-size:10px;justify-content:flex-end;padding-right:8px;color:var(--text-muted)">${hr}</div>`;
+    DAYS.forEach((_,di)=>{
+      // vary by day: weekday high, weekend low
+      const dayMult=[1,1.1,1,1.05,0.9,0.6,0.4][di];
+      const zoneKey=ZONES[0]; // combined all zones
+      const baseVal=heatData['Downtown'][hi];
+      const val=Math.min(10,Math.round(baseVal*dayMult));
+      const delivCount=Math.round(val*8+Math.random()*5);
+      html+=`<div class="hm-cell" style="background:${getHeatColor(val)}" data-tip="${delivCount} deliveries · ${hr} ${DAYS[di]}"></div>`;
+    });
+    html+='</div>';
+  });
+
+  // Legend
+  html+=`<div style="display:flex;align-items:center;gap:6px;margin-top:12px;justify-content:flex-end">
+    <span style="font-size:10px;color:var(--text-muted)">Low</span>`;
+  for(let i=0;i<=9;i++){html+=`<div style="width:18px;height:12px;border-radius:3px;background:${getHeatColor(i+1)}"></div>`;}
+  html+=`<span style="font-size:10px;color:var(--text-muted)">High</span></div>`;
+
+  body.innerHTML=html;
+}
+buildHeatmap();
+
+// ── MERCHANT BARS ──
+const MERCHANTS=[
+  {name:'Pharmacy Plus',revenue:48200,color:'#10b981'},
+  {name:'SwiftMart',revenue:31540,color:'#00c9a7'},
+  {name:'TechShop Cairo',revenue:24100,color:'#3b82f6'},
+  {name:'HomeGoods',revenue:19200,color:'#f97316'},
+  {name:'Fresh Eats Co.',revenue:14820,color:'#84cc16'},
+  {name:'Fashion Hub',revenue:8640,color:'#ec4899'},
+];
+const maxRev=Math.max(...MERCHANTS.map(m=>m.revenue));
+
+function buildMerchantBars(){
+  const el=document.getElementById('merchantBars');
+  el.innerHTML=MERCHANTS.map(m=>`
+    <div class="merch-row">
+      <div class="merch-label">${m.name}</div>
+      <div class="merch-bar-bg">
+        <div class="merch-bar-fill" style="width:${Math.round(m.revenue/maxRev*100)}%;background:${m.color}"></div>
+      </div>
+      <div class="merch-val">$${(m.revenue/1000).toFixed(1)}k</div>
+    </div>`).join('');
+  // animate bars
+  setTimeout(()=>{
+    document.querySelectorAll('.merch-bar-fill').forEach(b=>{
+      const w=b.style.width;b.style.width='0';
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{b.style.width=w;}));
+    });
+  },100);
+}
+buildMerchantBars();
+
+// ── FILTERS ──
+function updateFilters(){
+  showToast('Filters applied — refreshing data…');
+}
+
+// ── EXPORT ──
+function exportAll(format){
+  showToast(`⬇ Exporting all charts as ${format.toUpperCase()}…`);
+}
+function exportChart(chart){
+  showToast(`⬇ Exporting ${chart} as Excel…`);
+}
+
+// ── TOAST ──
+function showToast(msg,type='success'){
+  const el=document.createElement('div');el.className='toast';
+  const c={success:'var(--primary)',error:'var(--error)',warn:'var(--warning)'};
+  el.style.borderLeftColor=c[type]||c.success;
+  el.innerHTML=`<svg viewBox="0 0 24 24" style="fill:${c[type]||c.success}"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>${msg}`;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},3500);
+}
+
+// Animate KPI values on load
+document.querySelectorAll('.kpi-val').forEach(el=>{
+  const txt=el.textContent.trim();
+  if(txt.includes('k')||txt.includes('$')){
+    const num=parseFloat(txt.replace(/[$k%]/g,''));
+    if(!isNaN(num)&&num>0){
+      const isK=txt.includes('k'),isPre=txt.startsWith('$'),isSuf=txt.endsWith('%');
+      el.textContent=(isPre?'$':'')+'0'+(isK?'k':isSuf?'%':'');
+      const dur=700,st=performance.now();
+      function step(now){const p=Math.min((now-st)/dur,1),e=1-Math.pow(1-p,3);const v=(num*e);el.textContent=(isPre?'$':'')+v.toFixed(isK?1:isSuf?1:0)+(isK?'k':isSuf?'%':'');if(p<1)requestAnimationFrame(step);else el.textContent=txt;}
+      setTimeout(()=>requestAnimationFrame(step),80+Math.random()*150);
+    }
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Drop – User Roles</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#00c9a7;--primary-dark:#00a98a;--primary-light:#e6faf6;--primary-mid:#ccfbf1;
+  --sidebar-bg:#0a1628;--sidebar-hover:#111e35;
+  --page-bg:#f4f7f9;--card-bg:#ffffff;
+  --text-dark:#0d1b2a;--text-mid:#374151;--text-muted:#6b7280;--text-light:#9ca3af;
+  --border:#e8ecf0;--border-light:#f1f5f9;
+  --warning:#f59e0b;--warning-light:#fffbeb;
+  --error:#ef4444;--error-light:#fef2f2;
+  --info:#3b82f6;--info-light:#eff6ff;
+  --success:#10b981;--success-light:#ecfdf5;
+  --purple:#8b5cf6;--purple-light:#f5f3ff;
+  --orange:#f97316;--orange-light:#fff7ed;
+  --sidebar-w:240px;--topbar-h:64px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--page-bg);color:var(--text-dark);min-height:100vh;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.06);text-decoration:none}
+.logo-mark{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:20px;height:20px;fill:white}
+.logo-text{font-size:16px;font-weight:800;color:white}
+.logo-badge{font-size:9px;font-weight:700;background:var(--primary);color:white;border-radius:4px;padding:1px 5px;margin-left:auto;letter-spacing:.04em}
+.sidebar-section{padding:18px 12px 8px}
+.sidebar-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.45);font-size:13px;font-weight:500;transition:all .18s;text-decoration:none;margin-bottom:2px}
+.nav-item:hover{background:var(--sidebar-hover);color:rgba(255,255,255,.8)}
+.nav-item.active{background:linear-gradient(135deg,rgba(0,201,167,.18),rgba(0,201,167,.08));color:var(--primary);border:1px solid rgba(0,201,167,.2)}
+.nav-icon{width:16px;height:16px;flex-shrink:0}.nav-icon svg{width:16px;height:16px;fill:currentColor}
+.nav-badge{margin-left:auto;background:var(--error);color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.nav-badge.teal{background:var(--primary)}.nav-badge.warn{background:var(--warning)}
+.sidebar-footer{margin-top:auto;padding:16px 12px;border-top:1px solid rgba(255,255,255,.06)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:background .18s}
+.user-card:hover{background:var(--sidebar-hover)}
+.user-avatar-sm{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0}
+.user-name{font-size:12px;font-weight:700;color:white}.user-role-txt{font-size:10px;color:rgba(255,255,255,.35)}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+.topbar{height:var(--topbar-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px;flex:1}
+.page-title{font-size:18px;font-weight:800;color:var(--text-dark)}
+.page-subtitle{font-size:12px;color:var(--text-muted);font-weight:500}
+.topbar-divider{width:1px;height:24px;background:var(--border)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .2s}
+.icon-btn:hover{border-color:var(--primary)}
+.icon-btn svg{width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:2}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--error);border-radius:50%;border:1.5px solid white}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s}
+.btn-primary{background:var(--primary);color:white;box-shadow:0 4px 14px rgba(0,201,167,.25)}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn-secondary{background:white;color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:var(--error-light);color:var(--error);border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:var(--error);color:white}
+.btn-success{background:var(--success-light);color:var(--success);border:1px solid rgba(16,185,129,.2)}
+.btn-success:hover{background:var(--success);color:white}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn svg{width:14px;height:14px;fill:currentColor}
+
+/* ── CONTENT ── */
+.content{padding:24px 28px;flex:1}
+
+/* ── TAB BAR ── */
+.tab-bar{display:flex;align-items:center;gap:4px;background:white;border:1px solid var(--border-light);border-radius:14px;padding:5px;margin-bottom:22px;width:fit-content}
+.tab-btn{padding:9px 22px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-muted);background:transparent;transition:all .2s;display:flex;align-items:center;gap:7px}
+.tab-btn.active{background:var(--primary);color:white;box-shadow:0 4px 12px rgba(0,201,167,.25)}
+.tab-btn svg{width:14px;height:14px;fill:currentColor}
+.tab-count{font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;background:rgba(255,255,255,.25)}
+.tab-btn:not(.active) .tab-count{background:var(--border-light);color:var(--text-muted)}
+
+/* ── ROLES SECTION ── */
+.roles-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.roles-title{font-size:15px;font-weight:700;color:var(--text-dark)}
+.roles-sub{font-size:12px;color:var(--text-muted);margin-top:1px}
+
+.roles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.role-card{background:white;border-radius:16px;border:1px solid var(--border-light);padding:22px;cursor:pointer;transition:all .22s;position:relative;overflow:hidden;animation:fadeUp .35s ease both}
+.role-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;background:var(--role-color,var(--primary));border-radius:4px 0 0 4px}
+.role-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.08);transform:translateY(-2px)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.role-card:nth-child(1){animation-delay:.05s}.role-card:nth-child(2){animation-delay:.1s}
+.role-card:nth-child(3){animation-delay:.15s}.role-card:nth-child(4){animation-delay:.2s}
+.role-card:nth-child(5){animation-delay:.25s}.role-card:nth-child(6){animation-delay:.3s}
+
+.role-card-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.role-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.role-icon svg{width:20px;height:20px}
+.role-card-actions{display:flex;gap:6px;opacity:0;transition:opacity .15s}
+.role-card:hover .role-card-actions{opacity:1}
+.rc-action{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.rc-action:hover{border-color:var(--primary);background:var(--primary-light)}
+.rc-action.danger:hover{border-color:var(--error);background:var(--error-light);color:var(--error)}
+.rc-action svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+
+.role-name{font-size:15px;font-weight:800;color:var(--text-dark);margin-bottom:4px}
+.role-desc{font-size:12px;color:var(--text-muted);line-height:1.55;margin-bottom:14px}
+.role-footer{display:flex;align-items:center;justify-content:space-between}
+.role-emp-count{display:flex;align-items:center;gap:8px}
+.emp-avatars{display:flex}
+.emp-avatar-xs{width:24px;height:24px;border-radius:50%;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:white;margin-left:-6px;flex-shrink:0}
+.emp-avatar-xs:first-child{margin-left:0}
+.role-emp-label{font-size:12px;color:var(--text-muted);font-weight:600}
+.role-emp-label strong{color:var(--text-dark)}
+.perm-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.perm-chip{font-size:10px;font-weight:600;padding:3px 8px;border-radius:5px}
+
+/* ── EMPLOYEE TABLE ── */
+.table-card{background:white;border-radius:16px;border:1px solid var(--border-light);overflow:hidden;animation:fadeUp .35s ease both}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light);gap:12px;flex-wrap:wrap}
+.table-title-wrap{flex:1}
+.table-title{font-size:15px;font-weight:700;color:var(--text-dark)}
+.table-sub{font-size:12px;color:var(--text-muted);margin-top:1px}
+.table-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* Search + filter */
+.search-row{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--border-light);flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--page-bg);border:1.5px solid var(--border);border-radius:9px;padding:7px 12px;flex:1;min-width:180px;transition:border-color .2s}
+.search-box:focus-within{border-color:var(--primary)}
+.search-box svg{width:13px;height:13px;fill:none;stroke:var(--text-muted);stroke-width:2;flex-shrink:0}
+.search-box input{border:none;background:transparent;outline:none;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);width:100%}
+.search-box input::placeholder{color:var(--text-light)}
+.filter-sel{border:1.5px solid var(--border);border-radius:8px;padding:7px 28px 7px 10px;font-size:12px;font-weight:500;color:var(--text-mid);background:var(--page-bg);cursor:pointer;appearance:none;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:110px;transition:border-color .2s}
+.filter-sel:focus{border-color:var(--primary)}
+
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--border-light);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f9fafb}
+td{padding:13px 16px;font-size:13px;color:var(--text-mid);white-space:nowrap}
+
+/* Employee cells */
+.emp-cell{display:flex;align-items:center;gap:10px}
+.emp-avatar{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0}
+.emp-name{font-size:13px;font-weight:700;color:var(--text-dark)}
+.emp-email{font-size:11px;color:var(--text-muted);margin-top:1px}
+
+.status-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.status-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sp-active{background:var(--success-light);color:var(--success)}
+.sp-inactive{background:var(--border-light);color:var(--text-muted)}
+.sp-suspended{background:var(--error-light);color:var(--error)}
+
+.role-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700}
+
+/* Row actions */
+.row-acts{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+tbody tr:hover .row-acts{opacity:1}
+.ra-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative}
+.ra-btn:hover{border-color:var(--primary);background:var(--primary-light)}
+.ra-btn.danger:hover{border-color:var(--error);background:var(--error-light);color:var(--error)}
+.ra-btn.success:hover{border-color:var(--success);background:var(--success-light)}
+.ra-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+.ra-btn[data-tip]:hover::before{content:attr(data-tip);position:absolute;bottom:calc(100% + 5px);left:50%;transform:translateX(-50%);background:#1f2937;color:white;font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;white-space:nowrap;z-index:99;pointer-events:none}
+
+.cb{width:15px;height:15px;accent-color:var(--primary);cursor:pointer}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--border-light)}
+.page-info{font-size:12px;color:var(--text-muted)}
+.page-btns{display:flex;gap:4px}
+.pg-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid);transition:all .15s}
+.pg-btn:hover{border-color:var(--primary);color:var(--primary)}
+.pg-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
+.pg-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+
+/* ── SLIDE PANEL ── */
+.panel-overlay{position:fixed;inset:0;background:rgba(10,22,40,.5);backdrop-filter:blur(3px);z-index:400;display:none}
+.panel-overlay.show{display:block}
+.slide-panel{position:fixed;top:0;right:0;bottom:0;width:560px;background:white;z-index:500;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.slide-panel.wide{width:720px}
+.slide-panel.open{transform:translateX(0)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-size:17px;font-weight:800;color:var(--text-dark)}
+.panel-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.panel-close{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+.panel-close:hover{border-color:var(--error);color:var(--error)}
+.panel-close svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+.panel-body{flex:1;overflow-y:auto;padding:0}
+.panel-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:white}
+
+/* Form sections */
+.form-section{padding:20px 24px;border-bottom:1px solid var(--border-light)}
+.form-section:last-child{border-bottom:none}
+.form-section-title{font-size:11px;font-weight:700;color:var(--text-dark);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.fsicon{width:24px;height:24px;border-radius:6px;background:var(--primary-light);display:flex;align-items:center;justify-content:center}
+.fsicon svg{width:12px;height:12px;fill:var(--primary-dark)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;font-weight:600;color:var(--text-mid)}
+.form-control{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s;background:white}
+.form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,201,167,.1)}
+.form-control::placeholder{color:var(--text-light)}
+select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer}
+.form-hint{font-size:10px;color:var(--text-muted)}
+
+/* Permissions checklist */
+.perm-section{margin-bottom:14px}
+.perm-section-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.perm-section-label::after{content:'';flex:1;height:1px;background:var(--border-light)}
+.perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.perm-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;transition:all .18s}
+.perm-item:hover{border-color:var(--primary);background:var(--primary-light)}
+.perm-item input[type=checkbox]{width:14px;height:14px;accent-color:var(--primary);cursor:pointer;flex-shrink:0}
+.perm-item-text{flex:1}
+.perm-item-name{font-size:12px;font-weight:600;color:var(--text-dark)}
+.perm-item-desc{font-size:10px;color:var(--text-muted)}
+.perm-item.checked{border-color:var(--primary);background:var(--primary-light)}
+
+/* Color picker */
+.color-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.color-dot{width:28px;height:28px;border-radius:50%;cursor:pointer;transition:transform .2s;position:relative;border:3px solid transparent}
+.color-dot:hover{transform:scale(1.2)}
+.color-dot.selected::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white}
+
+/* Employee detail hero */
+.emp-hero{background:linear-gradient(135deg,#0a1628,#0f2540);padding:24px;position:relative;overflow:hidden}
+.emp-hero::before{content:'';position:absolute;top:-50px;right:-50px;width:180px;height:180px;border-radius:50%;background:rgba(0,201,167,.07)}
+.emp-hero-inner{display:flex;align-items:flex-start;gap:16px;position:relative;z-index:1}
+.emp-hero-avatar{width:60px;height:60px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:22px;color:white;flex-shrink:0}
+.emp-hero-name{font-size:20px;font-weight:800;color:white;margin-bottom:3px}
+.emp-hero-role{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:8px}
+.emp-hero-badges{display:flex;gap:7px;flex-wrap:wrap}
+.emp-hero-badge{padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700}
+
+.detail-row{display:flex;align-items:center;padding:11px 0;border-bottom:1px solid var(--border-light)}
+.detail-row:last-child{border-bottom:none}
+.detail-row label{font-size:11px;font-weight:600;color:var(--text-muted);width:140px;flex-shrink:0;text-transform:uppercase;letter-spacing:.05em}
+.detail-row span{font-size:13px;font-weight:600;color:var(--text-dark)}
+
+/* Role employees sub-panel */
+.sub-emp-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border-light)}
+.sub-emp-item:last-child{border-bottom:none}
+.sub-emp-avatar{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;flex-shrink:0}
+.sub-emp-name{font-size:13px;font-weight:700;color:var(--text-dark)}
+.sub-emp-email{font-size:11px;color:var(--text-muted)}
+
+/* Toggle switch */
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:#e5e7eb;border-radius:11px;cursor:pointer;transition:background .2s}
+.toggle-track::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle input:checked + .toggle-track{background:var(--primary)}
+.toggle input:checked + .toggle-track::after{transform:translateX(18px)}
+
+/* Delete confirm */
+.delete-confirm{background:var(--error-light);border:1px solid rgba(239,68,68,.2);border-radius:12px;padding:14px 16px;margin:0 24px 16px;display:none}
+.delete-confirm.show{display:block}
+.delete-confirm p{font-size:13px;color:var(--error);font-weight:500;margin-bottom:10px}
+.delete-confirm-btns{display:flex;gap:8px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#0a1628;color:white;border-left:4px solid var(--primary);border-radius:12px;padding:14px 20px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;animation:fadeUp .3s ease;max-width:380px}
+.toast svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Modal (confirm delete) */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,22,40,.5);backdrop-filter:blur(4px);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:white;border-radius:20px;padding:28px;width:100%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.modal-title{font-size:17px;font-weight:800;color:var(--text-dark);margin-bottom:6px}
+.modal-text{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:20px}
+.modal-btns{display:flex;gap:10px}
+
+@media(max-width:900px){:root{--sidebar-w:0px}.sidebar{transform:translateX(-240px)}.main{margin-left:0}.slide-panel,.slide-panel.wide{width:100%}}
+@media(max-width:700px){.roles-grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}}
+@media(max-width:480px){.roles-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5S5.17 15.5 6 15.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
+    <span class="logo-text">Fast Drop</span><span class="logo-badge">ADMIN</span>
+  </a>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Overview</div>
+    <a class="nav-item" href="fastdrop-admin-dashboard.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Shipments<span class="nav-badge teal">1,284</span></a>
+    <a class="nav-item" href="fastdrop-drivers.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></span>Drivers</a>
+    <a class="nav-item" href="fastdrop-dispatcher.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Fleet</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Business</div>
+    <a class="nav-item" href="fastdrop-merchants.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>Merchants</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg></span>Invoices<span class="nav-badge warn">5</span></a>
+    <a class="nav-item" href="fastdrop-analytics.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg></span>Analytics</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">System</div>
+    <a class="nav-item active" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg></span>User Roles</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>Settings</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar-sm">SA</div>
+      <div style="flex:1"><div class="user-name">Sara Ahmed</div><div class="user-role-txt">Super Admin</div></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,.3)"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title">User Roles & Employees</div>
+        <div class="page-subtitle">Manage internal access and team members</div>
+      </div>
+      <div class="topbar-divider"></div>
+      <span style="font-size:12px;color:var(--text-muted)"><strong style="color:var(--text-dark)">6</strong> roles · <strong style="color:var(--text-dark)">34</strong> employees</span>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-dot"></div></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- TAB BAR -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tabRoles" onclick="switchTab('roles')">
+          <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg>
+          Roles <span class="tab-count">6</span>
+        </button>
+        <button class="tab-btn" id="tabEmployees" onclick="switchTab('employees')">
+          <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+          Employees <span class="tab-count">34</span>
+        </button>
+      </div>
+      <div id="tabActionBtn">
+        <button class="btn btn-primary" onclick="openRolePanel()">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Create Role
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ ROLES TAB ══ -->
+    <div id="rolesTab">
+      <div class="roles-grid" id="rolesGrid"></div>
+    </div>
+
+    <!-- ══ EMPLOYEES TAB ══ -->
+    <div id="employeesTab" style="display:none">
+      <div class="table-card">
+        <div class="table-head">
+          <div class="table-title-wrap">
+            <div class="table-title">All Employees</div>
+            <div class="table-sub">Internal staff accounts</div>
+          </div>
+          <div class="table-actions">
+            <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</button>
+            <button class="btn btn-primary btn-sm" onclick="openEmployeePanel()"><svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Employee</button>
+          </div>
+        </div>
+        <div class="search-row">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" placeholder="Search name, email, role…" oninput="filterEmployees(this.value)">
+          </div>
+          <select class="filter-sel" onchange="filterByRole(this.value)">
+            <option value="">All Roles</option>
+            <option>Super Admin</option><option>Operations Manager</option><option>Dispatcher</option>
+            <option>Customer Support</option><option>Finance Officer</option><option>Viewer</option>
+          </select>
+          <select class="filter-sel" onchange="filterByStatus(this.value)">
+            <option value="">All Statuses</option>
+            <option>Active</option><option>Inactive</option><option>Suspended</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px"><input type="checkbox" class="cb"></th>
+                <th>Employee</th>
+                <th>Role</th>
+                <th>Supervisor</th>
+                <th>Joined</th>
+                <th>Last Active</th>
+                <th>Status</th>
+                <th style="width:140px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="empTableBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <div class="page-info" id="empPageInfo">Showing 1–10 of 34 employees</div>
+          <div class="page-btns">
+            <div class="pg-btn"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+            <div class="pg-btn active">1</div>
+            <div class="pg-btn">2</div>
+            <div class="pg-btn">3</div>
+            <div class="pg-btn">4</div>
+            <div class="pg-btn"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ OVERLAY ══ -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanels()"></div>
+
+<!-- ══ ROLE PANEL ══ -->
+<div class="slide-panel wide" id="rolePanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="rolePanelTitle">Create New Role</div>
+      <div class="panel-sub">Define access permissions for this role</div>
+    </div>
+    <div class="panel-close" onclick="closePanels()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="panel-body">
+    <div class="form-section">
+      <div class="form-section-title"><div class="fsicon"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg></div>Role Details</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Role Name *</label>
+          <input class="form-control" id="roleNameInput" placeholder="e.g. Fleet Manager">
+        </div>
+        <div class="form-group">
+          <label>Role Color</label>
+          <div class="color-row" id="colorPicker">
+            <div class="color-dot selected" style="background:#00c9a7" data-color="#00c9a7" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#3b82f6" data-color="#3b82f6" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#8b5cf6" data-color="#8b5cf6" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#f59e0b" data-color="#f59e0b" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#ef4444" data-color="#ef4444" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#f97316" data-color="#f97316" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#10b981" data-color="#10b981" onclick="selectColor(this)"></div>
+            <div class="color-dot" style="background:#0891b2" data-color="#0891b2" onclick="selectColor(this)"></div>
+          </div>
+        </div>
+        <div class="form-group full">
+          <label>Description</label>
+          <textarea class="form-control" id="roleDescInput" rows="2" placeholder="Describe what this role does…" style="resize:vertical"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title"><div class="fsicon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>Permissions</div>
+
+      <div class="perm-section">
+        <div class="perm-section-label">Shipments</div>
+        <div class="perm-grid">
+          <label class="perm-item"><input type="checkbox" checked><div class="perm-item-text"><div class="perm-item-name">View Shipments</div><div class="perm-item-desc">Read-only access to all orders</div></div></label>
+          <label class="perm-item"><input type="checkbox" checked><div class="perm-item-text"><div class="perm-item-name">Create Shipments</div><div class="perm-item-desc">Add new shipment orders</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">Edit Shipments</div><div class="perm-item-desc">Modify existing orders</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">Cancel Shipments</div><div class="perm-item-desc">Cancel or void orders</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">Assign Routes</div><div class="perm-item-desc">Dispatch and route management</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">Change Status</div><div class="perm-item-desc">Manually override status</div></div></label>
+        </div>
+      </div>
+
+      <div class="perm-section">
+        <div class="perm-section-label">Drivers & Fleet</div>
+        <div class="perm-grid">
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">View Drivers</div><div class="perm-item-desc">See driver profiles & status</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">Manage Drivers</div><div class="perm-item-desc">Create, edit, suspend drivers</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">View Fleet</div><div class="perm-item-desc">View vehicle records</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">Manage Fleet</div><div class="perm-item-desc">Edit vehicle details & docs</div></div></label>
+        </div>
+      </div>
+
+      <div class="perm-section">
+        <div class="perm-section-label">Finance</div>
+        <div class="perm-grid">
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">View Invoices</div><div class="perm-item-desc">Read-only invoice access</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">Manage Invoices</div><div class="perm-item-desc">Create, edit, mark paid</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">View Revenue</div><div class="perm-item-desc">Access financial reports</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">Export Data</div><div class="perm-item-desc">Download reports and CSVs</div></div></label>
+        </div>
+      </div>
+
+      <div class="perm-section">
+        <div class="perm-section-label">System</div>
+        <div class="perm-grid">
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">Manage Users</div><div class="perm-item-desc">Create and edit employee accounts</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">Manage Roles</div><div class="perm-item-desc">Create and modify roles</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">System Settings</div><div class="perm-item-desc">Access global configuration</div></div></label>
+          <label class="perm-item"><input type="checkbox"><div class="perm-item-text"><div class="perm-item-name">View Audit Log</div><div class="perm-item-desc">See all system activity</div></div></label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn btn-secondary" onclick="closePanels()">Cancel</button>
+    <button class="btn btn-primary" style="margin-left:auto" onclick="saveRole()"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Save Role</button>
+  </div>
+</div>
+
+<!-- ══ ROLE DETAIL PANEL (view employees under role) ══ -->
+<div class="slide-panel" id="roleDetailPanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="rdTitle">Role Detail</div>
+      <div class="panel-sub" id="rdSub">Permissions & assigned employees</div>
+    </div>
+    <div class="panel-close" onclick="closePanels()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="panel-body" id="rdBody"></div>
+  <div class="panel-footer" id="rdFooter"></div>
+</div>
+
+<!-- ══ EMPLOYEE PANEL ══ -->
+<div class="slide-panel" id="employeePanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="empPanelTitle">Add New Employee</div>
+      <div class="panel-sub">Admin assigns credentials directly</div>
+    </div>
+    <div class="panel-close" onclick="closePanels()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="panel-body">
+    <div class="form-section">
+      <div class="form-section-title"><div class="fsicon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></div>Personal Information</div>
+      <div class="form-grid">
+        <div class="form-group"><label>First Name *</label><input class="form-control" placeholder="Ahmed"></div>
+        <div class="form-group"><label>Last Name *</label><input class="form-control" placeholder="Kamal"></div>
+        <div class="form-group full"><label>Email Address *</label><input class="form-control" type="email" placeholder="ahmed.kamal@fastdrop.io"></div>
+        <div class="form-group"><label>Phone Number</label><input class="form-control" placeholder="+20 (10) 000-0000"></div>
+        <div class="form-group"><label>Department</label><input class="form-control" placeholder="Operations"></div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title"><div class="fsicon"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg></div>Role & Access</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Assign Role *</label>
+          <select class="form-control">
+            <option value="">— Select role —</option>
+            <option>Super Admin</option><option>Operations Manager</option><option>Dispatcher</option>
+            <option>Customer Support</option><option>Finance Officer</option><option>Viewer</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Supervisor</label>
+          <select class="form-control">
+            <option value="">— None —</option>
+            <option>Sara Ahmed (Super Admin)</option>
+            <option>Mona Khalil (Operations Manager)</option>
+            <option>Tarek Hassan (Finance Officer)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Account Status</label>
+          <select class="form-control">
+            <option>Active</option><option>Inactive</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Start Date</label>
+          <input type="date" class="form-control" value="2026-03-19">
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="form-section-title"><div class="fsicon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>Login Credentials</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Temporary Password *</label>
+          <div style="display:flex;gap:8px">
+            <input class="form-control" id="tempPwd" type="text" placeholder="Auto-generate or enter manually" style="flex:1">
+            <button class="btn btn-secondary btn-sm" onclick="generatePwd()" style="flex-shrink:0;white-space:nowrap">⚡ Generate</button>
+          </div>
+          <div class="form-hint">Employee will be prompted to change on first login</div>
+        </div>
+        <div class="form-group full" style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--border-light);border-radius:10px;margin-top:4px">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--text-dark)">Send Welcome Email</div>
+            <div style="font-size:11px;color:var(--text-muted)">Sends credentials and login link to employee</div>
+          </div>
+          <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn btn-secondary" onclick="closePanels()">Cancel</button>
+    <button class="btn btn-primary" style="margin-left:auto" onclick="saveEmployee()"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Create Account</button>
+  </div>
+</div>
+
+<!-- ══ EMPLOYEE DETAIL PANEL ══ -->
+<div class="slide-panel" id="empDetailPanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="edTitle">Employee Detail</div>
+      <div class="panel-sub" id="edSub">Full profile & access info</div>
+    </div>
+    <div class="panel-close" onclick="closePanels()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="panel-body" id="edBody"></div>
+  <div class="panel-footer" id="edFooter"></div>
+</div>
+
+<!-- ══ DELETE CONFIRM MODAL ══ -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="mini-modal-bg" style="position:absolute;inset:0" onclick="closeDeleteModal()"></div>
+  <div class="modal-box" style="position:relative;z-index:1">
+    <div class="modal-icon" style="background:var(--error-light)"><svg width="26" height="26" viewBox="0 0 24 24" fill="var(--error)"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4z"/></svg></div>
+    <div class="modal-title">Delete Role</div>
+    <div class="modal-text" id="deleteModalText">Are you sure you want to delete this role? This action cannot be undone.</div>
+    <div class="modal-btns">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" style="flex:1" onclick="confirmDelete()"><svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM8 9h8v10H8V9zm7.5-5l-1-1h-5l-1 1H5v2h14V4z"/></svg> Delete Role</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const roles = [
+  {id:'r1',name:'Super Admin',color:'#00c9a7',icon:'M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z',desc:'Full system access. Can manage all modules, users, roles, settings, and financial data.',perms:['All Permissions'],empCount:2},
+  {id:'r2',name:'Operations Manager',color:'#3b82f6',icon:'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z',desc:'Oversees day-to-day delivery operations. Manages shipments, drivers, routes, and zones.',perms:['View/Edit Shipments','Manage Drivers','Manage Fleet','Assign Routes'],empCount:4},
+  {id:'r3',name:'Dispatcher',color:'#f59e0b',icon:'M13 2L3 14h9l-1 8 10-12h-9l1-8z',desc:'Handles daily dispatch. Can assign drivers to routes and manage in-transit shipments.',perms:['View Shipments','Assign Routes','Change Status'],empCount:8},
+  {id:'r4',name:'Customer Support',color:'#8b5cf6',icon:'M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z',desc:'Handles customer inquiries. Can view shipment status and update delivery notes.',perms:['View Shipments','View Customers'],empCount:12},
+  {id:'r5',name:'Finance Officer',color:'#10b981',icon:'M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z',desc:'Manages invoicing, COD settlements, and financial reports. No operational access.',perms:['View/Manage Invoices','View Revenue','Export Data'],empCount:3},
+  {id:'r6',name:'Viewer',color:'#9ca3af',icon:'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 100 6 3 3 0 000-6z',desc:'Read-only access to dashboard and shipments. Cannot modify any data.',perms:['View Dashboard','View Shipments'],empCount:5},
+];
+
+const employees = [
+  {id:'e1',name:'Sara Ahmed',email:'sara@fastdrop.io',role:'Super Admin',roleId:'r1',supervisor:'—',joined:'Jan 2024',lastActive:'Just now',status:'Active',initials:'SA',color:'#00c9a7'},
+  {id:'e2',name:'Mona Khalil',email:'mona@fastdrop.io',role:'Operations Manager',roleId:'r2',supervisor:'Sara Ahmed',joined:'Mar 2024',lastActive:'2h ago',status:'Active',initials:'MK',color:'#3b82f6'},
+  {id:'e3',name:'Ahmed Tarek',email:'ahmed.t@fastdrop.io',role:'Dispatcher',roleId:'r3',supervisor:'Mona Khalil',joined:'May 2024',lastActive:'15m ago',status:'Active',initials:'AT',color:'#f59e0b'},
+  {id:'e4',name:'Nour Hassan',email:'nour@fastdrop.io',role:'Dispatcher',roleId:'r3',supervisor:'Mona Khalil',joined:'Jun 2024',lastActive:'1d ago',status:'Active',initials:'NH',color:'#f59e0b'},
+  {id:'e5',name:'Heba Sami',email:'heba@fastdrop.io',role:'Customer Support',roleId:'r4',supervisor:'Sara Ahmed',joined:'Jul 2024',lastActive:'30m ago',status:'Active',initials:'HS',color:'#8b5cf6'},
+  {id:'e6',name:'Karim Youssef',email:'karim@fastdrop.io',role:'Customer Support',roleId:'r4',supervisor:'Sara Ahmed',joined:'Aug 2024',lastActive:'3d ago',status:'Inactive',initials:'KY',color:'#8b5cf6'},
+  {id:'e7',name:'Tarek Hassan',email:'tarek@fastdrop.io',role:'Finance Officer',roleId:'r5',supervisor:'Sara Ahmed',joined:'Feb 2024',lastActive:'1h ago',status:'Active',initials:'TH',color:'#10b981'},
+  {id:'e8',name:'Layla Fathy',email:'layla@fastdrop.io',role:'Dispatcher',roleId:'r3',supervisor:'Mona Khalil',joined:'Sep 2024',lastActive:'5h ago',status:'Active',initials:'LF',color:'#f59e0b'},
+  {id:'e9',name:'Omar Saad',email:'omar@fastdrop.io',role:'Customer Support',roleId:'r4',supervisor:'Sara Ahmed',joined:'Oct 2024',lastActive:'1w ago',status:'Suspended',initials:'OS',color:'#8b5cf6'},
+  {id:'e10',name:'Rania Adel',email:'rania@fastdrop.io',role:'Viewer',roleId:'r6',supervisor:'Mona Khalil',joined:'Nov 2024',lastActive:'2d ago',status:'Active',initials:'RA',color:'#9ca3af'},
+];
+
+let currentEmpData = [...employees];
+let deleteTargetId = '';
+let selectedRoleColor = '#00c9a7';
+
+// ── RENDER ROLES ──
+function renderRoles(data){
+  const grid = document.getElementById('rolesGrid');
+  grid.innerHTML = data.map(r=>{
+    const empSlice = employees.filter(e=>e.roleId===r.id).slice(0,4);
+    const permBg = r.color + '18';
+    return `<div class="role-card" style="--role-color:${r.color}" onclick="openRoleDetail('${r.id}')">
+      <div class="role-card-head">
+        <div class="role-icon" style="background:${r.color}18">
+          <svg viewBox="0 0 24 24" fill="${r.color}"><path d="${r.icon}"/></svg>
+        </div>
+        <div class="role-card-actions" onclick="event.stopPropagation()">
+          <div class="rc-action" data-tip="Edit" onclick="editRole('${r.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          ${r.empCount===0?`<div class="rc-action danger" onclick="deleteRole('${r.id}')"><svg viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg></div>`:''}
+        </div>
+      </div>
+      <div class="role-name">${r.name}</div>
+      <div class="role-desc">${r.desc}</div>
+      <div class="perm-chips">
+        ${r.perms.slice(0,3).map(p=>`<span class="perm-chip" style="background:${r.color}15;color:${r.color}">${p}</span>`).join('')}
+        ${r.perms.length>3?`<span class="perm-chip" style="background:var(--border-light);color:var(--text-muted)">+${r.perms.length-3} more</span>`:''}
+      </div>
+      <div class="role-footer" style="margin-top:14px">
+        <div class="role-emp-count">
+          <div class="emp-avatars">
+            ${empSlice.map(e=>`<div class="emp-avatar-xs" style="background:${e.color}">${e.initials}</div>`).join('')}
+          </div>
+          <div class="role-emp-label"><strong>${r.empCount}</strong> employee${r.empCount!==1?'s':''}</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();viewRoleEmps('${r.id}')">View →</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+renderRoles(roles);
+
+// ── ROLE DETAIL PANEL ──
+function openRoleDetail(id){
+  const r = roles.find(x=>x.id===id);
+  const emps = employees.filter(e=>e.roleId===id);
+  document.getElementById('rdTitle').textContent = r.name;
+  document.getElementById('rdSub').textContent = `${emps.length} employee${emps.length!==1?'s':''} · ${r.perms.length} permissions`;
+  document.getElementById('rdBody').innerHTML = `
+    <div style="background:linear-gradient(135deg,#0a1628,#0f2540);padding:20px 24px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:${r.color}10"></div>
+      <div style="display:flex;align-items:center;gap:14px;position:relative;z-index:1">
+        <div style="width:52px;height:52px;border-radius:14px;background:${r.color}25;display:flex;align-items:center;justify-content:center">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="${r.color}"><path d="${r.icon}"/></svg>
+        </div>
+        <div>
+          <div style="font-size:20px;font-weight:800;color:white;margin-bottom:4px">${r.name}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.4)">${r.desc}</div>
+        </div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title"><div class="fsicon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>Permissions (${r.perms.length})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${r.perms.map(p=>`<span class="perm-chip" style="background:${r.color}15;color:${r.color};font-size:12px;padding:5px 12px">${p}</span>`).join('')}
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title"><div class="fsicon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></div>Employees Under This Role (${emps.length})</div>
+      ${emps.length===0?'<div style="font-size:13px;color:var(--text-muted);padding:8px 0">No employees assigned to this role yet.</div>':
+      emps.map(e=>`<div class="sub-emp-item">
+        <div class="sub-emp-avatar" style="background:${e.color}">${e.initials}</div>
+        <div style="flex:1"><div class="sub-emp-name">${e.name}</div><div class="sub-emp-email">${e.email}</div></div>
+        <span class="status-pill ${e.status==='Active'?'sp-active':e.status==='Inactive'?'sp-inactive':'sp-suspended'}">${e.status}</span>
+      </div>`).join('')}
+    </div>`;
+  document.getElementById('rdFooter').innerHTML = `
+    <button class="btn btn-secondary" onclick="closePanels()">Close</button>
+    <button class="btn btn-secondary" onclick="editRole('${id}');closePanels()"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Role</button>
+    ${r.empCount===0?`<button class="btn btn-danger" style="margin-left:auto" onclick="deleteRole('${id}');closePanels()"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12z"/></svg> Delete</button>`:''}`;
+  openPanel('roleDetailPanel');
+}
+
+function viewRoleEmps(id){ openRoleDetail(id); }
+
+function editRole(id){
+  const r=roles.find(x=>x.id===id);
+  document.getElementById('rolePanelTitle').textContent='Edit Role — '+r.name;
+  document.getElementById('roleNameInput').value=r.name;
+  document.getElementById('roleDescInput').value=r.desc;
+  selectedRoleColor=r.color;
+  document.querySelectorAll('.color-dot').forEach(d=>{d.classList.toggle('selected',d.dataset.color===r.color)});
+  openPanel('rolePanel');
+}
+
+// ── RENDER EMPLOYEES ──
+function renderEmployees(data){
+  const tbody = document.getElementById('empTableBody');
+  tbody.innerHTML = data.map(e=>`
+    <tr onclick="openEmpDetail('${e.id}')">
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="cb"></td>
+      <td><div class="emp-cell">
+        <div class="emp-avatar" style="background:${e.color}">${e.initials}</div>
+        <div><div class="emp-name">${e.name}</div><div class="emp-email">${e.email}</div></div>
+      </div></td>
+      <td><span class="role-pill" style="background:${roles.find(r=>r.id===e.roleId)?.color||'#9ca3af'}18;color:${roles.find(r=>r.id===e.roleId)?.color||'#9ca3af'}">${e.role}</span></td>
+      <td style="font-size:12px;color:var(--text-muted)">${e.supervisor}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${e.joined}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${e.lastActive}</td>
+      <td><span class="status-pill ${e.status==='Active'?'sp-active':e.status==='Inactive'?'sp-inactive':'sp-suspended'}">${e.status}</span></td>
+      <td onclick="event.stopPropagation()">
+        <div class="row-acts">
+          <div class="ra-btn" data-tip="View" onclick="openEmpDetail('${e.id}')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="ra-btn" data-tip="Edit Role" onclick="openEmpDetail('${e.id}')"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div class="ra-btn ${e.status==='Active'?'danger':'success'}" data-tip="${e.status==='Active'?'Deactivate':'Activate'}" onclick="toggleEmpStatus('${e.id}',event)">
+            <svg viewBox="0 0 24 24">${e.status==='Active'?'<path d="M18.36 6.64a9 9 0 11-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>':'<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>'}</svg>
+          </div>
+        </div>
+      </td>
+    </tr>`).join('');
+  document.getElementById('empPageInfo').textContent=`Showing 1–${Math.min(10,data.length)} of ${data.length} employees`;
+}
+renderEmployees(employees);
+
+// ── EMPLOYEE DETAIL ──
+function openEmpDetail(id){
+  const e=employees.find(x=>x.id===id);
+  const role=roles.find(r=>r.id===e.roleId);
+  document.getElementById('edTitle').textContent=e.name;
+  document.getElementById('edSub').textContent=`${e.role} · ${e.status}`;
+  document.getElementById('edBody').innerHTML=`
+    <div class="emp-hero">
+      <div class="emp-hero-inner">
+        <div class="emp-hero-avatar" style="background:${e.color}35;border:2px solid ${e.color}40">
+          <span style="color:${e.color};font-weight:800;font-size:22px">${e.initials}</span>
+        </div>
+        <div>
+          <div class="emp-hero-name">${e.name}</div>
+          <div class="emp-hero-role">${e.email}</div>
+          <div class="emp-hero-badges">
+            <span class="emp-hero-badge" style="background:${role?.color||'#9ca3af'}25;color:${role?.color||'#9ca3af'}">${e.role}</span>
+            <span class="emp-hero-badge" style="background:${e.status==='Active'?'rgba(16,185,129,.2)':e.status==='Suspended'?'rgba(239,68,68,.2)':'rgba(107,114,128,.2)'};color:${e.status==='Active'?'#10b981':e.status==='Suspended'?'#ef4444':'#9ca3af'}">${e.status}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title"><div class="fsicon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></div>Profile</div>
+      <div class="detail-row"><label>Full Name</label><span>${e.name}</span></div>
+      <div class="detail-row"><label>Email</label><span>${e.email}</span></div>
+      <div class="detail-row"><label>Role</label><span style="color:${role?.color||'#9ca3af'};font-weight:700">${e.role}</span></div>
+      <div class="detail-row"><label>Supervisor</label><span>${e.supervisor}</span></div>
+      <div class="detail-row"><label>Joined</label><span>${e.joined}</span></div>
+      <div class="detail-row"><label>Last Active</label><span>${e.lastActive}</span></div>
+    </div>
+    <div class="form-section">
+      <div class="form-section-title"><div class="fsicon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>Permissions (via ${e.role})</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        ${(role?.perms||[]).map(p=>`<span class="perm-chip" style="background:${role?.color||'#9ca3af'}15;color:${role?.color||'#9ca3af'};font-size:12px;padding:5px 12px">${p}</span>`).join('')}
+      </div>
+    </div>
+    <div class="form-section" style="border-bottom:none">
+      <div class="form-section-title"><div class="fsicon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg></div>Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--border-light);border-radius:10px">
+          <div><div style="font-size:13px;font-weight:600;color:var(--text-dark)">Account Status</div><div style="font-size:11px;color:var(--text-muted)">Toggle to activate or deactivate this account</div></div>
+          <label class="toggle"><input type="checkbox" ${e.status==='Active'?'checked':''} onchange="toggleEmpStatus('${e.id}')"><div class="toggle-track"></div></label>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" style="flex:1" onclick="openEmployeePanel()"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Details</button>
+          <button class="btn btn-secondary btn-sm" style="flex:1" onclick="closePanels();openPanel('employeePanel')"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg> Change Role</button>
+          <button class="btn btn-secondary btn-sm" onclick="resetPwd(e.name)"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 5V1L7 6l5 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg> Reset Pwd</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('edFooter').innerHTML=`
+    <button class="btn btn-secondary" onclick="closePanels()">Close</button>
+    <button class="btn btn-danger" style="margin-left:auto" onclick="if(confirm('Suspend ${e.name}?')){showToast('⚠ ${e.name} has been suspended','warn');closePanels()}">Suspend Account</button>`;
+  openPanel('empDetailPanel');
+}
+
+// ── FILTERS ──
+function filterEmployees(q){
+  currentEmpData = employees.filter(e=>
+    e.name.toLowerCase().includes(q.toLowerCase())||
+    e.email.toLowerCase().includes(q.toLowerCase())||
+    e.role.toLowerCase().includes(q.toLowerCase())
+  );
+  renderEmployees(currentEmpData);
+}
+function filterByRole(r){ currentEmpData=r?employees.filter(e=>e.role===r):[...employees]; renderEmployees(currentEmpData); }
+function filterByStatus(s){ currentEmpData=s?employees.filter(e=>e.status===s):[...employees]; renderEmployees(currentEmpData); }
+
+// ── TAB SWITCH ──
+function switchTab(tab){
+  const isRoles = tab==='roles';
+  document.getElementById('rolesTab').style.display = isRoles?'block':'none';
+  document.getElementById('employeesTab').style.display = isRoles?'none':'block';
+  document.getElementById('tabRoles').classList.toggle('active', isRoles);
+  document.getElementById('tabEmployees').classList.toggle('active', !isRoles);
+  document.getElementById('tabActionBtn').innerHTML = isRoles
+    ? `<button class="btn btn-primary" onclick="openRolePanel()"><svg viewBox="0 0 24 24" fill="white" width="14" height="14"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Create Role</button>`
+    : `<button class="btn btn-primary" onclick="openEmployeePanel()"><svg viewBox="0 0 24 24" fill="white" width="14" height="14"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg> Add Employee</button>`;
+}
+
+// ── PANELS ──
+function openPanel(id){ document.getElementById('panelOverlay').classList.add('show'); document.getElementById(id).classList.add('open'); }
+function closePanels(){ document.getElementById('panelOverlay').classList.remove('show'); document.querySelectorAll('.slide-panel').forEach(p=>p.classList.remove('open')); }
+function openRolePanel(){ document.getElementById('rolePanelTitle').textContent='Create New Role'; document.getElementById('roleNameInput').value=''; document.getElementById('roleDescInput').value=''; openPanel('rolePanel'); }
+function openEmployeePanel(){ document.getElementById('empPanelTitle').textContent='Add New Employee'; openPanel('employeePanel'); }
+
+// ── COLOR PICKER ──
+function selectColor(el){ document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected')); el.classList.add('selected'); selectedRoleColor=el.dataset.color; }
+
+// ── ACTIONS ──
+function saveRole(){ closePanels(); showToast('✓ Role saved successfully'); }
+function saveEmployee(){ closePanels(); showToast('✓ Employee account created — welcome email sent'); }
+function generatePwd(){ document.getElementById('tempPwd').value='Fd@'+Math.random().toString(36).slice(2,10).toUpperCase(); }
+function resetPwd(name){ showToast(`📧 Password reset email sent to ${name}`); }
+
+function toggleEmpStatus(id,event){ if(event)event.stopPropagation(); const e=employees.find(x=>x.id===id); if(!e)return; e.status=e.status==='Active'?'Inactive':'Active'; renderEmployees(currentEmpData); showToast(`${e.name} is now ${e.status}`); }
+
+// ── DELETE ──
+function deleteRole(id){ deleteTargetId=id; const r=roles.find(x=>x.id===id); if(r.empCount>0){showToast('Cannot delete: employees are assigned to this role','error');return;} document.getElementById('deleteModalText').textContent=`Are you sure you want to delete the "${r.name}" role? This cannot be undone.`; document.getElementById('deleteModal').classList.add('show'); }
+function closeDeleteModal(){ document.getElementById('deleteModal').classList.remove('show'); }
+function confirmDelete(){ const r=roles.find(x=>x.id===deleteTargetId); if(r){const i=roles.indexOf(r);roles.splice(i,1);renderRoles(roles);} closeDeleteModal(); showToast(`Role deleted successfully`); }
+
+// ── TOAST ──
+function showToast(msg,type='success'){
+  const el=document.createElement('div');el.className='toast';
+  const colors={success:'var(--primary)',error:'var(--error)',warn:'var(--warning)'};
+  el.style.borderLeftColor=colors[type]||colors.success;
+  el.innerHTML=`<svg viewBox="0 0 24 24" style="fill:${colors[type]||colors.success}"><path d="${type==='error'?'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z':type==='warn'?'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z':'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'}"/></svg>${msg}`;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},3500);
+}
+</script>
+</body>
+</html>

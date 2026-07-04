@@ -1,0 +1,856 @@
+2g2g2TYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Drop – Create Account</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #00c9a7;
+    --primary-dark: #00a98a;
+    --primary-light: #e6faf6;
+    --error: #ef4444;
+    --error-bg: #fef2f2;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --text-dark: #111827;
+    --text-mid: #374151;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --border-focus: #00c9a7;
+    --white: #ffffff;
+    --bg: linear-gradient(150deg, #e8f8f4 0%, #f0fdf9 45%, #eafaf6 100%);
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    color: var(--text-dark);
+  }
+
+  /* ── NAV ── */
+  nav {
+    padding: 18px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,.7);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(0,201,167,.1);
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 9px;
+    font-weight: 700; font-size: 16px; color: var(--text-dark);
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 34px; height: 34px; background: var(--primary);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 20px; height: 20px; fill: white; }
+  .nav-right { font-size: 13px; color: var(--text-muted); }
+  .nav-right a { color: var(--primary); font-weight: 600; text-decoration: none; }
+  .nav-right a:hover { text-decoration: underline; }
+
+  /* ── MAIN ── */
+  main {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px 60px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: white;
+    border-radius: 24px;
+    padding: 44px 44px 36px;
+    width: 100%;
+    max-width: 520px;
+    box-shadow: 0 8px 48px rgba(0,0,0,.07), 0 1px 3px rgba(0,0,0,.04);
+    position: relative;
+  }
+
+  /* Header */
+  .card-header { margin-bottom: 32px; }
+  .card-header h1 {
+    font-size: 24px; font-weight: 800; color: var(--text-dark); margin-bottom: 6px;
+  }
+  .card-header p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+  /* Role switcher */
+  .role-toggle {
+    display: flex; background: #f3f4f6; border-radius: 10px;
+    padding: 4px; gap: 4px; margin-bottom: 28px;
+  }
+  .role-btn {
+    flex: 1; padding: 9px 8px; border: none; border-radius: 7px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    background: transparent; color: var(--text-muted);
+    font-family: 'Inter', sans-serif; transition: all .2s;
+  }
+  .role-btn.active {
+    background: white; color: var(--text-dark);
+    box-shadow: 0 1px 4px rgba(0,0,0,.1);
+  }
+
+  /* ── FORM ── */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .field-group { margin-bottom: 18px; position: relative; }
+  .field-group.full { grid-column: 1 / -1; }
+
+  label {
+    display: block; font-size: 12px; font-weight: 600;
+    color: var(--text-mid); margin-bottom: 6px; letter-spacing: .01em;
+  }
+
+  .input-wrap {
+    position: relative; display: flex; align-items: center;
+  }
+  .input-wrap input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 11px 38px 11px 38px;
+    font-size: 13px; font-family: 'Inter', sans-serif;
+    color: var(--text-dark); outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    background: white;
+  }
+  .input-wrap input::placeholder { color: #c0c5cc; }
+  .input-wrap input:focus {
+    border-color: var(--border-focus);
+    box-shadow: 0 0 0 3px rgba(0,201,167,.1);
+  }
+  .input-wrap input.valid { border-color: var(--success); }
+  .input-wrap input.invalid { border-color: var(--error); background: var(--error-bg); }
+  .input-wrap input.invalid:focus { box-shadow: 0 0 0 3px rgba(239,68,68,.1); }
+
+  .icon-left {
+    position: absolute; left: 12px;
+    color: #9ca3af; display: flex; align-items: center; pointer-events: none;
+    transition: color .2s;
+  }
+  .icon-left svg { width: 14px; height: 14px; }
+  .input-wrap:focus-within .icon-left { color: var(--primary); }
+
+  .icon-right {
+    position: absolute; right: 12px;
+    color: #9ca3af; display: flex; align-items: center; cursor: pointer;
+  }
+  .icon-right svg { width: 15px; height: 15px; }
+  .status-icon {
+    position: absolute; right: 12px;
+    display: flex; align-items: center; pointer-events: none;
+  }
+  .status-icon svg { width: 15px; height: 15px; }
+
+  .field-error {
+    display: none; font-size: 11px; color: var(--error);
+    margin-top: 5px; padding-left: 2px;
+    align-items: center; gap: 4px;
+  }
+  .field-error.show { display: flex; }
+  .field-error svg { width: 11px; height: 11px; flex-shrink: 0; }
+
+  .field-hint {
+    font-size: 11px; color: var(--text-muted); margin-top: 5px; padding-left: 2px;
+  }
+
+  /* ── PASSWORD STRENGTH ── */
+  .strength-wrap { margin-top: 8px; }
+  .strength-bars {
+    display: flex; gap: 4px; margin-bottom: 5px;
+  }
+  .strength-bar {
+    flex: 1; height: 3px; border-radius: 2px;
+    background: #e5e7eb; transition: background .3s;
+  }
+  .strength-bar.weak { background: var(--error); }
+  .strength-bar.fair { background: var(--warning); }
+  .strength-bar.good { background: #3b82f6; }
+  .strength-bar.strong { background: var(--success); }
+  .strength-label {
+    font-size: 11px; color: var(--text-muted); font-weight: 500;
+  }
+  .strength-label.weak { color: var(--error); }
+  .strength-label.fair { color: var(--warning); }
+  .strength-label.good { color: #3b82f6; }
+  .strength-label.strong { color: var(--success); }
+
+  /* ── MERCHANT FIELDS ── */
+  .merchant-section {
+    overflow: hidden; max-height: 0;
+    transition: max-height .35s ease, opacity .3s ease;
+    opacity: 0;
+  }
+  .merchant-section.open { max-height: 300px; opacity: 1; }
+  .merchant-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 18px;
+  }
+  .merchant-divider-line { flex: 1; height: 1px; background: rgba(0,201,167,.15); }
+  .merchant-divider-text {
+    font-size: 11px; font-weight: 600; color: var(--primary);
+    text-transform: uppercase; letter-spacing: .07em; white-space: nowrap;
+  }
+
+  /* ── TERMS ── */
+  .terms-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    margin: 6px 0 22px;
+  }
+  .terms-row input[type="checkbox"] {
+    width: 16px; height: 16px; accent-color: var(--primary);
+    cursor: pointer; margin-top: 1px; flex-shrink: 0;
+    border-radius: 4px;
+  }
+  .terms-row label {
+    font-size: 12px; color: var(--text-muted);
+    font-weight: 400; margin: 0; cursor: pointer; line-height: 1.5;
+  }
+  .terms-row label a { color: var(--primary); font-weight: 600; text-decoration: none; }
+  .terms-row label a:hover { text-decoration: underline; }
+  .terms-error { display: none; font-size: 11px; color: var(--error); margin-bottom: 14px; padding-left: 2px; }
+  .terms-error.show { display: block; }
+
+  /* ── SUBMIT BUTTON ── */
+  .btn-submit {
+    width: 100%; background: var(--primary); color: white; border: none;
+    border-radius: 50px; padding: 14px; font-size: 15px; font-weight: 700;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: background .2s, box-shadow .2s, transform .1s;
+    box-shadow: 0 4px 20px rgba(0,201,167,.3);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    position: relative; overflow: hidden;
+  }
+  .btn-submit:hover:not(:disabled) {
+    background: var(--primary-dark);
+    box-shadow: 0 6px 28px rgba(0,201,167,.4);
+    transform: translateY(-1px);
+  }
+  .btn-submit:active:not(:disabled) { transform: translateY(0); }
+  .btn-submit:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+  /* spinner */
+  .spinner {
+    display: none; width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,.3);
+    border-top-color: white; border-radius: 50%;
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .btn-submit.loading .btn-text { display: none; }
+  .btn-submit.loading .spinner { display: block; }
+
+  /* ── SUCCESS STATE ── */
+  .success-overlay {
+    display: none; position: absolute; inset: 0;
+    background: white; border-radius: 24px;
+    flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 40px; z-index: 10;
+    animation: fadeIn .4s ease;
+  }
+  .success-overlay.show { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: scale(1); } }
+
+  .success-icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    display: flex; align-items: center; justify-content: center; margin-bottom: 24px;
+    box-shadow: 0 8px 30px rgba(0,201,167,.3);
+    animation: popIn .5s cubic-bezier(.34,1.56,.64,1) .1s both;
+  }
+  @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+  .success-icon svg { width: 34px; height: 34px; fill: white; }
+  .success-overlay h2 { font-size: 22px; font-weight: 800; color: var(--text-dark); margin-bottom: 10px; }
+  .success-overlay p { font-size: 14px; color: var(--text-muted); line-height: 1.6; max-width: 300px; }
+  .success-overlay .email-badge {
+    background: var(--primary-light); color: var(--primary-dark);
+    border-radius: 8px; padding: 10px 20px; font-weight: 600; font-size: 14px;
+    margin: 18px 0;
+  }
+  .success-overlay .btn-login-link {
+    margin-top: 8px; font-size: 13px; color: var(--text-muted);
+  }
+  .success-overlay .btn-login-link a {
+    color: var(--primary); font-weight: 600; text-decoration: none;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    display: flex; align-items: center; gap: 12px; margin: 20px 0;
+  }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-text { font-size: 11px; color: var(--text-muted); }
+
+  /* Social */
+  .social-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .btn-social {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    padding: 10px; font-size: 13px; font-weight: 600; color: var(--text-dark);
+    background: white; cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: border-color .2s, background .2s;
+  }
+  .btn-social:hover { border-color: #aaa; background: #fafafa; }
+  .btn-social svg { width: 16px; height: 16px; }
+
+  /* ── FOOTER ── */
+  .card-footer { text-align: center; margin-top: 22px; font-size: 13px; color: var(--text-muted); }
+  .card-footer a { color: var(--primary); font-weight: 600; text-decoration: none; }
+  .card-footer a:hover { text-decoration: underline; }
+
+  .legal-links {
+    display: flex; justify-content: center; gap: 8px;
+    margin-top: 12px; font-size: 11px; color: #c0c5cc;
+  }
+  .legal-links a { color: #9ca3af; text-decoration: none; }
+  .legal-links a:hover { color: var(--primary); }
+  .legal-links span { color: #e5e7eb; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .card { padding: 32px 24px; }
+  }
+  @media (max-width: 560px) {
+    nav { padding: 16px 20px; }
+    main { padding: 24px 16px 48px; }
+    .card { padding: 28px 20px 24px; border-radius: 20px; }
+    .form-row { grid-template-columns: 1fr; }
+    .card-header h1 { font-size: 20px; }
+  }
+
+  /* ── TOOLTIP ── */
+  .pwd-rules {
+    background: #1f2937; border-radius: 10px; padding: 12px 14px;
+    margin-top: 8px; display: none;
+  }
+  .pwd-rules.show { display: block; }
+  .pwd-rule {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11px; color: rgba(255,255,255,.5); margin-bottom: 5px;
+    transition: color .2s;
+  }
+  .pwd-rule:last-child { margin-bottom: 0; }
+  .pwd-rule.met { color: var(--primary); }
+  .pwd-rule svg { width: 11px; height: 11px; flex-shrink: 0; fill: currentColor; }
+
+  /* phone prefix */
+  .phone-prefix {
+    position: absolute; left: 38px; font-size: 13px; color: var(--text-muted);
+    pointer-events: none; z-index: 1;
+  }
+  .input-wrap input.has-prefix { padding-left: 62px; }
+
+  /* floating label effect on valid */
+  .input-wrap input.valid + .icon-right svg,
+  .input-wrap input.valid ~ .status-icon svg { color: var(--success); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="fastdrop-landing.html" class="nav-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5S5.17 15.5 6 15.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+    </div>
+    Fast Drop
+  </a>
+  <div class="nav-right">Already have an account? <a href="fastdrop-login.html">Log in</a></div>
+</nav>
+
+<!-- MAIN -->
+<main>
+  <div class="card">
+
+    <!-- Success overlay -->
+    <div class="success-overlay" id="successOverlay">
+      <div class="success-icon">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+      </div>
+      <h2>Check your email! 🎉</h2>
+      <p>We've sent a verification link to</p>
+      <div class="email-badge" id="successEmail">your@email.com</div>
+      <p>Click the link in the email to verify your account and start delivering faster.</p>
+      <div class="btn-login-link" style="margin-top:20px">
+        <a href="fastdrop-login.html">← Back to Log in</a>
+      </div>
+    </div>
+
+    <!-- Card header -->
+    <div class="card-header">
+      <h1>Create your account</h1>
+      <p>Join 10,000+ businesses optimizing their deliveries daily.</p>
+    </div>
+
+    <!-- Role toggle -->
+    <div class="role-toggle" id="roleToggle">
+      <button class="role-btn active" data-role="dispatcher" onclick="setRole('dispatcher', this)">🚚 Dispatcher</button>
+      <button class="role-btn" data-role="driver" onclick="setRole('driver', this)">🧑‍✈️ Driver</button>
+      <button class="role-btn" data-role="merchant" onclick="setRole('merchant', this)">🏪 Merchant</button>
+    </div>
+
+    <!-- Social sign up -->
+    <div class="social-row">
+      <button class="btn-social">
+        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+      <button class="btn-social">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path d="M0 0h23v23H0z" fill="#f3f3f3"/><path d="M1 1h10v10H1z" fill="#f35325"/><path d="M12 1h10v10H12z" fill="#81bc06"/><path d="M1 12h10v10H1z" fill="#05a6f0"/><path d="M12 12h10v10H12z" fill="#ffba08"/></svg>
+        Microsoft
+      </button>
+    </div>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">OR SIGN UP WITH EMAIL</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- FORM -->
+    <form id="signupForm" novalidate>
+      <div class="form-row">
+        <!-- Full Name -->
+        <div class="field-group">
+          <label for="fullName">Full Name</label>
+          <div class="input-wrap">
+            <span class="icon-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            </span>
+            <input type="text" id="fullName" placeholder="John Smith" autocomplete="name">
+            <span class="status-icon" id="fullNameStatus"></span>
+          </div>
+          <div class="field-error" id="fullNameError">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <span>Please enter your full name</span>
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="field-group">
+          <label for="email">Email Address</label>
+          <div class="input-wrap">
+            <span class="icon-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </span>
+            <input type="email" id="email" placeholder="you@company.com" autocomplete="email">
+            <span class="status-icon" id="emailStatus"></span>
+          </div>
+          <div class="field-error" id="emailError">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <span>Please enter a valid email</span>
+          </div>
+        </div>
+
+        <!-- Phone -->
+        <div class="field-group full">
+          <label for="phone">Phone Number</label>
+          <div class="input-wrap">
+            <span class="icon-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 10.8a19.79 19.79 0 01-3.07-8.67A2 2 0 012 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 9.91a16 16 0 006.17 6.17l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+            </span>
+            <input type="tel" id="phone" placeholder="+1 (555) 000-0000" autocomplete="tel">
+            <span class="status-icon" id="phoneStatus"></span>
+          </div>
+          <div class="field-error" id="phoneError">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <span>Please enter a valid phone number</span>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="field-group full">
+          <label for="password">Password</label>
+          <div class="input-wrap">
+            <span class="icon-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </span>
+            <input type="password" id="password" placeholder="Create a strong password" autocomplete="new-password">
+            <span class="icon-right" onclick="togglePwd('password', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eyeIcon1"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
+          </div>
+
+          <!-- Password strength -->
+          <div class="strength-wrap" id="strengthWrap" style="display:none">
+            <div class="strength-bars">
+              <div class="strength-bar" id="sb1"></div>
+              <div class="strength-bar" id="sb2"></div>
+              <div class="strength-bar" id="sb3"></div>
+              <div class="strength-bar" id="sb4"></div>
+            </div>
+            <span class="strength-label" id="strengthLabel">Too weak</span>
+          </div>
+
+          <!-- Rules -->
+          <div class="pwd-rules" id="pwdRules">
+            <div class="pwd-rule" id="rule-len">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              At least 8 characters
+            </div>
+            <div class="pwd-rule" id="rule-upper">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              One uppercase letter
+            </div>
+            <div class="pwd-rule" id="rule-num">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              One number
+            </div>
+            <div class="pwd-rule" id="rule-sym">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></svg>
+              One special character
+            </div>
+          </div>
+
+          <div class="field-error" id="passwordError">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <span>Password must be at least 8 characters</span>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="field-group full">
+          <label for="confirmPassword">Confirm Password</label>
+          <div class="input-wrap">
+            <span class="icon-left">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </span>
+            <input type="password" id="confirmPassword" placeholder="Re-enter your password" autocomplete="new-password">
+            <span class="icon-right" onclick="togglePwd('confirmPassword', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="eyeIcon2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </span>
+          </div>
+          <div class="field-error" id="confirmPasswordError">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+            <span>Passwords don't match</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MERCHANT SECTION -->
+      <div class="merchant-section" id="merchantSection">
+        <div class="merchant-divider">
+          <div class="merchant-divider-line"></div>
+          <div class="merchant-divider-text">🏪 Shop Details</div>
+          <div class="merchant-divider-line"></div>
+        </div>
+        <div class="form-row">
+          <div class="field-group">
+            <label for="shopName">Shop Name</label>
+            <div class="input-wrap">
+              <span class="icon-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+              </span>
+              <input type="text" id="shopName" placeholder="My Store Inc.">
+              <span class="status-icon" id="shopNameStatus"></span>
+            </div>
+            <div class="field-error" id="shopNameError">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              <span>Shop name is required</span>
+            </div>
+          </div>
+          <div class="field-group">
+            <label for="shopAddress">Shop Address</label>
+            <div class="input-wrap">
+              <span class="icon-left">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </span>
+              <input type="text" id="shopAddress" placeholder="123 Main St, City">
+              <span class="status-icon" id="shopAddressStatus"></span>
+            </div>
+            <div class="field-error" id="shopAddressError">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+              <span>Shop address is required</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TERMS -->
+      <div class="terms-row">
+        <input type="checkbox" id="terms">
+        <label for="terms">
+          I agree to Fast Drop's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>. I understand how my data will be used to operate my account.
+        </label>
+      </div>
+      <div class="terms-error" id="termsError">⚠ You must accept the terms to continue.</div>
+
+      <!-- SUBMIT -->
+      <button type="submit" class="btn-submit" id="submitBtn">
+        <span class="btn-text">Create Account</span>
+        <div class="spinner"></div>
+      </button>
+    </form>
+
+    <!-- Footer -->
+    <div class="card-footer">
+      Already have an account? <a href="fastdrop-login.html">Log in</a>
+    </div>
+    <div class="legal-links">
+      <a href="#">Terms</a><span>•</span>
+      <a href="#">Privacy</a><span>•</span>
+      <a href="#">Help</a>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // ── ROLE TOGGLE ──
+  let currentRole = 'dispatcher';
+  function setRole(role, btn) {
+    currentRole = role;
+    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const ms = document.getElementById('merchantSection');
+    if (role === 'merchant') ms.classList.add('open');
+    else ms.classList.remove('open');
+  }
+
+  // ── PASSWORD TOGGLE ──
+  function togglePwd(id, btn) {
+    const inp = document.getElementById(id);
+    const isText = inp.type === 'text';
+    inp.type = isText ? 'password' : 'text';
+    btn.querySelector('svg').innerHTML = isText
+      ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+      : '<path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  }
+
+  // ── VALIDATION HELPERS ──
+  const checkIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20,6 9,17 4,12"/></svg>`;
+  const crossIcon = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+
+  function setValid(inputId, statusId) {
+    const el = document.getElementById(inputId);
+    el.classList.remove('invalid'); el.classList.add('valid');
+    document.getElementById(statusId).innerHTML = checkIcon;
+  }
+  function setInvalid(inputId, statusId, errorId, msg) {
+    const el = document.getElementById(inputId);
+    el.classList.remove('valid'); el.classList.add('invalid');
+    document.getElementById(statusId).innerHTML = crossIcon;
+    const err = document.getElementById(errorId);
+    err.querySelector('span').textContent = msg;
+    err.classList.add('show');
+  }
+  function clearField(inputId, statusId, errorId) {
+    const el = document.getElementById(inputId);
+    el.classList.remove('valid', 'invalid');
+    document.getElementById(statusId).innerHTML = '';
+    document.getElementById(errorId).classList.remove('show');
+  }
+
+  // ── FULL NAME ──
+  const fullNameEl = document.getElementById('fullName');
+  fullNameEl.addEventListener('blur', () => validateFullName());
+  fullNameEl.addEventListener('input', () => {
+    if (fullNameEl.classList.contains('invalid')) validateFullName();
+  });
+  function validateFullName() {
+    const v = fullNameEl.value.trim();
+    if (!v) { setInvalid('fullName','fullNameStatus','fullNameError','Please enter your full name'); return false; }
+    if (v.split(' ').length < 2) { setInvalid('fullName','fullNameStatus','fullNameError','Please enter first and last name'); return false; }
+    setValid('fullName','fullNameStatus');
+    document.getElementById('fullNameError').classList.remove('show');
+    return true;
+  }
+
+  // ── EMAIL ──
+  const emailEl = document.getElementById('email');
+  emailEl.addEventListener('blur', () => validateEmail());
+  emailEl.addEventListener('input', () => {
+    if (emailEl.classList.contains('invalid')) validateEmail();
+  });
+  function validateEmail() {
+    const v = emailEl.value.trim();
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!v) { setInvalid('email','emailStatus','emailError','Email is required'); return false; }
+    if (!re.test(v)) { setInvalid('email','emailStatus','emailError','Please enter a valid email address'); return false; }
+    setValid('email','emailStatus');
+    document.getElementById('emailError').classList.remove('show');
+    return true;
+  }
+
+  // ── PHONE ──
+  const phoneEl = document.getElementById('phone');
+  phoneEl.addEventListener('input', () => {
+    let v = phoneEl.value.replace(/\D/g,'');
+    if (v.length > 0 && v[0] !== '1') v = v;
+    phoneEl.value = formatPhone(v);
+    if (phoneEl.classList.contains('invalid')) validatePhone();
+  });
+  phoneEl.addEventListener('blur', () => validatePhone());
+  function formatPhone(digits) {
+    if (digits.length === 0) return '';
+    if (digits.length <= 3) return `(${digits}`;
+    if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+    return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6,10)}`;
+  }
+  function validatePhone() {
+    const digits = phoneEl.value.replace(/\D/g,'');
+    if (!phoneEl.value) { setInvalid('phone','phoneStatus','phoneError','Phone number is required'); return false; }
+    if (digits.length < 10) { setInvalid('phone','phoneStatus','phoneError','Please enter a valid 10-digit number'); return false; }
+    setValid('phone','phoneStatus');
+    document.getElementById('phoneError').classList.remove('show');
+    return true;
+  }
+
+  // ── PASSWORD STRENGTH ──
+  const pwdEl = document.getElementById('password');
+  const strengthWrap = document.getElementById('strengthWrap');
+  const pwdRules = document.getElementById('pwdRules');
+  const bars = [document.getElementById('sb1'),document.getElementById('sb2'),document.getElementById('sb3'),document.getElementById('sb4')];
+  const strengthLabel = document.getElementById('strengthLabel');
+
+  pwdEl.addEventListener('focus', () => { pwdRules.classList.add('show'); });
+  pwdEl.addEventListener('blur', () => {
+    pwdRules.classList.remove('show');
+    validatePassword();
+  });
+  pwdEl.addEventListener('input', () => {
+    const v = pwdEl.value;
+    if (v.length > 0) strengthWrap.style.display = 'block';
+    else strengthWrap.style.display = 'none';
+    updateStrength(v);
+    if (pwdEl.classList.contains('invalid')) validatePassword();
+    // re-validate confirm if it has a value
+    const conf = document.getElementById('confirmPassword');
+    if (conf.value) validateConfirm();
+  });
+
+  function updateStrength(v) {
+    const rules = {
+      len:   v.length >= 8,
+      upper: /[A-Z]/.test(v),
+      num:   /[0-9]/.test(v),
+      sym:   /[^A-Za-z0-9]/.test(v),
+    };
+    toggleRule('rule-len', rules.len);
+    toggleRule('rule-upper', rules.upper);
+    toggleRule('rule-num', rules.num);
+    toggleRule('rule-sym', rules.sym);
+
+    const score = Object.values(rules).filter(Boolean).length;
+    const classes = ['','weak','fair','good','strong'];
+    const labels = ['','Too weak','Fair','Good','Strong 💪'];
+    bars.forEach((b,i) => {
+      b.className = 'strength-bar';
+      if (i < score) b.classList.add(classes[score]);
+    });
+    strengthLabel.textContent = v.length === 0 ? '' : labels[score];
+    strengthLabel.className = 'strength-label ' + (classes[score] || '');
+  }
+
+  function toggleRule(id, met) {
+    const el = document.getElementById(id);
+    if (met) {
+      el.classList.add('met');
+      el.querySelector('svg').innerHTML = '<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>';
+    } else {
+      el.classList.remove('met');
+      el.querySelector('svg').innerHTML = '<circle cx="12" cy="12" r="10"/>';
+    }
+  }
+
+  function validatePassword() {
+    const v = pwdEl.value;
+    if (!v) { setInvalid('password','','passwordError','Password is required'); return false; }
+    if (v.length < 8) { setInvalid('password','','passwordError','Password must be at least 8 characters'); return false; }
+    pwdEl.classList.remove('invalid'); pwdEl.classList.add('valid');
+    document.getElementById('passwordError').classList.remove('show');
+    return true;
+  }
+  // override status icon for password (no status icon)
+  function setInvalid(inputId, statusId, errorId, msg) {
+    const el = document.getElementById(inputId);
+    el.classList.remove('valid'); el.classList.add('invalid');
+    if (statusId) document.getElementById(statusId).innerHTML = crossIcon;
+    const err = document.getElementById(errorId);
+    err.querySelector('span').textContent = msg;
+    err.classList.add('show');
+  }
+  function setValid(inputId, statusId) {
+    const el = document.getElementById(inputId);
+    el.classList.remove('invalid'); el.classList.add('valid');
+    if (statusId) document.getElementById(statusId).innerHTML = checkIcon;
+  }
+
+  // ── CONFIRM PASSWORD ──
+  const confEl = document.getElementById('confirmPassword');
+  confEl.addEventListener('blur', () => validateConfirm());
+  confEl.addEventListener('input', () => {
+    if (confEl.classList.contains('invalid')) validateConfirm();
+  });
+  function validateConfirm() {
+    const v = confEl.value;
+    if (!v) { setInvalid('confirmPassword','','confirmPasswordError','Please confirm your password'); return false; }
+    if (v !== pwdEl.value) { setInvalid('confirmPassword','','confirmPasswordError','Passwords don\'t match'); return false; }
+    confEl.classList.remove('invalid'); confEl.classList.add('valid');
+    document.getElementById('confirmPasswordError').classList.remove('show');
+    return true;
+  }
+
+  // ── MERCHANT FIELDS ──
+  document.getElementById('shopName')?.addEventListener('blur', validateShopName);
+  document.getElementById('shopAddress')?.addEventListener('blur', validateShopAddress);
+  function validateShopName() {
+    if (currentRole !== 'merchant') return true;
+    const v = document.getElementById('shopName').value.trim();
+    if (!v) { setInvalid('shopName','shopNameStatus','shopNameError','Shop name is required'); return false; }
+    setValid('shopName','shopNameStatus');
+    document.getElementById('shopNameError').classList.remove('show');
+    return true;
+  }
+  function validateShopAddress() {
+    if (currentRole !== 'merchant') return true;
+    const v = document.getElementById('shopAddress').value.trim();
+    if (!v) { setInvalid('shopAddress','shopAddressStatus','shopAddressError','Shop address is required'); return false; }
+    setValid('shopAddress','shopAddressStatus');
+    document.getElementById('shopAddressError').classList.remove('show');
+    return true;
+  }
+
+  // ── FORM SUBMIT ──
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const n = validateFullName();
+    const em = validateEmail();
+    const ph = validatePhone();
+    const pw = validatePassword();
+    const cp = validateConfirm();
+    const sn = currentRole === 'merchant' ? validateShopName() : true;
+    const sa = currentRole === 'merchant' ? validateShopAddress() : true;
+    const terms = document.getElementById('terms').checked;
+    if (!terms) document.getElementById('termsError').classList.add('show');
+    else document.getElementById('termsError').classList.remove('show');
+
+    if (!n || !em || !ph || !pw || !cp || !sn || !sa || !terms) return;
+
+    // Simulate loading
+    const btn = document.getElementById('submitBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    await new Promise(r => setTimeout(r, 1800));
+
+    btn.classList.remove('loading');
+    document.getElementById('successEmail').textContent = emailEl.value;
+    document.getElementById('successOverlay').classList.add('show');
+  });
+
+  // Terms live check
+  document.getElementById('terms').addEventListener('change', function() {
+    if (this.checked) document.getElementById('termsError').classList.remove('show');
+  });
+</script>
+</body>
+</html>

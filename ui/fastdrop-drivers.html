@@ -1,0 +1,917 @@
+2!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Drop – Drivers</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#00c9a7;--primary-dark:#00a98a;--primary-light:#e6faf6;--primary-mid:#ccfbf1;
+  --sidebar-bg:#0a1628;--sidebar-hover:#111e35;
+  --page-bg:#f4f7f9;--card-bg:#ffffff;
+  --text-dark:#0d1b2a;--text-mid:#374151;--text-muted:#6b7280;--text-light:#9ca3af;
+  --border:#e8ecf0;--border-light:#f1f5f9;
+  --warning:#f59e0b;--warning-light:#fffbeb;
+  --error:#ef4444;--error-light:#fef2f2;
+  --info:#3b82f6;--info-light:#eff6ff;
+  --success:#10b981;--success-light:#ecfdf5;
+  --purple:#8b5cf6;--purple-light:#f5f3ff;
+  --orange:#f97316;--orange-light:#fff7ed;
+  --sidebar-w:240px;--topbar-h:64px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--page-bg);color:var(--text-dark);min-height:100vh;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.06);text-decoration:none}
+.logo-mark{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:20px;height:20px;fill:white}
+.logo-text{font-size:16px;font-weight:800;color:white}
+.logo-badge{font-size:9px;font-weight:700;background:var(--primary);color:white;border-radius:4px;padding:1px 5px;margin-left:auto;letter-spacing:.04em}
+.sidebar-section{padding:18px 12px 8px}
+.sidebar-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.45);font-size:13px;font-weight:500;transition:all .18s;text-decoration:none;margin-bottom:2px}
+.nav-item:hover{background:var(--sidebar-hover);color:rgba(255,255,255,.8)}
+.nav-item.active{background:linear-gradient(135deg,rgba(0,201,167,.18),rgba(0,201,167,.08));color:var(--primary);border:1px solid rgba(0,201,167,.2)}
+.nav-icon{width:16px;height:16px;flex-shrink:0}.nav-icon svg{width:16px;height:16px;fill:currentColor}
+.nav-badge{margin-left:auto;background:var(--error);color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.nav-badge.teal{background:var(--primary)}.nav-badge.warn{background:var(--warning)}
+.sidebar-footer{margin-top:auto;padding:16px 12px;border-top:1px solid rgba(255,255,255,.06)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:background .18s}
+.user-card:hover{background:var(--sidebar-hover)}
+.u-avatar{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0}
+.u-name{font-size:12px;font-weight:700;color:white}.u-role{font-size:10px;color:rgba(255,255,255,.35)}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:var(--topbar-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px;flex:1}
+.page-title{font-size:18px;font-weight:800;color:var(--text-dark)}
+.page-subtitle{font-size:12px;color:var(--text-muted);font-weight:500}
+.topbar-divider{width:1px;height:24px;background:var(--border)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .2s}
+.icon-btn:hover{border-color:var(--primary)}
+.icon-btn svg{width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:2}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--error);border-radius:50%;border:1.5px solid white}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s}
+.btn-primary{background:var(--primary);color:white;box-shadow:0 4px 14px rgba(0,201,167,.25)}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn-secondary{background:white;color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:var(--error-light);color:var(--error);border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:var(--error);color:white}
+.btn-success{background:var(--success-light);color:var(--success);border:1px solid rgba(16,185,129,.2)}
+.btn-success:hover{background:var(--success);color:white}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+.btn svg{width:14px;height:14px;fill:currentColor}
+
+/* ── CONTENT ── */
+.content{padding:24px 28px;flex:1}
+
+/* ── SUMMARY STRIP ── */
+.summary-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+.strip-card{background:white;border-radius:14px;padding:16px 18px;border:1px solid var(--border-light);display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.strip-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;background:var(--sc-color,var(--primary));transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.strip-card:hover{box-shadow:0 6px 22px rgba(0,0,0,.07);transform:translateY(-1px)}
+.strip-card:hover::after{transform:scaleX(1)}
+.strip-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.strip-icon svg{width:18px;height:18px}
+.strip-val{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.strip-lbl{font-size:11px;color:var(--text-muted);font-weight:500;margin-top:1px}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:white;border-radius:14px;border:1px solid var(--border-light);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--page-bg);border:1.5px solid var(--border);border-radius:9px;padding:7px 12px;flex:1;min-width:200px;transition:border-color .2s}
+.search-box:focus-within{border-color:var(--primary)}
+.search-box svg{width:13px;height:13px;fill:none;stroke:var(--text-muted);stroke-width:2;flex-shrink:0}
+.search-box input{border:none;background:transparent;outline:none;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);width:100%}
+.search-box input::placeholder{color:var(--text-light)}
+.fsel{border:1.5px solid var(--border);border-radius:8px;padding:7px 28px 7px 10px;font-size:12px;font-weight:500;color:var(--text-mid);background:var(--page-bg);cursor:pointer;appearance:none;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:120px;transition:border-color .2s}
+.fsel:focus{border-color:var(--primary)}
+.filter-divider{width:1px;height:24px;background:var(--border);flex-shrink:0}
+.filter-count{font-size:11px;color:var(--text-muted);white-space:nowrap;margin-left:auto}
+.expiry-warn-chip{display:flex;align-items:center;gap:5px;background:var(--warning-light);color:var(--warning);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer}
+.expiry-warn-chip svg{width:11px;height:11px;fill:currentColor}
+
+/* ── TABLE ── */
+.table-wrap{background:white;border-radius:16px;border:1px solid var(--border-light);overflow:hidden;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light);gap:12px;flex-wrap:wrap}
+.table-title{font-size:15px;font-weight:700;color:var(--text-dark)}
+.table-actions{display:flex;gap:8px}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--border-light);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{background:#e8ecf0}
+tbody tr{border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f9fafb}
+td{padding:13px 14px;font-size:13px;color:var(--text-mid);white-space:nowrap}
+
+/* Driver cell */
+.driver-cell{display:flex;align-items:center;gap:10px}
+.d-avatar{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0;position:relative}
+.d-avatar-status{position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;border-radius:50%;border:2px solid white}
+.d-name{font-size:13px;font-weight:700;color:var(--text-dark)}
+.d-id{font-size:10px;color:var(--text-muted);margin-top:1px}
+
+/* Status / tier badges */
+.s-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.s-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sb-available{background:var(--success-light);color:var(--success)}
+.sb-on-route{background:var(--warning-light);color:var(--warning)}
+.sb-offline{background:var(--border-light);color:var(--text-muted)}
+.sb-suspended{background:var(--error-light);color:var(--error)}
+
+.tier-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:6px;font-size:11px;font-weight:700}
+.tier-gold{background:#fef3c7;color:#d97706}
+.tier-silver{background:#f1f5f9;color:#64748b}
+.tier-bronze{background:#fff7ed;color:#c2410c}
+.tier-new{background:var(--info-light);color:var(--info)}
+
+.expiry-cell{font-size:12px;font-weight:600}
+.expiry-ok{color:var(--text-muted)}
+.expiry-warn{color:var(--warning);font-weight:700}
+.expiry-critical{color:var(--error);font-weight:700}
+
+/* Stars */
+.stars{display:flex;align-items:center;gap:2px;font-size:11px;color:var(--warning)}
+
+/* Row actions */
+.row-acts{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+tbody tr:hover .row-acts{opacity:1}
+.ra-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative}
+.ra-btn:hover{border-color:var(--primary);background:var(--primary-light)}
+.ra-btn.danger:hover{border-color:var(--error);background:var(--error-light);color:var(--error)}
+.ra-btn.success:hover{border-color:var(--success);background:var(--success-light)}
+.ra-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+.ra-btn[data-tip]:hover::before{content:attr(data-tip);position:absolute;bottom:calc(100%+5px);left:50%;transform:translateX(-50%);background:#1f2937;color:white;font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;white-space:nowrap;z-index:99;pointer-events:none}
+
+.cb{width:15px;height:15px;accent-color:var(--primary);cursor:pointer}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--border-light)}
+.page-info{font-size:12px;color:var(--text-muted)}
+.page-btns{display:flex;gap:4px}
+.pg-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid);transition:all .15s}
+.pg-btn:hover{border-color:var(--primary);color:var(--primary)}
+.pg-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
+.pg-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+
+/* ── SLIDE PANEL ── */
+.panel-overlay{position:fixed;inset:0;background:rgba(10,22,40,.5);backdrop-filter:blur(3px);z-index:400;display:none}
+.panel-overlay.show{display:block}
+.slide-panel{position:fixed;top:0;right:0;bottom:0;width:720px;background:white;z-index:500;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.slide-panel.narrow{width:520px}
+.slide-panel.open{transform:translateX(0)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-size:17px;font-weight:800;color:var(--text-dark)}
+.panel-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.panel-close{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+.panel-close:hover{border-color:var(--error);color:var(--error)}
+.panel-close svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+.panel-body{flex:1;overflow-y:auto;padding:0}
+.panel-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:white;flex-wrap:wrap}
+
+/* ── DRIVER DETAIL ── */
+.driver-hero{background:linear-gradient(135deg,#0a1628 0%,#0f2540 100%);padding:24px;position:relative;overflow:hidden}
+.driver-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(0,201,167,.07)}
+.driver-hero::after{content:'';position:absolute;bottom:-40px;left:-20px;width:150px;height:150px;border-radius:50%;background:rgba(0,201,167,.04)}
+.hero-inner{display:flex;align-items:flex-start;gap:18px;position:relative;z-index:1}
+.hero-avatar{width:70px;height:70px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:26px;color:white;flex-shrink:0;border:2px solid rgba(255,255,255,.15)}
+.hero-name{font-size:22px;font-weight:800;color:white;margin-bottom:4px}
+.hero-id{font-size:12px;color:rgba(255,255,255,.35);margin-bottom:8px}
+.hero-badges{display:flex;gap:7px;flex-wrap:wrap}
+.hero-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700}
+.hero-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid rgba(255,255,255,.08);margin-top:18px;position:relative;z-index:1}
+.hstat{padding:14px 16px;border-right:1px solid rgba(255,255,255,.08);text-align:center}
+.hstat:last-child{border-right:none}
+.hstat-val{font-size:20px;font-weight:800;color:white;letter-spacing:-.02em}
+.hstat-lbl{font-size:10px;color:rgba(255,255,255,.35);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+/* Detail tabs */
+.detail-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:white;flex-shrink:0}
+.dtab{padding:12px 20px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.dtab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.dtab:hover:not(.active){color:var(--text-dark)}
+
+/* Detail sections */
+.detail-section{padding:20px 24px;border-bottom:1px solid var(--border-light)}
+.detail-section:last-child{border-bottom:none}
+.dsection-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.dsection-title svg{width:13px;height:13px;fill:currentColor;opacity:.6}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.dfield{padding:9px 0;border-bottom:1px solid var(--border-light)}
+.dfield:nth-last-child(-n+2){border-bottom:none}
+.dfield label{font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px}
+.dfield span{font-size:13px;font-weight:600;color:var(--text-dark)}
+
+/* Performance chart */
+.perf-chart-wrap{padding:16px 0 4px;position:relative;height:100px}
+.perf-bars{display:flex;align-items:flex-end;gap:4px;height:80px}
+.perf-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer}
+.perf-bar{width:100%;border-radius:3px 3px 0 0;transition:opacity .2s;min-height:4px}
+.perf-bar-col:hover .perf-bar{opacity:.8}
+.perf-day{font-size:9px;color:var(--text-light)}
+.perf-line{display:flex;justify-content:space-between;font-size:9px;color:var(--text-light);margin-top:4px;padding:0 2px}
+
+/* Rating stars full */
+.rating-row{display:flex;align-items:center;gap:3px}
+.star-full{color:var(--warning);font-size:14px}
+.star-empty{color:var(--border);font-size:14px}
+
+/* Feedback cards */
+.feedback-card{background:var(--border-light);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.fb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.fb-customer{font-size:13px;font-weight:700;color:var(--text-dark)}
+.fb-date{font-size:11px;color:var(--text-muted)}
+.fb-text{font-size:12px;color:var(--text-mid);line-height:1.55}
+.fb-shp{font-size:10px;color:var(--text-light);margin-top:6px}
+
+/* Order history mini table */
+.mini-table{width:100%;border-collapse:collapse}
+.mini-table th{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 10px;background:var(--border-light);text-align:left}
+.mini-table td{padding:9px 10px;border-bottom:1px solid var(--border-light);font-size:12px;color:var(--text-mid)}
+.mini-table tr:last-child td{border-bottom:none}
+.mini-table tr:hover td{background:var(--border-light)}
+
+/* Payment history */
+.pay-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-light)}
+.pay-row:last-child{border-bottom:none}
+.pay-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pay-icon svg{width:15px;height:15px}
+.pay-desc{font-size:13px;font-weight:600;color:var(--text-dark)}
+.pay-date{font-size:11px;color:var(--text-muted);margin-top:1px}
+.pay-amount{font-size:14px;font-weight:800;margin-left:auto}
+
+/* Vehicle card */
+.vehicle-card{background:var(--border-light);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;margin-bottom:10px;cursor:pointer;transition:all .2s}
+.vehicle-card:hover{background:var(--primary-light);border:1px solid rgba(0,201,167,.2)}
+.vehicle-icon{width:44px;height:44px;background:white;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.vehicle-icon svg{width:22px;height:22px;fill:var(--primary-dark)}
+.vehicle-info{flex:1}
+.vehicle-name{font-size:13px;font-weight:700;color:var(--text-dark)}
+.vehicle-plate{font-size:11px;color:var(--text-muted);margin-top:2px}
+.vehicle-badges{display:flex;gap:6px;margin-top:5px}
+
+/* Route pill */
+.route-pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:7px;font-size:11px;font-weight:600;background:var(--info-light);color:var(--info)}
+.route-pill svg{width:11px;height:11px;fill:currentColor}
+
+/* Toggle */
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:#e5e7eb;border-radius:11px;cursor:pointer;transition:background .2s}
+.toggle-track::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle input:checked+.toggle-track{background:var(--primary)}
+.toggle input:checked+.toggle-track::after{transform:translateX(18px)}
+
+/* Form elements */
+.form-section{padding:20px 24px;border-bottom:1px solid var(--border-light)}
+.fsec-title{font-size:11px;font-weight:700;color:var(--text-dark);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.fsec-icon{width:24px;height:24px;border-radius:6px;background:var(--primary-light);display:flex;align-items:center;justify-content:center}
+.fsec-icon svg{width:12px;height:12px;fill:var(--primary-dark)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;font-weight:600;color:var(--text-mid)}
+.form-control{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s;background:white}
+.form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,201,167,.1)}
+.form-control::placeholder{color:var(--text-light)}
+select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer}
+.form-hint{font-size:10px;color:var(--text-muted)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#0a1628;color:white;border-left:4px solid var(--primary);border-radius:12px;padding:14px 20px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;animation:fadeUp .3s ease}
+.toast svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+@media(max-width:900px){:root{--sidebar-w:0px}.sidebar{transform:translateX(-240px)}.main{margin-left:0}.slide-panel,.slide-panel.narrow{width:100%}}
+@media(max-width:700px){.summary-strip{grid-template-columns:repeat(3,1fr)}.form-grid{grid-template-columns:1fr}.hero-stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.summary-strip{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5S5.17 15.5 6 15.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
+    <span class="logo-text">Fast Drop</span><span class="logo-badge">ADMIN</span>
+  </a>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Overview</div>
+    <a class="nav-item" href="fastdrop-admin-dashboard.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Shipments<span class="nav-badge teal">1,284</span></a>
+    <a class="nav-item active" href="fastdrop-drivers.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span>Drivers</a>
+    <a class="nav-item" href="fastdrop-dispatcher.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Fleet</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Business</div>
+    <a class="nav-item" href="fastdrop-merchants.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>Merchants</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></span>Zones</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg></span>Invoices<span class="nav-badge warn">5</span></a>
+    <a class="nav-item" href="fastdrop-analytics.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg></span>Analytics</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">System</div>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg></span>User Roles</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33z"/></svg></span>Settings</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="u-avatar">SA</div>
+      <div style="flex:1"><div class="u-name">Sara Ahmed</div><div class="u-role">Super Admin</div></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,.3)"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title">Drivers</div>
+        <div class="page-subtitle">96 registered · 84 active</div>
+      </div>
+      <div class="topbar-divider"></div>
+      <span class="s-badge sb-available" style="font-size:10px">22 Available</span>
+      <span class="s-badge sb-on-route" style="font-size:10px">62 On Route</span>
+      <span class="s-badge sb-offline" style="font-size:10px">12 Offline</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="openCreate()">
+        <svg viewBox="0 0 24 24"><path d="M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+        Add Driver
+      </button>
+      <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-dot"></div></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- SUMMARY STRIP -->
+    <div class="summary-strip">
+      <div class="strip-card" style="--sc-color:var(--success)" onclick="filterStatus('Available')">
+        <div class="strip-icon" style="background:var(--success-light)"><svg viewBox="0 0 24 24" fill="var(--success)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+        <div><div class="strip-val" style="color:var(--success)">22</div><div class="strip-lbl">Available</div></div>
+      </div>
+      <div class="strip-card" style="--sc-color:var(--warning)" onclick="filterStatus('On Route')">
+        <div class="strip-icon" style="background:var(--warning-light)"><svg viewBox="0 0 24 24" fill="var(--warning)"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+        <div><div class="strip-val" style="color:var(--warning)">62</div><div class="strip-lbl">On Route</div></div>
+      </div>
+      <div class="strip-card" style="--sc-color:var(--text-light)" onclick="filterStatus('Offline')">
+        <div class="strip-icon" style="background:var(--border-light)"><svg viewBox="0 0 24 24" fill="var(--text-muted)"><circle cx="12" cy="12" r="10"/></svg></div>
+        <div><div class="strip-val" style="color:var(--text-muted)">12</div><div class="strip-lbl">Offline</div></div>
+      </div>
+      <div class="strip-card" style="--sc-color:var(--error)" onclick="filterStatus('Suspended')">
+        <div class="strip-icon" style="background:var(--error-light)"><svg viewBox="0 0 24 24" fill="var(--error)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+        <div><div class="strip-val" style="color:var(--error)">7</div><div class="strip-lbl">Suspended</div></div>
+      </div>
+      <div class="strip-card" style="--sc-color:var(--warning)">
+        <div class="strip-icon" style="background:var(--warning-light)"><svg viewBox="0 0 24 24" fill="var(--warning)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div>
+        <div><div class="strip-val" style="color:var(--warning)">7</div><div class="strip-lbl">License Expiring</div></div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search driver name, phone, ID…" oninput="filterDrivers(this.value)">
+      </div>
+      <div class="filter-divider"></div>
+      <select class="fsel" onchange="filterStatus(this.value)">
+        <option value="">All Statuses</option>
+        <option>Available</option><option>On Route</option><option>Offline</option><option>Suspended</option>
+      </select>
+      <select class="fsel">
+        <option>All Zones</option><option>Downtown</option><option>Westside</option>
+        <option>East Hub</option><option>North Ring</option><option>South Bay</option><option>Airport</option>
+      </select>
+      <select class="fsel">
+        <option>All Tiers</option><option>Gold</option><option>Silver</option><option>Bronze</option><option>New</option>
+      </select>
+      <select class="fsel" id="expiryFilter">
+        <option value="">All License Dates</option>
+        <option value="warn">Expiring &lt; 30 days</option>
+        <option value="critical">Expiring &lt; 7 days</option>
+      </select>
+      <div class="expiry-warn-chip" onclick="filterExpiry()">
+        <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+        7 expiring soon
+      </div>
+      <div class="filter-count" id="filterCount">Showing 1–12 of 96 drivers</div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div class="table-head">
+        <div>
+          <div class="table-title">All Drivers</div>
+        </div>
+        <div class="table-actions">
+          <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px"><input type="checkbox" class="cb"></th>
+              <th>Driver</th>
+              <th>Phone</th>
+              <th>Zone</th>
+              <th>Status</th>
+              <th>Vehicle</th>
+              <th>License Expiry</th>
+              <th>Rating</th>
+              <th>Tier</th>
+              <th style="width:120px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="driverTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="page-info" id="pageInfo">Showing 1–12 of 96 drivers</div>
+        <div class="page-btns">
+          <div class="pg-btn"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="pg-btn active">1</div>
+          <div class="pg-btn">2</div>
+          <div class="pg-btn">3</div>
+          <div class="pg-btn">…</div>
+          <div class="pg-btn">8</div>
+          <div class="pg-btn"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OVERLAY ══ -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanels()"></div>
+
+<!-- ══ DRIVER DETAIL PANEL ══ -->
+<div class="slide-panel" id="detailPanel">
+  <div class="panel-header" style="padding:16px 24px">
+    <div><div class="panel-title" id="dpTitle">Driver Profile</div><div class="panel-sub" id="dpSub">Full profile & performance</div></div>
+    <div class="panel-close" onclick="closePanels()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <!-- detail tabs -->
+  <div class="detail-tabs" id="detailTabs">
+    <div class="dtab active" onclick="switchDTab('info',this)">Profile</div>
+    <div class="dtab" onclick="switchDTab('performance',this)">Performance</div>
+    <div class="dtab" onclick="switchDTab('orders',this)">Order History</div>
+    <div class="dtab" onclick="switchDTab('payments',this)">Payments</div>
+    <div class="dtab" onclick="switchDTab('feedback',this)">Feedback</div>
+  </div>
+  <div class="panel-body" id="detailBody"></div>
+  <div class="panel-footer" id="detailFooter"></div>
+</div>
+
+<!-- ══ CREATE PANEL ══ -->
+<div class="slide-panel narrow" id="createPanel">
+  <div class="panel-header">
+    <div><div class="panel-title" id="createTitle">Add New Driver</div><div class="panel-sub">Create a driver account and assign details</div></div>
+    <div class="panel-close" onclick="closePanels()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="panel-body">
+    <div class="form-section">
+      <div class="fsec-title"><div class="fsec-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></div>Personal Information</div>
+      <div class="form-grid">
+        <div class="form-group"><label>First Name *</label><input class="form-control" placeholder="Ahmed"></div>
+        <div class="form-group"><label>Last Name *</label><input class="form-control" placeholder="Kamel"></div>
+        <div class="form-group full"><label>Phone Number *</label><input class="form-control" placeholder="+20 (10) 000-0000"></div>
+        <div class="form-group full"><label>Home Address</label><input class="form-control" placeholder="Street, Building, City"></div>
+        <div class="form-group full"><label>National ID</label><input class="form-control" placeholder="29XXXXXXXXXXXXXXX"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="fsec-title"><div class="fsec-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg></div>License & Documents</div>
+      <div class="form-grid">
+        <div class="form-group"><label>License Number *</label><input class="form-control" placeholder="LIC-XXXXXXXX"></div>
+        <div class="form-group"><label>License Expiry *</label><input type="date" class="form-control"></div>
+        <div class="form-group"><label>License Type</label><select class="form-control"><option>Motorcycle</option><option>Light Vehicle</option><option>Heavy Vehicle</option></select></div>
+        <div class="form-group"><label>Years of Experience</label><input type="number" class="form-control" placeholder="3" min="0"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="fsec-title"><div class="fsec-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>Assignment</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Assign Zone *</label><select class="form-control"><option>— Select zone —</option><option>Downtown</option><option>Westside</option><option>East Hub</option><option>North Ring</option><option>South Bay</option><option>Airport</option></select></div>
+        <div class="form-group"><label>Assign Vehicle</label><select class="form-control"><option>— None yet —</option><option>VHC-001 · Honda CG125</option><option>VHC-008 · Yamaha R15</option><option>VHC-014 · Toyota Hiace</option></select></div>
+        <div class="form-group"><label>Account Status</label><select class="form-control"><option>Active</option><option>Inactive</option></select></div>
+        <div class="form-group"><label>Start Date</label><input type="date" class="form-control" value="2026-03-19"></div>
+      </div>
+    </div>
+    <div class="form-section" style="border-bottom:none">
+      <div class="fsec-title"><div class="fsec-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg></div>Payment Info</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Payment Method</label><select class="form-control"><option>Cash</option><option>Bank Transfer</option><option>Wallet</option></select></div>
+        <div class="form-group"><label>Base Rate (per delivery)</label><input type="number" class="form-control" placeholder="5.00"></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn btn-secondary" onclick="closePanels()">Cancel</button>
+    <button class="btn btn-primary" style="margin-left:auto" onclick="saveDriver()"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Create Driver Account</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const DRIVERS = [
+  {id:'DRV-041',name:'Ahmed Kamel',phone:'+20 100 123 4567',zone:'Downtown',status:'On Route',vehicle:'Honda CG125',plate:'ABC-1234',vehicleId:'VHC-001',licExpiry:'2026-11-15',daysLeft:240,rating:4.8,tier:'Gold',color:'#00c9a7',deliveries:1842,successRate:97.4,avgRating:4.8,joined:'Jan 2024',address:'15 Tahrir St, Cairo',license:'LIC-4412881',lastRoute:'RT-440',supervisor:'Mona Khalil'},
+  {id:'DRV-038',name:'Mohamed Samir',phone:'+20 101 234 5678',zone:'Westside',status:'On Route',vehicle:'Yamaha R15',plate:'XYZ-5678',vehicleId:'VHC-008',licExpiry:'2026-09-20',daysLeft:185,rating:4.6,tier:'Gold',color:'#3b82f6',deliveries:1620,successRate:95.8,avgRating:4.6,joined:'Feb 2024',address:'44 Dokki Ave, Cairo',license:'LIC-3398812',lastRoute:'RT-445',supervisor:'Mona Khalil'},
+  {id:'DRV-022',name:'Karim Youssef',phone:'+20 102 345 6789',zone:'East Hub',status:'Available',vehicle:'Bajaj Boxer',plate:'DEF-9012',vehicleId:'VHC-015',licExpiry:'2027-03-10',daysLeft:356,rating:4.5,tier:'Silver',color:'#8b5cf6',deliveries:894,successRate:94.1,avgRating:4.5,joined:'Jul 2024',address:'7 Nasr City Rd',license:'LIC-7712209',lastRoute:'RT-442',supervisor:'Ahmed Tarek'},
+  {id:'DRV-015',name:'Omar Fathy',phone:'+20 103 456 7890',zone:'North Ring',status:'On Route',vehicle:'TVS Apache',plate:'GHI-3456',vehicleId:'VHC-019',licExpiry:'2026-03-27',daysLeft:7,rating:4.2,tier:'Silver',color:'#f97316',deliveries:1102,successRate:92.3,avgRating:4.2,joined:'Apr 2024',address:'28 Salah Salem',license:'LIC-2245667',lastRoute:'RT-447',supervisor:'Mona Khalil'},
+  {id:'DRV-031',name:'Khaled Adel',phone:'+20 104 567 8901',zone:'Airport',status:'Available',vehicle:'Honda CG125',plate:'JKL-7890',vehicleId:'VHC-003',licExpiry:'2026-04-12',daysLeft:23,rating:4.7,tier:'Gold',color:'#10b981',deliveries:1455,successRate:96.8,avgRating:4.7,joined:'Mar 2024',address:'91 Airport Rd',license:'LIC-9901122',lastRoute:'RT-450',supervisor:'Mona Khalil'},
+  {id:'DRV-055',name:'Yasser Hassan',phone:'+20 105 678 9012',zone:'South Bay',status:'Offline',vehicle:'Suzuki GS150',plate:'MNO-1234',vehicleId:'VHC-022',licExpiry:'2027-01-05',daysLeft:291,rating:3.9,tier:'Bronze',color:'#f59e0b',deliveries:612,successRate:88.4,avgRating:3.9,joined:'Sep 2024',address:'5 Maadi Corniche',license:'LIC-5534891',lastRoute:'RT-448',supervisor:'Ahmed Tarek'},
+  {id:'DRV-044',name:'Tamer Mostafa',phone:'+20 106 789 0123',zone:'Downtown',status:'Available',vehicle:'Piaggio Ape',plate:'PQR-5678',vehicleId:'VHC-028',licExpiry:'2026-04-08',daysLeft:19,rating:4.4,tier:'Silver',color:'#0891b2',deliveries:788,successRate:93.0,avgRating:4.4,joined:'Jun 2024',address:'33 26th July St',license:'LIC-8823456',lastRoute:'RT-441',supervisor:'Mona Khalil'},
+  {id:'DRV-012',name:'Sayed Ibrahim',phone:'+20 107 890 1234',zone:'Westside',status:'Suspended',vehicle:'—',plate:'—',vehicleId:null,licExpiry:'2025-12-20',daysLeft:-90,rating:2.8,tier:'Bronze',color:'#ef4444',deliveries:310,successRate:74.2,avgRating:2.8,joined:'Nov 2023',address:'12 Agouza St',license:'LIC-1122334',lastRoute:'—',supervisor:'Mona Khalil'},
+  {id:'DRV-067',name:'Laila Fawzy',phone:'+20 108 901 2345',zone:'East Hub',status:'Available',vehicle:'Honda ADV',plate:'STU-9012',vehicleId:'VHC-031',licExpiry:'2027-06-15',daysLeft:453,rating:4.9,tier:'Gold',color:'#ec4899',deliveries:966,successRate:98.2,avgRating:4.9,joined:'May 2024',address:'19 Heliopolis Sq',license:'LIC-6634512',lastRoute:'RT-442',supervisor:'Ahmed Tarek'},
+  {id:'DRV-049',name:'Hassan Nabil',phone:'+20 109 012 3456',zone:'North Ring',status:'On Route',vehicle:'Piaggio Vespa',plate:'VWX-3456',vehicleId:'VHC-037',licExpiry:'2026-07-30',daysLeft:133,rating:4.3,tier:'Silver',color:'#6366f1',deliveries:720,successRate:91.5,avgRating:4.3,joined:'Aug 2024',address:'47 Nasr Blvd',license:'LIC-4456789',lastRoute:'RT-449',supervisor:'Ahmed Tarek'},
+  {id:'DRV-058',name:'Rania Saad',phone:'+20 100 123 6789',zone:'South Bay',status:'On Route',vehicle:'Bajaj RE',plate:'YZA-7890',vehicleId:'VHC-041',licExpiry:'2026-03-26',daysLeft:6,rating:4.6,tier:'Silver',color:'#84cc16',deliveries:544,successRate:94.7,avgRating:4.6,joined:'Oct 2024',address:'8 Maadi Ring',license:'LIC-7788990',lastRoute:'RT-446',supervisor:'Ahmed Tarek'},
+  {id:'DRV-073',name:'Amr Khalil',phone:'+20 101 234 0987',zone:'Airport',status:'Offline',vehicle:'Yamaha NMAX',plate:'BCD-1234',vehicleId:'VHC-044',licExpiry:'2027-08-22',daysLeft:520,rating:4.1,tier:'New',color:'#9ca3af',deliveries:88,successRate:89.8,avgRating:4.1,joined:'Jan 2026',address:'64 Airport Access',license:'LIC-9900112',lastRoute:'—',supervisor:'Mona Khalil'},
+];
+
+const statusCls={Available:'sb-available','On Route':'sb-on-route',Offline:'sb-offline',Suspended:'sb-suspended'};
+const tierCls={Gold:'tier-gold',Silver:'tier-silver',Bronze:'tier-bronze',New:'tier-new'};
+const tierIcon={Gold:'⭐',Silver:'🥈',Bronze:'🥉',New:'🆕'};
+const statusDot={Available:'#10b981','On Route':'#f59e0b',Offline:'#9ca3af',Suspended:'#ef4444'};
+
+let currentData=[...DRIVERS];
+
+function expiryClass(days){
+  if(days<0) return 'expiry-critical';
+  if(days<=7) return 'expiry-critical';
+  if(days<=30) return 'expiry-warn';
+  return 'expiry-ok';
+}
+function expiryLabel(days,raw){
+  if(days<0) return `Expired ${Math.abs(days)}d ago`;
+  if(days===0) return 'Expires today!';
+  if(days<=7) return `${days}d left ⚠`;
+  if(days<=30) return `${days}d left`;
+  return raw.split('-').reverse().join('/');
+}
+function stars(r){return '★'.repeat(Math.round(r))+'☆'.repeat(5-Math.round(r))}
+function initials(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+
+function renderTable(data){
+  const tbody=document.getElementById('driverTableBody');
+  tbody.innerHTML=data.map(d=>`
+    <tr onclick="openDetail('${d.id}')">
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="cb"></td>
+      <td><div class="driver-cell">
+        <div class="d-avatar" style="background:${d.color}">
+          ${initials(d.name)}
+          <div class="d-avatar-status" style="background:${statusDot[d.status]}"></div>
+        </div>
+        <div><div class="d-name">${d.name}</div><div class="d-id">${d.id}</div></div>
+      </div></td>
+      <td style="font-size:12px">${d.phone}</td>
+      <td style="font-size:12px;font-weight:600;color:var(--info)">${d.zone}</td>
+      <td><span class="s-badge ${statusCls[d.status]}">${d.status}</span></td>
+      <td style="font-size:12px">${d.vehicle}</td>
+      <td class="expiry-cell ${expiryClass(d.daysLeft)}">${expiryLabel(d.daysLeft,d.licExpiry)}</td>
+      <td><span style="color:var(--warning);font-weight:700;font-size:13px">${d.rating}</span> <span style="color:var(--warning);font-size:11px">★</span></td>
+      <td><span class="tier-badge ${tierCls[d.tier]}">${tierIcon[d.tier]} ${d.tier}</span></td>
+      <td onclick="event.stopPropagation()">
+        <div class="row-acts">
+          <div class="ra-btn" data-tip="View Profile" onclick="openDetail('${d.id}')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="ra-btn" data-tip="Edit" onclick="openEdit('${d.id}',event)"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div class="ra-btn ${d.status==='Suspended'?'success':'danger'}" data-tip="${d.status==='Suspended'?'Activate':'Suspend'}" onclick="toggleStatus('${d.id}',event)">
+            <svg viewBox="0 0 24 24">${d.status==='Suspended'?'<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>':'<path d="M18.36 6.64a9 9 0 11-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>'}
+            </svg>
+          </div>
+        </div>
+      </td>
+    </tr>`).join('');
+  document.getElementById('filterCount').textContent=`Showing 1–${Math.min(12,data.length)} of ${data.length} drivers`;
+  document.getElementById('pageInfo').textContent=`Showing 1–${Math.min(12,data.length)} of ${data.length} drivers`;
+}
+renderTable(DRIVERS);
+
+function filterDrivers(q){
+  currentData=DRIVERS.filter(d=>d.name.toLowerCase().includes(q.toLowerCase())||d.id.toLowerCase().includes(q.toLowerCase())||d.phone.includes(q));
+  renderTable(currentData);
+}
+function filterStatus(st){
+  currentData=st?DRIVERS.filter(d=>d.status===st):[...DRIVERS];
+  renderTable(currentData);
+}
+function filterExpiry(){
+  currentData=DRIVERS.filter(d=>d.daysLeft>=0&&d.daysLeft<=30);
+  renderTable(currentData);
+}
+
+// ── DETAIL PANEL ──
+let currentDriver=null;
+let currentTab='info';
+
+function openDetail(id){
+  currentDriver=DRIVERS.find(d=>d.id===id);
+  if(!currentDriver)return;
+  document.getElementById('dpTitle').textContent=currentDriver.name;
+  document.getElementById('dpSub').textContent=`${currentDriver.id} · ${currentDriver.zone}`;
+  currentTab='info';
+  document.querySelectorAll('.dtab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  buildDetailContent();
+  buildDetailFooter();
+  openPanel('detailPanel');
+}
+
+function switchDTab(tab,el){
+  currentTab=tab;
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  buildDetailContent();
+}
+
+function buildDetailContent(){
+  const d=currentDriver;
+  const body=document.getElementById('detailBody');
+  const hero=buildHero(d);
+
+  if(currentTab==='info'){
+    body.innerHTML=hero+`
+    <div class="detail-section">
+      <div class="dsection-title"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg>Personal Information</div>
+      <div class="detail-grid">
+        <div class="dfield"><label>Full Name</label><span>${d.name}</span></div>
+        <div class="dfield"><label>Phone</label><span>${d.phone}</span></div>
+        <div class="dfield"><label>Address</label><span>${d.address}</span></div>
+        <div class="dfield"><label>License No.</label><span>${d.license}</span></div>
+        <div class="dfield"><label>License Expiry</label><span class="${expiryClass(d.daysLeft)}">${expiryLabel(d.daysLeft,d.licExpiry)}</span></div>
+        <div class="dfield"><label>Joined</label><span>${d.joined}</span></div>
+        <div class="dfield"><label>Supervisor</label><span>${d.supervisor}</span></div>
+        <div class="dfield"><label>Current Route</label><span><span class="route-pill"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>${d.lastRoute}</span></span></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="dsection-title"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>Assigned Vehicle</div>
+      ${d.vehicleId?`<div class="vehicle-card">
+        <div class="vehicle-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></div>
+        <div class="vehicle-info">
+          <div class="vehicle-name">${d.vehicle}</div>
+          <div class="vehicle-plate">${d.plate} · ${d.vehicleId}</div>
+          <div class="vehicle-badges"><span class="s-badge sb-available" style="font-size:10px">Active</span><span style="font-size:10px;color:var(--text-muted);font-weight:600">Insurance valid until Dec 2026</span></div>
+        </div>
+      </div>`:'<div style="font-size:13px;color:var(--text-muted);padding:8px 0">No vehicle assigned.</div>'}
+    </div>
+    <div class="detail-section" style="border-bottom:none">
+      <div class="dsection-title"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>Account Controls</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--border-light);border-radius:10px">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-dark)">Account Status</div>
+          <div style="font-size:11px;color:var(--text-muted)">Current: <span style="font-weight:700;color:${statusDot[d.status]}">${d.status}</span></div>
+        </div>
+        <label class="toggle"><input type="checkbox" ${d.status==='Available'||d.status==='On Route'?'checked':''} onchange="toggleAccountStatus()"><div class="toggle-track"></div></label>
+      </div>
+    </div>`;
+  }
+
+  else if(currentTab==='performance'){
+    const perf=[72,85,91,78,94,88,96,82,79,90,97,85,92,88];
+    const max=Math.max(...perf);
+    body.innerHTML=hero+`
+    <div class="detail-section">
+      <div class="dsection-title"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>Daily Performance Score (Last 14 Days)</div>
+      <div class="perf-chart-wrap">
+        <div class="perf-bars">
+          ${perf.map((v,i)=>{
+            const h=Math.round((v/max)*100);
+            const col=v>=90?'var(--success)':v>=75?'var(--primary)':v>=60?'var(--warning)':'var(--error)';
+            const days=['Mar 6','Mar 7','Mar 8','Mar 9','Mar 10','Mar 11','Mar 12','Mar 13','Mar 14','Mar 15','Mar 16','Mar 17','Mar 18','Mar 19'];
+            return `<div class="perf-bar-col">
+              <div class="perf-bar" style="height:${h}%;background:${col};opacity:.85"></div>
+              <div class="perf-day">${days[i].split(' ')[1]}</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="perf-line"><span>0</span><span>50</span><span>100</span></div>
+      </div>
+      <div style="display:flex;gap:16px;margin-top:14px;flex-wrap:wrap">
+        <div style="flex:1;background:var(--success-light);border-radius:10px;padding:12px 14px;min-width:100px"><div style="font-size:20px;font-weight:800;color:var(--success)">${Math.round(perf.reduce((a,b)=>a+b)/perf.length)}</div><div style="font-size:11px;color:var(--success);font-weight:500;margin-top:2px">Avg Score</div></div>
+        <div style="flex:1;background:var(--primary-light);border-radius:10px;padding:12px 14px;min-width:100px"><div style="font-size:20px;font-weight:800;color:var(--primary)">${Math.max(...perf)}</div><div style="font-size:11px;color:var(--primary);font-weight:500;margin-top:2px">Best Day</div></div>
+        <div style="flex:1;background:var(--warning-light);border-radius:10px;padding:12px 14px;min-width:100px"><div style="font-size:20px;font-weight:800;color:var(--warning)">${Math.min(...perf)}</div><div style="font-size:11px;color:var(--warning);font-weight:500;margin-top:2px">Lowest Day</div></div>
+      </div>
+    </div>
+    <div class="detail-section">
+      <div class="dsection-title"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Delivery Statistics</div>
+      <div class="detail-grid">
+        <div class="dfield"><label>Total Deliveries</label><span style="font-size:18px;font-weight:800;color:var(--primary)">${d.deliveries.toLocaleString()}</span></div>
+        <div class="dfield"><label>Success Rate</label><span style="font-size:18px;font-weight:800;color:var(--success)">${d.successRate}%</span></div>
+        <div class="dfield"><label>Average Rating</label><span>${d.avgRating} ★ <span style="color:var(--warning)">${'★'.repeat(Math.round(d.avgRating))}</span></span></div>
+        <div class="dfield"><label>Performance Tier</label><span class="tier-badge ${tierCls[d.tier]}">${tierIcon[d.tier]} ${d.tier}</span></div>
+        <div class="dfield"><label>Failed Deliveries</label><span style="color:var(--error)">${Math.round(d.deliveries*(1-d.successRate/100))}</span></div>
+        <div class="dfield"><label>Avg Deliveries/Day</label><span>${Math.round(d.deliveries/180)}</span></div>
+      </div>
+    </div>
+    <div class="detail-section" style="border-bottom:none">
+      <div class="dsection-title"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Historical Routes</div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px">
+        ${['RT-440','RT-441','RT-442','RT-443','RT-445'].map(r=>`<span class="route-pill"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>${r}</span>`).join('')}
+      </div>
+    </div>`;
+  }
+
+  else if(currentTab==='orders'){
+    const orders=[
+      {id:'SHP-8821',merchant:'SwiftMart',addr:'Nile City Mall',date:'Mar 19',status:'Delivered',cod:'$120'},
+      {id:'SHP-8819',merchant:'Pharmacy Plus',addr:'Sara Medical',date:'Mar 19',status:'Delivered',cod:'$340'},
+      {id:'SHP-8817',merchant:'Fashion Hub',addr:'Mona Tarek',date:'Mar 18',status:'Delivered',cod:'$210'},
+      {id:'SHP-8813',merchant:'TechShop',addr:'Laptop World',date:'Mar 18',status:'Returned',cod:'$1,200'},
+      {id:'SHP-8810',merchant:'HomeGoods',addr:'Ahmed Furniture',date:'Mar 17',status:'Delivered',cod:'—'},
+      {id:'SHP-8806',merchant:'SwiftMart',addr:'City Super',date:'Mar 17',status:'Delivered',cod:'$430'},
+      {id:'SHP-8801',merchant:'Fashion Hub',addr:'Heba Nour',date:'Mar 16',status:'Failed',cod:'$75'},
+    ];
+    body.innerHTML=hero+`
+    <div class="detail-section">
+      <div class="dsection-title"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>Recent Deliveries (${orders.length} shown)</div>
+      <table class="mini-table">
+        <thead><tr><th>SHP ID</th><th>Merchant</th><th>Customer</th><th>Date</th><th>Status</th><th>COD</th></tr></thead>
+        <tbody>${orders.map(o=>`<tr>
+          <td style="font-weight:700;color:var(--primary);font-size:12px">${o.id}</td>
+          <td>${o.merchant}</td>
+          <td style="color:var(--text-muted)">${o.addr}</td>
+          <td style="color:var(--text-muted);font-size:11px">${o.date}</td>
+          <td><span class="s-badge ${o.status==='Delivered'?'sb-available':o.status==='Failed'?'sb-suspended':'sb-offline'}" style="font-size:10px">${o.status}</span></td>
+          <td style="font-weight:700;color:${o.cod==='—'?'var(--text-light)':'var(--success)'}">${o.cod}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+      <div style="text-align:center;margin-top:12px">
+        <button class="btn btn-secondary btn-sm">Load more orders</button>
+      </div>
+    </div>`;
+  }
+
+  else if(currentTab==='payments'){
+    const payments=[
+      {type:'Weekly Settlement',date:'Mar 18, 2026',amount:'+$184.50',positive:true,method:'Bank Transfer',ref:'TXN-88821'},
+      {type:'Weekly Settlement',date:'Mar 11, 2026',amount:'+$212.00',positive:true,method:'Bank Transfer',ref:'TXN-88712'},
+      {type:'Bonus — Top Performer',date:'Mar 10, 2026',amount:'+$50.00',positive:true,method:'Wallet Credit',ref:'BON-0041'},
+      {type:'Weekly Settlement',date:'Mar 4, 2026',amount:'+$196.00',positive:true,method:'Bank Transfer',ref:'TXN-88603'},
+      {type:'Deduction — Late Return',date:'Feb 28, 2026',amount:'-$15.00',positive:false,method:'Deduction',ref:'DED-0012'},
+      {type:'Weekly Settlement',date:'Feb 25, 2026',amount:'+$178.00',positive:true,method:'Bank Transfer',ref:'TXN-88490'},
+    ];
+    body.innerHTML=hero+`
+    <div class="detail-section">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+        <div style="background:var(--success-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--success)">$820.50</div><div style="font-size:10px;color:var(--success);font-weight:600;margin-top:2px;text-transform:uppercase">Paid This Month</div></div>
+        <div style="background:var(--primary-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--primary)">$184.50</div><div style="font-size:10px;color:var(--primary);font-weight:600;margin-top:2px;text-transform:uppercase">Pending</div></div>
+        <div style="background:var(--warning-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--warning)">$15.00</div><div style="font-size:10px;color:var(--warning);font-weight:600;margin-top:2px;text-transform:uppercase">Deductions</div></div>
+      </div>
+      <div class="dsection-title"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg>Payment History</div>
+      ${payments.map(p=>`<div class="pay-row">
+        <div class="pay-icon" style="background:${p.positive?'var(--success-light)':'var(--error-light)'}"><svg viewBox="0 0 24 24" fill="${p.positive?'var(--success)':'var(--error)'}"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg></div>
+        <div><div class="pay-desc">${p.type}</div><div class="pay-date">${p.date} · ${p.method} · ${p.ref}</div></div>
+        <div class="pay-amount" style="color:${p.positive?'var(--success)':'var(--error)'}">${p.amount}</div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  else if(currentTab==='feedback'){
+    const feedbacks=[
+      {customer:'Nile City Mall',rating:5,text:'Ahmed was incredibly punctual and handled the package with great care. Would request him again!',shp:'SHP-8821',date:'Mar 19'},
+      {customer:'Sara Medical Center',rating:5,text:'Fast delivery, professional behavior. The driver called ahead as instructed.',shp:'SHP-8819',date:'Mar 19'},
+      {customer:'TechShop Cairo',rating:4,text:'Good service overall. Slight delay but communicated proactively.',shp:'SHP-8817',date:'Mar 18'},
+      {customer:'Heba Nour',rating:3,text:'Delivery was okay but driver seemed rushed and didn\'t wait long enough.',shp:'SHP-8801',date:'Mar 16'},
+      {customer:'City Supermarket',rating:5,text:'Excellent! Always smiling and very efficient. One of the best drivers we\'ve had.',shp:'SHP-8806',date:'Mar 17'},
+    ];
+    const avg=(feedbacks.reduce((s,f)=>s+f.rating,0)/feedbacks.length).toFixed(1);
+    body.innerHTML=hero+`
+    <div class="detail-section">
+      <div style="display:flex;align-items:center;gap:24px;margin-bottom:16px">
+        <div style="text-align:center">
+          <div style="font-size:40px;font-weight:800;color:var(--warning);letter-spacing:-.02em">${avg}</div>
+          <div style="color:var(--warning);font-size:18px">★★★★★</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:2px">${feedbacks.length} reviews</div>
+        </div>
+        <div style="flex:1">
+          ${[5,4,3,2,1].map(s=>{const c=feedbacks.filter(f=>f.rating===s).length;const pct=Math.round(c/feedbacks.length*100);return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px"><span style="font-size:11px;color:var(--text-muted);width:16px">${s}★</span><div style="flex:1;height:6px;background:var(--border-light);border-radius:3px"><div style="height:6px;background:var(--warning);border-radius:3px;width:${pct}%"></div></div><span style="font-size:11px;color:var(--text-muted);width:24px">${c}</span></div>`;}).join('')}
+        </div>
+      </div>
+      <div class="dsection-title"><svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>Customer Feedback</div>
+      ${feedbacks.map(f=>`<div class="feedback-card">
+        <div class="fb-header">
+          <div class="fb-customer">${f.customer}</div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="color:var(--warning);font-size:13px">${'★'.repeat(f.rating)}${'☆'.repeat(5-f.rating)}</span>
+            <span class="fb-date">${f.date}</span>
+          </div>
+        </div>
+        <div class="fb-text">"${f.text}"</div>
+        <div class="fb-shp">Shipment ${f.shp}</div>
+      </div>`).join('')}
+    </div>`;
+  }
+}
+
+function buildHero(d){
+  return `<div class="driver-hero">
+    <div class="hero-inner">
+      <div class="hero-avatar" style="background:${d.color}30">
+        <span style="color:${d.color};font-weight:800">${initials(d.name)}</span>
+      </div>
+      <div>
+        <div class="hero-name">${d.name}</div>
+        <div class="hero-id">${d.id} · ${d.zone}</div>
+        <div class="hero-badges">
+          <span class="s-badge ${statusCls[d.status]}">${d.status}</span>
+          <span class="hero-badge" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)">${d.vehicle}</span>
+          <span class="tier-badge ${tierCls[d.tier]}">${tierIcon[d.tier]} ${d.tier}</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="hstat-val">${d.deliveries.toLocaleString()}</div><div class="hstat-lbl">Deliveries</div></div>
+      <div class="hstat"><div class="hstat-val">${d.successRate}%</div><div class="hstat-lbl">Success Rate</div></div>
+      <div class="hstat"><div class="hstat-val" style="color:var(--warning)">${d.avgRating} ★</div><div class="hstat-lbl">Avg Rating</div></div>
+      <div class="hstat"><div class="hstat-val">${d.daysLeft>0?d.daysLeft+'d':'Expired'}</div><div class="hstat-lbl">License Left</div></div>
+    </div>
+  </div>`;
+}
+
+function buildDetailFooter(){
+  const d=currentDriver;
+  document.getElementById('detailFooter').innerHTML=`
+    <button class="btn btn-secondary btn-sm" onclick="openEdit('${d.id}',null)"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Driver</button>
+    <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg> Assign Zone</button>
+    <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg> Assign Vehicle</button>
+    <button class="btn ${d.status==='Suspended'?'btn-success':'btn-danger'} btn-sm" style="margin-left:auto" onclick="toggleStatus('${d.id}',null)">
+      ${d.status==='Suspended'?'✓ Activate Driver':'⊘ Suspend Driver'}
+    </button>`;
+}
+
+// ── ACTIONS ──
+function toggleStatus(id, event){
+  if(event) event.stopPropagation();
+  const d=DRIVERS.find(x=>x.id===id);
+  if(!d)return;
+  const prev=d.status;
+  d.status=d.status==='Suspended'?'Available':'Suspended';
+  renderTable(currentData);
+  showToast(`${d.name} is now ${d.status}`);
+  if(currentDriver&&currentDriver.id===id){buildDetailContent();buildDetailFooter();}
+}
+
+function toggleAccountStatus(){
+  if(!currentDriver)return;
+  toggleStatus(currentDriver.id,null);
+}
+
+function openEdit(id,event){
+  if(event)event.stopPropagation();
+  const d=DRIVERS.find(x=>x.id===id);
+  document.getElementById('createTitle').textContent=`Edit Driver — ${d.name}`;
+  openPanel('createPanel');
+}
+
+function openCreate(){
+  document.getElementById('createTitle').textContent='Add New Driver';
+  openPanel('createPanel');
+}
+
+function saveDriver(){
+  closePanels();
+  showToast('✓ Driver account saved successfully');
+}
+
+// ── PANELS ──
+function openPanel(id){document.getElementById('panelOverlay').classList.add('show');document.getElementById(id).classList.add('open')}
+function closePanels(){document.getElementById('panelOverlay').classList.remove('show');document.querySelectorAll('.slide-panel').forEach(p=>p.classList.remove('open'))}
+
+// ── TOAST ──
+function showToast(msg,type='success'){
+  const el=document.createElement('div');el.className='toast';
+  const c={success:'var(--primary)',error:'var(--error)',warn:'var(--warning)'};
+  el.style.borderLeftColor=c[type]||c.success;
+  el.innerHTML=`<svg viewBox="0 0 24 24" style="fill:${c[type]||c.success}"><path d="${type==='error'?'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z':'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'}"/></svg>${msg}`;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},3500);
+}
+
+// Animate strip values on load
+document.querySelectorAll('.strip-val').forEach(el=>{
+  const raw=parseInt(el.textContent);
+  if(!isNaN(raw)&&raw>0){
+    el.textContent='0';
+    const dur=600,st=performance.now();
+    function step(now){const p=Math.min((now-st)/dur,1),e=1-Math.pow(1-p,3);el.textContent=Math.round(raw*e);if(p<1)requestAnimationFrame(step);}
+    setTimeout(()=>requestAnimationFrame(step),100+Math.random()*200);
+  }
+});
+</script>
+</body>
+</html>

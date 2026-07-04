@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Drop – Dispatcher</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#00c9a7;--primary-dark:#00a98a;--primary-light:#e6faf6;--primary-mid:#ccfbf1;
+  --sidebar-bg:#0a1628;--sidebar-hover:#111e35;
+  --page-bg:#f4f7f9;
+  --text-dark:#0d1b2a;--text-mid:#374151;--text-muted:#6b7280;--text-light:#9ca3af;
+  --border:#e8ecf0;--border-light:#f1f5f9;
+  --warning:#f59e0b;--warning-light:#fffbeb;
+  --error:#ef4444;--error-light:#fef2f2;
+  --info:#3b82f6;--info-light:#eff6ff;
+  --success:#10b981;--success-light:#ecfdf5;
+  --sidebar-w:240px;--topbar-h:64px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--page-bg);color:var(--text-dark);min-height:100vh;display:flex}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.06);text-decoration:none}
+.logo-mark{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:20px;height:20px;fill:white}
+.logo-text{font-size:16px;font-weight:800;color:white;flex:1}
+.logo-role{font-size:9px;font-weight:700;background:rgba(0,201,167,.2);color:var(--primary);border-radius:4px;padding:2px 6px;border:1px solid rgba(0,201,167,.3);white-space:nowrap}
+.sidebar-section{padding:18px 12px 8px}
+.sidebar-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.45);font-size:13px;font-weight:500;transition:all .18s;text-decoration:none;margin-bottom:2px}
+.nav-item:hover{background:var(--sidebar-hover);color:rgba(255,255,255,.8)}
+.nav-item.active{background:linear-gradient(135deg,rgba(0,201,167,.18),rgba(0,201,167,.08));color:var(--primary);border:1px solid rgba(0,201,167,.2)}
+.nav-icon{width:16px;height:16px;flex-shrink:0}
+.nav-icon svg{width:16px;height:16px;fill:currentColor}
+.nav-badge{margin-left:auto;color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;flex-shrink:0}
+.nb-red{background:var(--error)}.nb-teal{background:var(--primary)}.nb-warn{background:var(--warning)}
+.sidebar-footer{margin-top:auto;padding:16px 12px;border-top:1px solid rgba(255,255,255,.06)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:background .18s}
+.user-card:hover{background:var(--sidebar-hover)}
+.u-avatar{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#6366f1);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0}
+.u-name{font-size:12px;font-weight:700;color:white}
+.u-role{font-size:10px;color:rgba(255,255,255,.35)}
+
+/* MAIN */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:var(--topbar-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px;flex:1}
+.page-title{font-size:18px;font-weight:800;color:var(--text-dark)}
+.page-subtitle{font-size:12px;color:var(--text-muted);font-weight:500}
+.topbar-divider{width:1px;height:24px;background:var(--border)}
+.live-badge{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--success);background:var(--success-light);padding:4px 10px;border-radius:20px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:blink 1.4s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .2s}
+.icon-btn:hover{border-color:var(--primary)}
+.icon-btn svg{width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:2}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--error);border-radius:50%;border:1.5px solid white}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s;white-space:nowrap}
+.btn-primary{background:var(--primary);color:white;box-shadow:0 4px 14px rgba(0,201,167,.25)}
+.btn-primary:hover:not(:disabled){background:var(--primary-dark);transform:translateY(-1px)}
+.btn-secondary{background:white;color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:var(--error-light);color:var(--error);border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:var(--error);color:white}
+.btn-warning{background:var(--warning-light);color:var(--warning);border:1px solid rgba(245,158,11,.2)}
+.btn-warning:hover{background:var(--warning);color:white}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+.btn svg{width:14px;height:14px;fill:currentColor}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none !important;box-shadow:none}
+
+/* CONTENT */
+.content{padding:24px 28px;flex:1}
+.screen{display:none}
+.screen.active{display:block}
+
+/* DASHBOARD */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+.urgent-banner{background:linear-gradient(135deg,#7f1d1d,#991b1b);border-radius:14px;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;animation:fadeUp .3s ease both;border:1px solid rgba(239,68,68,.3);gap:16px;flex-wrap:wrap}
+.urgent-left{display:flex;align-items:center;gap:14px}
+.urgent-icon{width:40px;height:40px;border-radius:10px;background:rgba(239,68,68,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.urgent-icon svg{width:20px;height:20px;fill:#fca5a5}
+.urgent-title{font-size:15px;font-weight:800;color:white;margin-bottom:2px}
+.urgent-sub{font-size:12px;color:rgba(255,255,255,.55)}
+.urgent-right{display:flex;align-items:center;gap:16px;flex-shrink:0}
+.urgent-count{font-size:38px;font-weight:900;color:#fca5a5;letter-spacing:-.02em}
+
+/* Today cards */
+.today-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:20px}
+.today-card{background:white;border-radius:14px;padding:18px 16px;border:1px solid var(--border-light);text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;animation:fadeUp .35s ease both}
+.today-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--tc,var(--primary));transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.today-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.07);transform:translateY(-2px)}
+.today-card:hover::after{transform:scaleX(1)}
+.tc-val{font-size:30px;font-weight:900;letter-spacing:-.02em;margin-bottom:4px}
+.tc-lbl{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.tc-trend{font-size:10px;font-weight:600;margin-top:5px}
+
+/* Dash grid */
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.dash-card{background:white;border-radius:16px;border:1px solid var(--border-light);overflow:hidden;animation:fadeUp .4s ease both}
+.dash-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light)}
+.dash-title{font-size:14px;font-weight:700;color:var(--text-dark)}
+.dash-sub{font-size:11px;color:var(--text-muted);margin-top:1px}
+.dash-action{font-size:12px;font-weight:600;color:var(--primary);cursor:pointer;background:none;border:none;font-family:inherit;padding:0}
+.dash-action:hover{text-decoration:underline}
+
+/* Driver board */
+.driver-board{padding:14px 20px}
+.driver-status-row{display:flex;align-items:center;padding:9px 0;border-bottom:1px solid var(--border-light);gap:10px}
+.driver-status-row:last-child{border-bottom:none}
+.ds-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.ds-label{font-size:13px;font-weight:600;color:var(--text-mid);width:70px;flex-shrink:0}
+.ds-bar-wrap{flex:1;height:6px;background:var(--border-light);border-radius:3px}
+.ds-bar{height:6px;border-radius:3px}
+.ds-count{font-size:20px;font-weight:800;min-width:32px;text-align:right}
+
+/* Routes */
+.route-mini{padding:10px 14px;background:var(--border-light);border-radius:10px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.route-mini:last-child{margin-bottom:0}
+.route-id{font-size:12px;font-weight:700;color:var(--info)}
+.route-stops{font-size:11px;color:var(--text-muted);margin-top:1px}
+.route-pct-bar{flex:1;height:5px;background:rgba(0,0,0,.08);border-radius:3px;overflow:hidden}
+.route-pct-fill{height:5px;border-radius:3px;background:var(--primary)}
+.route-pct-lbl{font-size:11px;font-weight:700;color:var(--text-dark);min-width:30px;text-align:right}
+
+/* Failed items */
+.failed-section{max-height:320px;overflow-y:auto}
+.failed-item{display:flex;align-items:center;gap:12px;padding:11px 20px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .15s}
+.failed-item:last-child{border-bottom:none}
+.failed-item:hover{background:#fef2f2}
+.fi-id{font-size:12px;font-weight:700;color:var(--error);min-width:76px;flex-shrink:0}
+.fi-info{flex:1;min-width:0}
+.fi-customer{font-size:13px;font-weight:600;color:var(--text-dark)}
+.fi-detail{font-size:11px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi-badge{font-size:11px;font-weight:700;color:var(--error);background:var(--error-light);padding:3px 8px;border-radius:5px;white-space:nowrap;flex-shrink:0}
+
+/* ORDERS */
+.filter-bar{background:white;border-radius:14px;border:1px solid var(--border-light);padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:7px;background:var(--page-bg);border:1.5px solid var(--border);border-radius:9px;padding:7px 12px;flex:1;min-width:180px;transition:border-color .2s}
+.search-box:focus-within{border-color:var(--primary)}
+.search-box svg{width:13px;height:13px;fill:none;stroke:var(--text-muted);stroke-width:2;flex-shrink:0}
+.search-box input{border:none;background:transparent;outline:none;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);width:100%}
+.search-box input::placeholder{color:var(--text-light)}
+.fsel{border:1.5px solid var(--border);border-radius:8px;padding:7px 26px 7px 10px;font-size:12px;font-weight:500;color:var(--text-mid);background:var(--page-bg);cursor:pointer;appearance:none;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:110px;transition:border-color .2s}
+.fsel:focus{border-color:var(--primary)}
+.fdivider{width:1px;height:22px;background:var(--border);flex-shrink:0}
+
+/* Optimize bar */
+.optimize-bar{background:linear-gradient(135deg,#0a1628,#0f2540);border-radius:14px;padding:14px 20px;margin-bottom:16px;align-items:center;gap:14px;display:none}
+.optimize-bar.show{display:flex}
+.opt-icon{width:38px;height:38px;border-radius:10px;background:rgba(0,201,167,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.opt-icon svg{width:18px;height:18px;fill:var(--primary)}
+.opt-count{font-size:14px;font-weight:700;color:white}
+.opt-sub{font-size:11px;color:rgba(255,255,255,.4)}
+
+/* Table */
+.table-wrap{background:white;border-radius:16px;border:1px solid var(--border-light);overflow:hidden}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid var(--border-light);flex-wrap:wrap;gap:10px}
+.table-title{font-size:15px;font-weight:700;color:var(--text-dark)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--border-light);white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--border-light);transition:background .15s;cursor:pointer}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f9fafb}
+tbody tr.selected-row{background:var(--primary-light) !important}
+tbody tr.unassigned-row{border-left:3px solid var(--error)}
+td{padding:12px 14px;font-size:13px;color:var(--text-mid);white-space:nowrap}
+
+.s-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.s-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sb-delivered{background:var(--success-light);color:var(--success)}
+.sb-transit{background:var(--warning-light);color:var(--warning)}
+.sb-assigned{background:var(--info-light);color:var(--info)}
+.sb-failed{background:var(--error-light);color:var(--error)}
+.sb-unassigned{background:var(--error-light);color:var(--error);font-weight:800}
+
+.cb{width:15px;height:15px;accent-color:var(--primary);cursor:pointer}
+.row-acts{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+tbody tr:hover .row-acts{opacity:1}
+.ra-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative}
+.ra-btn:hover{border-color:var(--primary);background:var(--primary-light)}
+.ra-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+.ra-btn[data-tip]:hover::before{content:attr(data-tip);position:absolute;bottom:calc(100%+5px);left:50%;transform:translateX(-50%);background:#1f2937;color:white;font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;white-space:nowrap;z-index:99;pointer-events:none}
+
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-top:1px solid var(--border-light)}
+.page-info{font-size:12px;color:var(--text-muted)}
+.page-btns{display:flex;gap:4px}
+.pg-btn{width:30px;height:30px;border-radius:7px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid);transition:all .15s}
+.pg-btn:hover{border-color:var(--primary);color:var(--primary)}
+.pg-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
+.pg-btn svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2}
+
+/* PANELS */
+.panel-overlay{position:fixed;inset:0;background:rgba(10,22,40,.5);backdrop-filter:blur(3px);z-index:400;display:none}
+.panel-overlay.show{display:block}
+.slide-panel{position:fixed;top:0;right:0;bottom:0;width:520px;background:white;z-index:500;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.slide-panel.open{transform:translateX(0)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-size:17px;font-weight:800;color:var(--text-dark)}
+.panel-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.panel-close{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0;background:none}
+.panel-close:hover{border-color:var(--error);color:var(--error)}
+.panel-close svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+.panel-body{flex:1;overflow-y:auto}
+.panel-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0}
+
+/* Order detail */
+.order-hero{background:linear-gradient(135deg,#0a1628,#0f2540);padding:22px 24px;position:relative;overflow:hidden}
+.order-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(0,201,167,.07)}
+.oh-id{font-size:12px;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:4px}
+.oh-merchant{font-size:20px;font-weight:800;color:white;margin-bottom:8px}
+.oh-badges{display:flex;gap:7px;flex-wrap:wrap}
+.oh-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;background:rgba(255,255,255,.08);color:rgba(255,255,255,.65)}
+.d-section{padding:16px 24px;border-bottom:1px solid var(--border-light)}
+.dfield{display:flex;padding:8px 0;border-bottom:1px solid var(--border-light)}
+.dfield:last-child{border-bottom:none}
+.dfield label{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em;width:110px;flex-shrink:0;padding-top:1px}
+.dfield span{font-size:13px;font-weight:600;color:var(--text-dark)}
+
+/* Timeline */
+.tl-item{display:flex;gap:12px}
+.tl-col{display:flex;flex-direction:column;align-items:center;width:26px;flex-shrink:0}
+.tl-dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:1;border:2px solid white}
+.tl-dot svg{width:11px;height:11px;fill:white}
+.tl-line{width:2px;flex:1;background:var(--border-light);min-height:18px;margin:3px 0}
+.tl-content{flex:1;padding:3px 0 16px}
+.tl-title{font-size:13px;font-weight:700}
+.tl-time{font-size:10px;color:var(--text-light);margin-top:2px}
+
+/* Assign panel */
+.a-section{padding:18px 24px;border-bottom:1px solid var(--border-light)}
+.a-section:last-child{border-bottom:none}
+.a-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:12px}
+.form-group{margin-bottom:13px}
+.form-group:last-child{margin-bottom:0}
+.form-group label{font-size:11px;font-weight:600;color:var(--text-mid);display:block;margin-bottom:5px}
+.form-control{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s;background:white}
+.form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,201,167,.1)}
+select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer}
+textarea.form-control{resize:vertical}
+
+/* OPTIMIZER MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,22,40,.6);backdrop-filter:blur(5px);z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.show{display:flex}
+.modal-box{background:white;border-radius:22px;width:100%;max-width:660px;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,.25);animation:popIn .35s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-head{display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid var(--border)}
+.modal-icon{width:42px;height:42px;border-radius:12px;background:var(--primary-light);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.modal-icon svg{width:20px;height:20px;fill:var(--primary-dark)}
+.modal-title{font-size:17px;font-weight:800;color:var(--text-dark)}
+.modal-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.modal-close-btn{margin-left:auto;width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:none}
+.modal-close-btn:hover{border-color:var(--error);color:var(--error)}
+.modal-close-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2}
+.modal-body{flex:1;overflow-y:auto;padding:22px 24px}
+.modal-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center}
+
+/* Computing state */
+.computing-wrap{text-align:center;padding:28px 0}
+.opt-spinner{width:48px;height:48px;border:4px solid var(--border-light);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.opt-spinner-lbl{font-size:14px;font-weight:600;color:var(--text-muted)}
+.progress-wrap{height:6px;background:var(--border-light);border-radius:3px;max-width:280px;margin:12px auto;overflow:hidden}
+.progress-bar{height:6px;background:var(--primary);border-radius:3px;width:0;transition:width .4s ease}
+.step-lbl{font-size:11px;color:var(--text-light);margin-top:8px}
+
+/* Result */
+.rr-header{background:linear-gradient(135deg,#0a1628,#0f2540);border-radius:14px;padding:16px 20px;display:flex;align-items:center;margin-bottom:16px}
+.rr-stat{text-align:center;flex:1}
+.rr-val{font-size:20px;font-weight:800;color:var(--primary)}
+.rr-lbl{font-size:10px;color:rgba(255,255,255,.4);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+.rr-div{width:1px;height:36px;background:rgba(255,255,255,.1)}
+.opt-map{height:140px;background:linear-gradient(135deg,#d4f0ea,#c8ece4);border-radius:12px;position:relative;overflow:hidden;margin-bottom:16px}
+.opt-map-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(0,150,120,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(0,150,120,.07) 1px,transparent 1px);background-size:22px 22px}
+.stop-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border-light)}
+.stop-row:last-child{border-bottom:none}
+.stop-num{width:26px;height:26px;border-radius:50%;color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.stop-info{flex:1}
+.stop-id{font-size:11px;font-weight:700;color:var(--primary)}
+.stop-addr{font-size:12px;font-weight:600;color:var(--text-dark)}
+.stop-meta{font-size:11px;color:var(--text-muted)}
+.stop-dist{font-size:11px;color:var(--text-muted);text-align:right;min-width:50px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#0a1628;color:white;border-left:4px solid var(--primary);border-radius:12px;padding:14px 20px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;animation:fadeUp .3s ease;max-width:380px}
+.toast svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+@media(max-width:900px){:root{--sidebar-w:0px}.sidebar{transform:translateX(-240px)}.main{margin-left:0}.slide-panel{width:100%}.today-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.today-grid{grid-template-columns:repeat(2,1fr)}.dash-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>
+    </div>
+    <span class="logo-text">Fast Drop</span>
+    <span class="logo-role">DISPATCHER</span>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Operations</div>
+    <a class="nav-item active" id="navDash" href="fastdrop-admin-dashboard.html" onclick="return showScreen('dashboard',this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></span>
+      Dashboard
+    </a>
+    <a class="nav-item" id="navOrders" href="#" onclick="return showScreen('orders',this)">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>
+      Orders
+      <span class="nav-badge nb-teal">142</span>
+    </a>
+    <a class="nav-item" id="navRoutes" href="#" onclick="return showScreen('orders',document.getElementById('navOrders'))">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+      Routes
+      <span class="nav-badge nb-warn">8</span>
+    </a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Attention Needed</div>
+    <a class="nav-item" href="#" onclick="goToUnassigned();return false">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></span>
+      Unassigned
+      <span class="nav-badge nb-red" id="unassignedBadge">12</span>
+    </a>
+    <a class="nav-item" href="#" onclick="goToFailed();return false">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></span>
+      Failed
+      <span class="nav-badge nb-red">6</span>
+    </a>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="u-avatar">AT</div>
+      <div style="flex:1">
+        <div class="u-name">Ahmed Tarek</div>
+        <div class="u-role">Dispatcher</div>
+      </div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,.3)">
+        <path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/>
+      </svg>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title" id="topbarTitle">Dashboard</div>
+        <div class="page-subtitle">Thursday, March 19 · Operational view</div>
+      </div>
+      <div class="topbar-divider"></div>
+      <div class="live-badge">
+        <div class="live-dot"></div>
+        Live
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="icon-btn">
+        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <div class="notif-dot"></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ===== DASHBOARD ===== -->
+    <div class="screen active" id="screen-dashboard">
+
+      <!-- Urgent banner -->
+      <div class="urgent-banner">
+        <div class="urgent-left">
+          <div class="urgent-icon">
+            <svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+          </div>
+          <div>
+            <div class="urgent-title">Unassigned Orders Need Attention</div>
+            <div class="urgent-sub">These orders have no driver or route assigned — dispatch immediately</div>
+          </div>
+        </div>
+        <div class="urgent-right">
+          <div class="urgent-count" id="dashUnassigned">12</div>
+          <button class="btn btn-danger btn-sm" onclick="goToUnassigned()">Dispatch Now →</button>
+        </div>
+      </div>
+
+      <!-- Today stats -->
+      <div class="today-grid">
+        <div class="today-card" style="--tc:var(--primary)" onclick="goToOrders()">
+          <div class="tc-val" style="color:var(--primary)" id="card-total">342</div>
+          <div class="tc-lbl">Total Today</div>
+          <div class="tc-trend" style="color:var(--success)">↑ +28 vs yesterday</div>
+        </div>
+        <div class="today-card" style="--tc:var(--info)" onclick="goToOrders()">
+          <div class="tc-val" style="color:var(--info)" id="card-assigned">89</div>
+          <div class="tc-lbl">Assigned</div>
+          <div class="tc-trend" style="color:var(--text-muted)">awaiting pickup</div>
+        </div>
+        <div class="today-card" style="--tc:var(--warning)" onclick="goToOrders()">
+          <div class="tc-val" style="color:var(--warning)" id="card-transit">183</div>
+          <div class="tc-lbl">In Transit</div>
+          <div class="tc-trend" style="color:var(--warning)">active now</div>
+        </div>
+        <div class="today-card" style="--tc:var(--success)" onclick="goToOrders()">
+          <div class="tc-val" style="color:var(--success)" id="card-delivered">58</div>
+          <div class="tc-lbl">Delivered</div>
+          <div class="tc-trend" style="color:var(--success)">97.2% success</div>
+        </div>
+        <div class="today-card" style="--tc:var(--error)" onclick="goToFailed()">
+          <div class="tc-val" style="color:var(--error)" id="card-failed">6</div>
+          <div class="tc-lbl">Failed</div>
+          <div class="tc-trend" style="color:var(--error)">needs attention</div>
+        </div>
+      </div>
+
+      <!-- Dash grid -->
+      <div class="dash-grid">
+
+        <!-- Driver Availability -->
+        <div class="dash-card">
+          <div class="dash-head">
+            <div>
+              <div class="dash-title">Driver Availability</div>
+              <div class="dash-sub">84 active drivers today</div>
+            </div>
+          </div>
+          <div class="driver-board">
+            <div class="driver-status-row">
+              <div class="ds-dot" style="background:var(--success)"></div>
+              <div class="ds-label">Available</div>
+              <div class="ds-bar-wrap"><div class="ds-bar" style="width:26%;background:var(--success)"></div></div>
+              <div class="ds-count" style="color:var(--success)">22</div>
+            </div>
+            <div class="driver-status-row">
+              <div class="ds-dot" style="background:var(--warning)"></div>
+              <div class="ds-label">On Route</div>
+              <div class="ds-bar-wrap"><div class="ds-bar" style="width:74%;background:var(--warning)"></div></div>
+              <div class="ds-count" style="color:var(--warning)">62</div>
+            </div>
+            <div class="driver-status-row">
+              <div class="ds-dot" style="background:var(--text-light)"></div>
+              <div class="ds-label">Offline</div>
+              <div class="ds-bar-wrap"><div class="ds-bar" style="width:14%;background:var(--text-light)"></div></div>
+              <div class="ds-count" style="color:var(--text-muted)">12</div>
+            </div>
+          </div>
+          <div style="padding:12px 20px;background:var(--primary-light);border-top:1px solid rgba(0,201,167,.12)">
+            <div style="font-size:11px;font-weight:700;color:var(--primary-dark);margin-bottom:8px;text-transform:uppercase;letter-spacing:.05em">Suggested Drivers</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap" id="suggestedDrivers"></div>
+          </div>
+        </div>
+
+        <!-- Active Routes -->
+        <div class="dash-card">
+          <div class="dash-head">
+            <div>
+              <div class="dash-title">Active Routes</div>
+              <div class="dash-sub">8 routes running today</div>
+            </div>
+            <button class="dash-action" onclick="goToOrders()">View all</button>
+          </div>
+          <div style="padding:14px 20px" id="routesList"></div>
+        </div>
+
+        <!-- Failed Deliveries -->
+        <div class="dash-card" style="grid-column:1/-1">
+          <div class="dash-head">
+            <div>
+              <div class="dash-title">Recent Failed Deliveries</div>
+              <div class="dash-sub">Requiring reassignment or manual intervention</div>
+            </div>
+            <button class="dash-action" onclick="goToFailed()">Manage all</button>
+          </div>
+          <div class="failed-section" id="failedList"></div>
+        </div>
+
+      </div>
+    </div><!-- /dashboard -->
+
+    <!-- ===== ORDERS ===== -->
+    <div class="screen" id="screen-orders">
+
+      <!-- Optimize bar -->
+      <div class="optimize-bar" id="optimizeBar">
+        <div class="opt-icon">
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div class="opt-count"><span id="selectedCount">0</span> orders selected</div>
+          <div class="opt-sub">Select unassigned orders then optimize a route</div>
+        </div>
+        <button class="btn btn-primary" id="optimizeBtn" onclick="runOptimizer()" disabled>
+          <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <span id="optimizeBtnLabel">Select 2+ orders</span>
+        </button>
+        <button class="btn btn-secondary btn-sm" onclick="clearSelection()">Clear</button>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search order ID, merchant, customer…" oninput="filterOrders(this.value)">
+        </div>
+        <div class="fdivider"></div>
+        <select class="fsel" id="statusFilter" onchange="filterByStatus(this.value)">
+          <option value="">All Statuses</option>
+          <option value="Unassigned">Unassigned</option>
+          <option value="Assigned">Assigned</option>
+          <option value="In Transit">In Transit</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Failed">Failed</option>
+        </select>
+        <select class="fsel" onchange="filterByZone(this.value)">
+          <option value="">All Zones</option>
+          <option>Downtown</option>
+          <option>Westside</option>
+          <option>East Hub</option>
+          <option>North Ring</option>
+          <option>South Bay</option>
+        </select>
+        <select class="fsel">
+          <option value="">All Drivers</option>
+          <option>Ahmed Kamel</option>
+          <option>Mohamed Samir</option>
+          <option>Karim Youssef</option>
+          <option>Omar Fathy</option>
+        </select>
+        <button class="btn btn-primary btn-sm" id="bulkAssignBtn" style="display:none" onclick="openAssignPanel(null)">
+          <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg>
+          Bulk Assign
+        </button>
+        <div style="margin-left:auto;font-size:12px;color:var(--text-muted)" id="orderCount">142 orders</div>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-head">
+          <div class="table-title">Today's Orders</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:11px;background:var(--error-light);color:var(--error);padding:4px 10px;border-radius:6px;font-weight:700" id="unassignedTag">12 Unassigned</span>
+            <span style="font-size:11px;background:var(--warning-light);color:var(--warning);padding:4px 10px;border-radius:6px;font-weight:700">6 Failed</span>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:40px"><input type="checkbox" class="cb" id="masterCb" onchange="masterCheck(this)"></th>
+                <th>Order ID</th>
+                <th>Merchant</th>
+                <th>Customer</th>
+                <th>Zone</th>
+                <th>Status</th>
+                <th>Driver</th>
+                <th>Route</th>
+                <th>Time</th>
+                <th>Weight</th>
+                <th style="width:100px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="ordersBody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <div class="page-info" id="ordersPageInfo">Showing 1–12 of 142</div>
+          <div class="page-btns">
+            <div class="pg-btn"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+            <div class="pg-btn active">1</div>
+            <div class="pg-btn">2</div>
+            <div class="pg-btn">3</div>
+            <div class="pg-btn"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /orders -->
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- OVERLAY -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanels()"></div>
+
+<!-- ORDER DETAIL PANEL -->
+<div class="slide-panel" id="detailPanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="detailTitle">Order Detail</div>
+      <div class="panel-sub" id="detailSub">Status history</div>
+    </div>
+    <button class="panel-close" onclick="closePanels()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body" id="detailBody"></div>
+  <div class="panel-footer" id="detailFooter"></div>
+</div>
+
+<!-- ASSIGN PANEL -->
+<div class="slide-panel" id="assignPanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="assignTitle">Assign to Route</div>
+      <div class="panel-sub" id="assignSub">Select route and driver</div>
+    </div>
+    <button class="panel-close" onclick="closePanels()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="panel-body">
+    <div class="a-section">
+      <div class="a-title">Route Assignment</div>
+      <div class="form-group">
+        <label>Select Route</label>
+        <select class="form-control" id="routeSelect">
+          <option value="">— Select existing or create new —</option>
+          <option>RT-440 · Downtown · Ahmed Kamel (12 stops)</option>
+          <option>RT-441 · Downtown · Tamer Mostafa (7 stops)</option>
+          <option>RT-445 · Westside · Mohamed Samir (9 stops)</option>
+          <option>RT-442 · East Hub · Laila Fawzy (14 stops)</option>
+          <option>RT-447 · North Ring · Omar Fathy (8 stops)</option>
+          <option>RT-450 · Airport · Khaled Adel (6 stops)</option>
+          <option>New Route</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Assign Driver</label>
+        <select class="form-control" id="driverSelect">
+          <option value="">— Select driver —</option>
+          <option>Ahmed Kamel · Downtown · Available</option>
+          <option>Karim Youssef · East Hub · Available</option>
+          <option>Laila Fawzy · East Hub · Available</option>
+          <option>Mohamed Samir · Westside · On Route</option>
+          <option>Omar Fathy · North Ring · On Route</option>
+        </select>
+      </div>
+    </div>
+    <div class="a-section">
+      <div class="a-title">Options</div>
+      <div class="form-group">
+        <label>Priority</label>
+        <select class="form-control">
+          <option>Normal</option>
+          <option>High Priority</option>
+          <option>Express</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Pickup Slot</label>
+        <select class="form-control">
+          <option>As soon as possible</option>
+          <option>Morning (8am–12pm)</option>
+          <option>Afternoon (12pm–5pm)</option>
+          <option>Evening (5pm–9pm)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Dispatch Notes</label>
+        <textarea class="form-control" rows="2" placeholder="e.g. Call before arrival, fragile package…"></textarea>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn btn-secondary" onclick="closePanels()">Cancel</button>
+    <button class="btn btn-primary" style="margin-left:auto" onclick="confirmAssign()">
+      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+      Confirm Assignment
+    </button>
+  </div>
+</div>
+
+<!-- OPTIMIZER MODAL -->
+<div class="modal-overlay" id="optimizerModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-icon">
+        <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div>
+        <div class="modal-title" id="optimizerTitle">Route Optimizer</div>
+        <div class="modal-sub" id="optimizerSub">Computing optimal stop sequence…</div>
+      </div>
+      <button class="modal-close-btn" onclick="closeOptimizer()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="optimizerBody">
+      <div class="computing-wrap" id="computingWrap">
+        <div class="opt-spinner"></div>
+        <div class="opt-spinner-lbl">Running Nearest Neighbor algorithm…</div>
+        <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+        <div class="step-lbl" id="stepLabel">Initializing…</div>
+      </div>
+      <div id="optimizerResult" style="display:none"></div>
+    </div>
+    <div class="modal-footer" id="optimizerFooter" style="display:none">
+      <div style="font-size:12px;color:var(--text-muted)">Assign a driver after confirming</div>
+      <button class="btn btn-secondary btn-sm" style="margin-left:auto" onclick="closeOptimizer()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmRoute()">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        Confirm Route
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+var ORDERS = [
+  {id:'SHP-8830',merchant:'SwiftMart',customer:'Nile City Mall',zone:'Downtown',status:'Unassigned',driver:'—',route:'—',time:'08:15',weight:'1.2kg',lat:30.04,lng:31.24},
+  {id:'SHP-8829',merchant:'Pharmacy Plus',customer:'Omar Clinic',zone:'East Hub',status:'Unassigned',driver:'—',route:'—',time:'08:12',weight:'0.5kg',lat:30.08,lng:31.30},
+  {id:'SHP-8828',merchant:'TechShop',customer:'Laptop World',zone:'Downtown',status:'Unassigned',driver:'—',route:'—',time:'08:10',weight:'2.1kg',lat:30.05,lng:31.22},
+  {id:'SHP-8827',merchant:'HomeGoods',customer:'Ahmed Furniture',zone:'North Ring',status:'Unassigned',driver:'—',route:'—',time:'08:05',weight:'5.4kg',lat:30.10,lng:31.28},
+  {id:'SHP-8826',merchant:'Fashion Hub',customer:'Mona Tarek',zone:'Westside',status:'Unassigned',driver:'—',route:'—',time:'08:02',weight:'0.6kg',lat:30.03,lng:31.20},
+  {id:'SHP-8825',merchant:'SwiftMart',customer:'Ahmed Nour',zone:'Downtown',status:'Unassigned',driver:'—',route:'—',time:'07:58',weight:'1.0kg',lat:30.04,lng:31.25},
+  {id:'SHP-8824',merchant:'Pharmacy Plus',customer:'Shifa Clinic',zone:'East Hub',status:'Unassigned',driver:'—',route:'—',time:'07:55',weight:'0.8kg',lat:30.09,lng:31.29},
+  {id:'SHP-8821',merchant:'SwiftMart',customer:'City Super',zone:'Westside',status:'Assigned',driver:'Mohamed S.',route:'RT-445',time:'07:50',weight:'3.0kg',lat:30.04,lng:31.19},
+  {id:'SHP-8820',merchant:'TechShop',customer:'Ahmed Hassan',zone:'Downtown',status:'In Transit',driver:'Ahmed K.',route:'RT-440',time:'07:45',weight:'0.8kg',lat:30.05,lng:31.23},
+  {id:'SHP-8819',merchant:'Pharmacy Plus',customer:'Sara Medical',zone:'East Hub',status:'Delivered',driver:'Laila F.',route:'RT-442',time:'07:40',weight:'1.8kg',lat:30.09,lng:31.31},
+  {id:'SHP-8818',merchant:'HomeGoods',customer:'Retail Hub',zone:'North Ring',status:'In Transit',driver:'Omar F.',route:'RT-447',time:'07:35',weight:'4.2kg',lat:30.11,lng:31.27},
+  {id:'SHP-8814',merchant:'HomeGoods',customer:'Home Essentials',zone:'South Bay',status:'Failed',driver:'Yasser H.',route:'RT-448',time:'07:20',weight:'3.1kg',lat:29.97,lng:31.26},
+];
+
+var FAILED_ITEMS = [
+  {id:'SHP-8814',customer:'Home Essentials',detail:'South Bay · 3rd attempt · Customer unreachable',driver:'Yasser H.',attempts:'3/3'},
+  {id:'SHP-8802',customer:'Ahmed Gaber',detail:'Downtown · Wrong address · 3rd attempt',driver:'Tamer M.',attempts:'3/3'},
+  {id:'SHP-8799',customer:'Fatma Clinic',detail:'North Ring · Closed location · 2nd attempt',driver:'Omar F.',attempts:'2/3'},
+  {id:'SHP-8791',customer:'Mona Tarek',detail:'Westside · Not at home · 1st attempt',driver:'Mohamed S.',attempts:'1/3'},
+  {id:'SHP-8788',customer:'City Pharmacy',detail:'East Hub · Incorrect phone · 2nd attempt',driver:'Laila F.',attempts:'2/3'},
+  {id:'SHP-8781',customer:'Tech Solutions',detail:'Downtown · Access denied · 1st attempt',driver:'Ahmed K.',attempts:'1/3'},
+];
+
+var ROUTES_DATA = [
+  {id:'RT-440',zone:'Downtown',stops:12,driver:'Ahmed K.',pct:75},
+  {id:'RT-445',zone:'Westside',stops:9,driver:'Mohamed S.',pct:55},
+  {id:'RT-442',zone:'East Hub',stops:14,driver:'Laila F.',pct:43},
+  {id:'RT-447',zone:'North Ring',stops:8,driver:'Omar F.',pct:87},
+  {id:'RT-450',zone:'Airport',stops:6,driver:'Khaled A.',pct:33},
+];
+
+var SUGGESTED = ['Ahmed K.','Karim Y.','Laila F.'];
+
+var currentOrders = ORDERS.slice();
+var selectedIds = {};
+var assignTargetId = null;
+
+var STATUS_CLS = {
+  'Unassigned':'sb-unassigned',
+  'Assigned':'sb-assigned',
+  'In Transit':'sb-transit',
+  'Delivered':'sb-delivered',
+  'Failed':'sb-failed'
+};
+
+// ── INIT ──
+function init() {
+  renderRoutes();
+  renderFailed();
+  renderSuggested();
+  renderOrders(currentOrders);
+  animateCards();
+}
+
+function renderRoutes() {
+  var html = '';
+  ROUTES_DATA.forEach(function(r) {
+    html += '<div class="route-mini">' +
+      '<div><div class="route-id">' + r.id + '</div>' +
+      '<div class="route-stops">' + r.zone + ' · ' + r.stops + ' stops · ' + r.driver + '</div></div>' +
+      '<div class="route-pct-bar"><div class="route-pct-fill" style="width:' + r.pct + '%"></div></div>' +
+      '<div class="route-pct-lbl">' + r.pct + '%</div>' +
+      '</div>';
+  });
+  document.getElementById('routesList').innerHTML = html;
+}
+
+function renderFailed() {
+  var html = '';
+  FAILED_ITEMS.forEach(function(f) {
+    html += '<div class="failed-item" onclick="openOrderDetail(\'' + f.id + '\')">' +
+      '<div class="fi-id">' + f.id + '</div>' +
+      '<div class="fi-info"><div class="fi-customer">' + f.customer + '</div>' +
+      '<div class="fi-detail">' + f.detail + ' · ' + f.driver + '</div></div>' +
+      '<div class="fi-badge">' + f.attempts + '</div>' +
+      '<button class="btn btn-warning btn-sm" style="margin-left:8px" onclick="event.stopPropagation();openAssignPanel(\'' + f.id + '\')">Reassign</button>' +
+      '</div>';
+  });
+  document.getElementById('failedList').innerHTML = html;
+}
+
+function renderSuggested() {
+  var html = '';
+  SUGGESTED.forEach(function(d) {
+    html += '<div style="background:white;border:1px solid rgba(0,201,167,.2);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--primary-dark);cursor:pointer">' + d + ' <span style="color:var(--success)">●</span></div>';
+  });
+  html += '<div style="background:white;border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--text-muted)">+19 more</div>';
+  document.getElementById('suggestedDrivers').innerHTML = html;
+}
+
+function renderOrders(data) {
+  var html = '';
+  data.forEach(function(o) {
+    var isUnassigned = o.status === 'Unassigned';
+    var checked = selectedIds[o.id] ? 'checked' : '';
+    var disabled = !isUnassigned ? 'disabled' : '';
+    var rowClass = (isUnassigned ? 'unassigned-row' : '') + (selectedIds[o.id] ? ' selected-row' : '');
+    var scls = STATUS_CLS[o.status] || 'sb-assigned';
+
+    var assignBtn = '';
+    if (isUnassigned) {
+      assignBtn = '<div class="ra-btn" data-tip="Assign" onclick="event.stopPropagation();openAssignPanel(\'' + o.id + '\')">' +
+        '<svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>' +
+        '</div>';
+    } else if (o.status === 'Assigned' || o.status === 'In Transit') {
+      assignBtn = '<div class="ra-btn" data-tip="Reassign" onclick="event.stopPropagation();openAssignPanel(\'' + o.id + '\')">' +
+        '<svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>' +
+        '</div>';
+    }
+
+    html += '<tr class="' + rowClass + '" onclick="openOrderDetail(\'' + o.id + '\')">' +
+      '<td onclick="event.stopPropagation()"><input type="checkbox" class="cb" data-id="' + o.id + '" ' + checked + ' ' + disabled + ' onchange="toggleSelect(this,\'' + o.id + '\')" ' + (disabled ? 'style="opacity:.3;cursor:not-allowed"' : '') + '></td>' +
+      '<td style="font-weight:700;color:var(--primary);font-size:12px">' + o.id + (isUnassigned ? ' <span style="color:var(--error);font-size:10px">●</span>' : '') + '</td>' +
+      '<td style="font-weight:600;color:var(--text-dark)">' + o.merchant + '</td>' +
+      '<td style="font-size:12px">' + o.customer + '</td>' +
+      '<td><span style="font-size:11px;font-weight:600;color:var(--info);background:var(--info-light);padding:3px 7px;border-radius:5px">' + o.zone + '</span></td>' +
+      '<td><span class="s-badge ' + scls + '">' + o.status + '</span></td>' +
+      '<td style="font-size:12px">' + o.driver + '</td>' +
+      '<td style="font-size:12px;color:var(--info);font-weight:600">' + o.route + '</td>' +
+      '<td style="font-size:11px;color:var(--text-muted)">' + o.time + '</td>' +
+      '<td style="font-size:12px">' + o.weight + '</td>' +
+      '<td onclick="event.stopPropagation()"><div class="row-acts">' +
+        '<div class="ra-btn" data-tip="View" onclick="event.stopPropagation();openOrderDetail(\'' + o.id + '\')">' +
+          '<svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+        '</div>' +
+        assignBtn +
+      '</div></td>' +
+      '</tr>';
+  });
+  document.getElementById('ordersBody').innerHTML = html;
+  document.getElementById('orderCount').textContent = data.length + ' orders';
+  document.getElementById('ordersPageInfo').textContent = 'Showing 1–' + Math.min(12, data.length) + ' of ' + data.length;
+
+  var unassignedCount = data.filter(function(o){ return o.status === 'Unassigned'; }).length;
+  document.getElementById('unassignedTag').textContent = unassignedCount + ' Unassigned';
+}
+
+// ── SELECTION ──
+function toggleSelect(cb, id) {
+  if (cb.checked) {
+    selectedIds[id] = true;
+  } else {
+    delete selectedIds[id];
+  }
+  var row = cb.closest('tr');
+  if (row) row.classList.toggle('selected-row', cb.checked);
+  updateOptBar();
+}
+
+function masterCheck(mc) {
+  currentOrders.forEach(function(o) {
+    if (o.status === 'Unassigned') {
+      if (mc.checked) selectedIds[o.id] = true;
+      else delete selectedIds[o.id];
+    }
+  });
+  renderOrders(currentOrders);
+  updateOptBar();
+}
+
+function clearSelection() {
+  selectedIds = {};
+  renderOrders(currentOrders);
+  updateOptBar();
+}
+
+function updateOptBar() {
+  var n = Object.keys(selectedIds).length;
+  document.getElementById('selectedCount').textContent = n;
+  document.getElementById('optimizeBar').classList.toggle('show', n > 0);
+  document.getElementById('bulkAssignBtn').style.display = n > 1 ? 'flex' : 'none';
+  var btn = document.getElementById('optimizeBtn');
+  var lbl = document.getElementById('optimizeBtnLabel');
+  btn.disabled = n < 2;
+  lbl.textContent = n >= 2 ? 'Optimize Route (' + n + ' orders)' : 'Select 2+ orders';
+}
+
+// ── FILTERS ──
+function filterOrders(q) {
+  q = q.toLowerCase();
+  currentOrders = ORDERS.filter(function(o) {
+    return o.id.toLowerCase().indexOf(q) > -1 ||
+           o.merchant.toLowerCase().indexOf(q) > -1 ||
+           o.customer.toLowerCase().indexOf(q) > -1;
+  });
+  renderOrders(currentOrders);
+}
+
+function filterByStatus(s) {
+  currentOrders = s ? ORDERS.filter(function(o){ return o.status === s; }) : ORDERS.slice();
+  renderOrders(currentOrders);
+}
+
+function filterByZone(z) {
+  currentOrders = z ? ORDERS.filter(function(o){ return o.zone === z; }) : ORDERS.slice();
+  renderOrders(currentOrders);
+}
+
+// ── SCREEN SWITCH ──
+function showScreen(name, navEl) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('screen-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  if (navEl) navEl.classList.add('active');
+  var titles = {dashboard:'Dashboard', orders:'Orders & Dispatch'};
+  document.getElementById('topbarTitle').textContent = titles[name] || name;
+  return false;
+}
+
+function goToOrders() { showScreen('orders', document.getElementById('navOrders')); }
+function goToUnassigned() {
+  showScreen('orders', document.getElementById('navOrders'));
+  document.getElementById('statusFilter').value = 'Unassigned';
+  filterByStatus('Unassigned');
+}
+function goToFailed() {
+  showScreen('orders', document.getElementById('navOrders'));
+  document.getElementById('statusFilter').value = 'Failed';
+  filterByStatus('Failed');
+}
+
+// ── ORDER DETAIL ──
+function openOrderDetail(id) {
+  var o = null;
+  for (var i = 0; i < ORDERS.length; i++) { if (ORDERS[i].id === id) { o = ORDERS[i]; break; } }
+  if (!o) return;
+
+  document.getElementById('detailTitle').textContent = o.id;
+  document.getElementById('detailSub').textContent = o.merchant + ' · ' + o.status;
+
+  var scls = STATUS_CLS[o.status] || 'sb-assigned';
+  var tlSteps = [
+    {label:'Order Created', time:'Today ' + o.time, done:true, col:'#00c9a7'},
+    {label: o.status === 'Unassigned' ? 'Awaiting Assignment' : 'Assigned to Driver', time: o.status === 'Unassigned' ? 'Pending' : 'Today', done: o.status !== 'Unassigned', col:'#3b82f6'},
+    {label:'Picked Up', time: ['In Transit','Delivered','Failed'].indexOf(o.status) > -1 ? 'Today' : '—', done: ['In Transit','Delivered','Failed'].indexOf(o.status) > -1, col:'#f59e0b'},
+    {label: o.status === 'Delivered' ? 'Delivered' : o.status === 'Failed' ? 'Delivery Failed' : 'Awaiting Delivery', time: ['Delivered','Failed'].indexOf(o.status) > -1 ? 'Today' : '—', done: ['Delivered','Failed'].indexOf(o.status) > -1, col: o.status === 'Delivered' ? '#10b981' : '#ef4444'},
+  ];
+
+  var tlHtml = '';
+  for (var t = 0; t < tlSteps.length; t++) {
+    var s = tlSteps[t];
+    var dotIcon = s.done ? '<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>' : '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>';
+    var lineHtml = t < tlSteps.length - 1 ? '<div class="tl-line"></div>' : '';
+    tlHtml += '<div class="tl-item">' +
+      '<div class="tl-col">' +
+        '<div class="tl-dot" style="background:' + (s.done ? s.col : '#e5e7eb') + ';box-shadow:' + (s.done ? '0 0 0 3px ' + s.col + '22' : 'none') + '">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">' + dotIcon + '</svg>' +
+        '</div>' + lineHtml +
+      '</div>' +
+      '<div class="tl-content">' +
+        '<div class="tl-title" style="color:' + (s.done ? 'var(--text-dark)' : 'var(--text-light)') + '">' + s.label + '</div>' +
+        '<div class="tl-time">' + s.time + '</div>' +
+      '</div>' +
+      '</div>';
+  }
+
+  document.getElementById('detailBody').innerHTML =
+    '<div class="order-hero">' +
+      '<div class="oh-id">' + o.id + '</div>' +
+      '<div class="oh-merchant">' + o.merchant + '</div>' +
+      '<div class="oh-badges">' +
+        '<span class="s-badge ' + scls + '">' + o.status + '</span>' +
+        '<span class="oh-badge">' + o.zone + '</span>' +
+        '<span class="oh-badge">' + o.weight + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="d-section">' +
+      '<div class="dfield"><label>Customer</label><span>' + o.customer + '</span></div>' +
+      '<div class="dfield"><label>Zone</label><span style="color:var(--info)">' + o.zone + '</span></div>' +
+      '<div class="dfield"><label>Driver</label><span>' + o.driver + '</span></div>' +
+      '<div class="dfield"><label>Route</label><span style="color:var(--info)">' + o.route + '</span></div>' +
+      '<div class="dfield"><label>Created</label><span>Today at ' + o.time + '</span></div>' +
+      '<div class="dfield"><label>Weight</label><span>' + o.weight + '</span></div>' +
+    '</div>' +
+    '<div class="d-section">' +
+      '<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px">Status Timeline</div>' +
+      tlHtml +
+    '</div>';
+
+  var isAssignable = ['Unassigned','Assigned','Failed'].indexOf(o.status) > -1;
+  var footerHtml = '<button class="btn btn-secondary" onclick="closePanels()">Close</button>';
+  if (isAssignable) {
+    footerHtml = '<button class="btn btn-primary" onclick="closePanels();openAssignPanel(\'' + o.id + '\')">' +
+      '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg>' +
+      (o.status === 'Unassigned' ? 'Assign Now' : 'Reassign') + '</button>' + footerHtml;
+  }
+  document.getElementById('detailFooter').innerHTML = footerHtml;
+  openPanel('detailPanel');
+}
+
+// ── ASSIGN ──
+function openAssignPanel(id) {
+  assignTargetId = id;
+  var selCount = Object.keys(selectedIds).length;
+  var isBulk = !id && selCount > 1;
+  document.getElementById('assignTitle').textContent = isBulk ? 'Bulk Assign (' + selCount + ' orders)' : 'Assign Order ' + (id || '');
+  document.getElementById('assignSub').textContent = isBulk ? selCount + ' orders to route' : 'Select driver and route';
+  openPanel('assignPanel');
+}
+
+function confirmAssign() {
+  var route = document.getElementById('routeSelect').value;
+  var driver = document.getElementById('driverSelect').value;
+  if (!route && !driver) { showToast('Please select a route or driver', 'warn'); return; }
+
+  var targets = assignTargetId ? [assignTargetId] : Object.keys(selectedIds);
+  targets.forEach(function(id) {
+    var o = null;
+    for (var i = 0; i < ORDERS.length; i++) { if (ORDERS[i].id === id) { o = ORDERS[i]; break; } }
+    if (o) {
+      o.status = 'Assigned';
+      o.driver = driver ? driver.split('·')[0].trim() : 'Auto-assigned';
+      o.route = route ? route.split('·')[0].trim() : 'New Route';
+    }
+  });
+
+  selectedIds = {};
+  currentOrders = ORDERS.slice();
+  renderOrders(currentOrders);
+  updateOptBar();
+  closePanels();
+
+  var unassigned = ORDERS.filter(function(o){ return o.status === 'Unassigned'; }).length;
+  document.getElementById('dashUnassigned').textContent = unassigned;
+  document.getElementById('unassignedBadge').textContent = unassigned;
+
+  showToast(targets.length + ' order' + (targets.length > 1 ? 's' : '') + ' assigned successfully');
+}
+
+// ── OPTIMIZER ──
+function runOptimizer() {
+  var keys = Object.keys(selectedIds);
+  if (keys.length < 2) { showToast('Select at least 2 unassigned orders', 'warn'); return; }
+
+  document.getElementById('optimizerTitle').textContent = 'Optimizing ' + keys.length + ' Orders';
+  document.getElementById('optimizerSub').textContent = 'Running Nearest Neighbor algorithm…';
+  document.getElementById('computingWrap').style.display = 'block';
+  document.getElementById('optimizerResult').style.display = 'none';
+  document.getElementById('optimizerFooter').style.display = 'none';
+  document.getElementById('optimizerModal').classList.add('show');
+
+  var steps = [
+    {pct:15, label:'Parsing order coordinates…'},
+    {pct:32, label:'Building distance matrix…'},
+    {pct:50, label:'Finding start node from depot…'},
+    {pct:67, label:'Iterating nearest unvisited stops…'},
+    {pct:82, label:'Calculating total route distance…'},
+    {pct:95, label:'Finalizing optimized sequence…'},
+    {pct:100, label:'Complete!'},
+  ];
+
+  var i = 0;
+  var bar = document.getElementById('progressBar');
+  var stepLbl = document.getElementById('stepLabel');
+
+  function nextStep() {
+    if (i >= steps.length) { setTimeout(showResult, 400); return; }
+    bar.style.width = steps[i].pct + '%';
+    stepLbl.textContent = steps[i].label;
+    i++;
+    setTimeout(nextStep, 300 + Math.random() * 200);
+  }
+  setTimeout(nextStep, 200);
+}
+
+function showResult() {
+  var keys = Object.keys(selectedIds);
+  var orders = [];
+  keys.forEach(function(id) {
+    for (var i = 0; i < ORDERS.length; i++) { if (ORDERS[i].id === id) { orders.push(ORDERS[i]); break; } }
+  });
+
+  var route = nearestNeighbor(orders);
+  document.getElementById('computingWrap').style.display = 'none';
+  document.getElementById('optimizerTitle').textContent = 'Route Optimized ✓';
+  document.getElementById('optimizerSub').textContent = route.length + ' stops · Optimal sequence ready';
+
+  // Build SVG map
+  var svgPins = '';
+  var svgLines = '';
+  var positions = route.map(function(o, i) {
+    return {
+      x: 10 + (i / Math.max(route.length - 1, 1)) * 80,
+      y: 15 + Math.sin(i * 1.1) * 30 + (i % 2) * 20,
+      n: i + 1,
+      col: i === 0 ? '#00c9a7' : i === route.length - 1 ? '#ef4444' : '#0a1628'
+    };
+  });
+
+  for (var k = 0; k < positions.length - 1; k++) {
+    svgLines += '<line x1="' + positions[k].x + '%" y1="' + positions[k].y + '%" x2="' + positions[k+1].x + '%" y2="' + positions[k+1].y + '%" stroke="#00c9a7" stroke-width="2" stroke-dasharray="4,3" opacity=".7"/>';
+  }
+  positions.forEach(function(p) {
+    svgPins += '<div style="position:absolute;left:' + p.x + '%;top:' + p.y + '%;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:' + p.col + ';border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,.2);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:white">' + p.n + '</div>';
+  });
+
+  var stopsHtml = '';
+  route.forEach(function(o, i) {
+    var dist = i === 0 ? '0.0' : (3.0 + Math.random() * 3.5).toFixed(1);
+    var bg = i === 0 ? 'var(--primary)' : i === route.length - 1 ? 'var(--error)' : '#3b82f6';
+    stopsHtml += '<div class="stop-row">' +
+      '<div class="stop-num" style="background:' + bg + '">' + (i+1) + '</div>' +
+      '<div class="stop-info">' +
+        '<div class="stop-id">' + o.id + '</div>' +
+        '<div class="stop-addr">' + o.customer + '</div>' +
+        '<div class="stop-meta">' + o.merchant + ' · ' + o.zone + '</div>' +
+      '</div>' +
+      '<div class="stop-dist">' + dist + 'km<br><span style="font-size:10px;color:var(--text-light)">from prev</span></div>' +
+      '</div>';
+  });
+
+  var totalDist = (route.length * 4.1 + 5.2).toFixed(1);
+  var estTime = route.length * 18 + 20;
+
+  document.getElementById('optimizerResult').innerHTML =
+    '<div class="rr-header">' +
+      '<div class="rr-stat"><div class="rr-val">' + route.length + '</div><div class="rr-lbl">Stops</div></div>' +
+      '<div class="rr-div"></div>' +
+      '<div class="rr-stat"><div class="rr-val">' + totalDist + 'km</div><div class="rr-lbl">Distance</div></div>' +
+      '<div class="rr-div"></div>' +
+      '<div class="rr-stat"><div class="rr-val">~' + estTime + 'min</div><div class="rr-lbl">Duration</div></div>' +
+      '<div class="rr-div"></div>' +
+      '<div class="rr-stat"><div class="rr-val" style="color:#6ee7d4">RT-NEW</div><div class="rr-lbl">Route ID</div></div>' +
+    '</div>' +
+    '<div class="opt-map">' +
+      '<div class="opt-map-grid"></div>' +
+      '<svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 100 100" preserveAspectRatio="none">' + svgLines + '</svg>' +
+      svgPins +
+      '<div style="position:absolute;bottom:8px;left:10px;background:white;border-radius:7px;padding:4px 10px;font-size:10px;font-weight:700;color:var(--text-dark);box-shadow:0 2px 8px rgba(0,0,0,.1)">Route preview</div>' +
+    '</div>' +
+    '<div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">' +
+      'Optimized Stop Sequence</div>' +
+    stopsHtml +
+    '<div style="background:var(--primary-light);border-radius:10px;padding:12px 14px;margin-top:14px;font-size:12px;color:var(--primary-dark);font-weight:500;display:flex;align-items:center;gap:8px">' +
+      '<svg width="14" height="14" viewBox="0 0 24 24" fill="var(--primary)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' +
+      'Route RT-NEW saved · Assign a driver to begin dispatch' +
+    '</div>';
+
+  document.getElementById('optimizerResult').style.display = 'block';
+  document.getElementById('optimizerFooter').style.display = 'flex';
+}
+
+function nearestNeighbor(orders) {
+  if (!orders.length) return [];
+  var unvisited = orders.slice();
+  var route = [unvisited.splice(0, 1)[0]];
+  while (unvisited.length) {
+    var last = route[route.length - 1];
+    var minDist = Infinity, minIdx = 0;
+    for (var i = 0; i < unvisited.length; i++) {
+      var dx = unvisited[i].lat - last.lat;
+      var dy = unvisited[i].lng - last.lng;
+      var d = dx * dx + dy * dy;
+      if (d < minDist) { minDist = d; minIdx = i; }
+    }
+    route.push(unvisited.splice(minIdx, 1)[0]);
+  }
+  return route;
+}
+
+function confirmRoute() {
+  Object.keys(selectedIds).forEach(function(id) {
+    for (var i = 0; i < ORDERS.length; i++) {
+      if (ORDERS[i].id === id) { ORDERS[i].status = 'Assigned'; ORDERS[i].route = 'RT-NEW'; break; }
+    }
+  });
+  selectedIds = {};
+  currentOrders = ORDERS.slice();
+  renderOrders(currentOrders);
+  updateOptBar();
+  closeOptimizer();
+
+  var unassigned = ORDERS.filter(function(o){ return o.status === 'Unassigned'; }).length;
+  document.getElementById('dashUnassigned').textContent = unassigned;
+  document.getElementById('unassignedBadge').textContent = unassigned;
+
+  showToast('Route RT-NEW created and saved — assign a driver to dispatch');
+}
+
+function closeOptimizer() { document.getElementById('optimizerModal').classList.remove('show'); }
+
+// ── PANELS ──
+function openPanel(id) {
+  document.getElementById('panelOverlay').classList.add('show');
+  document.getElementById(id).classList.add('open');
+}
+function closePanels() {
+  document.getElementById('panelOverlay').classList.remove('show');
+  document.querySelectorAll('.slide-panel').forEach(function(p){ p.classList.remove('open'); });
+}
+
+// ── TOAST ──
+function showToast(msg, type) {
+  type = type || 'success';
+  var colors = {success:'var(--primary)', error:'var(--error)', warn:'var(--warning)'};
+  var icons = {
+    success:'<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>',
+    error:'<path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>',
+    warn:'<path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>',
+  };
+  var el = document.createElement('div');
+  el.className = 'toast';
+  el.style.borderLeftColor = colors[type] || colors.success;
+  el.innerHTML = '<svg viewBox="0 0 24 24" style="fill:' + (colors[type]||colors.success) + '">' + (icons[type]||icons.success) + '</svg>' + msg;
+  document.body.appendChild(el);
+  setTimeout(function(){ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(function(){ el.remove(); }, 300); }, 3800);
+}
+
+// ── ANIMATE CARDS ──
+function animateCards() {
+  var cards = [{id:'card-total',val:342},{id:'card-assigned',val:89},{id:'card-transit',val:183},{id:'card-delivered',val:58},{id:'card-failed',val:6}];
+  cards.forEach(function(c, idx) {
+    var el = document.getElementById(c.id);
+    if (!el) return;
+    el.textContent = '0';
+    setTimeout(function() {
+      var dur = 600, st = performance.now();
+      function step(now) {
+        var p = Math.min((now - st) / dur, 1);
+        var e = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(c.val * e);
+        if (p < 1) requestAnimationFrame(step);
+        else el.textContent = c.val;
+      }
+      requestAnimationFrame(step);
+    }, 80 + idx * 60);
+  });
+}
+
+// Run on load
+init();
+</script>
+</body>
+</html>

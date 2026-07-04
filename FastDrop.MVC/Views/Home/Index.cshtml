@@ -1,0 +1,652 @@
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Drop – Deliver Faster. Manage Smarter.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --primary: #00c9a7;
+    --primary-dark: #00a98a;
+    --primary-light: #e6faf6;
+    --text-dark: #111827;
+    --text-mid: #374151;
+    --text-muted: #6b7280;
+    --text-light: #9ca3af;
+    --bg-light: #f0fdf9;
+    --white: #ffffff;
+    --border: #e5e7eb;
+    --dark-bg: #0f1f2e;
+    --orange: #f97316;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: var(--text-dark);
+    background: var(--white);
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 40px; height: 64px;
+    background: rgba(255,255,255,.92);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0,201,167,.12);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 9px;
+    font-weight: 700; font-size: 17px; color: var(--text-dark); text-decoration: none;
+  }
+  .logo-icon {
+    width: 34px; height: 34px; background: var(--primary);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 20px; height: 20px; fill: white; }
+  .nav-links { display: flex; gap: 32px; list-style: none; }
+  .nav-links a {
+    text-decoration: none; color: var(--text-mid); font-size: 14px; font-weight: 500;
+    transition: color .2s;
+  }
+  .nav-links a:hover { color: var(--primary); }
+  .nav-actions { display: flex; align-items: center; gap: 12px; }
+  .btn-login {
+    background: none; border: none; cursor: pointer;
+    font-size: 14px; font-weight: 500; color: var(--text-mid);
+    font-family: 'Inter', sans-serif; transition: color .2s;
+  }
+  .btn-login:hover { color: var(--primary); }
+  .btn-primary {
+    background: var(--primary); color: white; border: none;
+    border-radius: 50px; padding: 9px 22px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif; transition: background .2s;
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(150deg, #e8f8f4 0%, #f0fdf9 40%, #eafaf6 100%);
+    text-align: center; padding: 88px 40px 0; overflow: hidden;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 7px;
+    background: white; border: 1px solid rgba(0,201,167,.25);
+    border-radius: 20px; padding: 5px 16px;
+    font-size: 11px; font-weight: 600; letter-spacing: .07em;
+    color: var(--text-muted); text-transform: uppercase; margin-bottom: 30px;
+  }
+  .hero-badge span {
+    width: 7px; height: 7px; background: var(--primary);
+    border-radius: 50%; display: inline-block;
+    box-shadow: 0 0 0 3px rgba(0,201,167,.2);
+  }
+  .hero h1 {
+    font-size: 58px; font-weight: 900; line-height: 1.1;
+    color: var(--text-dark); margin-bottom: 4px;
+  }
+  .hero h1 .accent { color: var(--primary); }
+  .hero p {
+    color: var(--text-muted); font-size: 16px; max-width: 480px;
+    margin: 18px auto 34px;
+  }
+  .hero-buttons { display: flex; gap: 12px; justify-content: center; margin-bottom: 52px; }
+  .btn-hero-primary {
+    background: var(--primary); color: white; border: none;
+    border-radius: 50px; padding: 14px 30px; font-size: 15px;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    display: flex; align-items: center; gap: 6px; transition: background .2s;
+    box-shadow: 0 4px 20px rgba(0,201,167,.35);
+  }
+  .btn-hero-primary:hover { background: var(--primary-dark); }
+  .btn-hero-secondary {
+    background: white; color: var(--text-dark); border: 1.5px solid var(--border);
+    border-radius: 50px; padding: 14px 30px; font-size: 15px;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    display: flex; align-items: center; gap: 6px; transition: border-color .2s;
+  }
+  .btn-hero-secondary:hover { border-color: var(--primary); }
+
+  /* hero mockup */
+  .hero-mockup {
+    max-width: 760px; margin: 0 auto;
+    background: var(--primary); border-radius: 16px 16px 0 0;
+    overflow: hidden; box-shadow: 0 20px 60px rgba(0,201,167,.25);
+    padding: 16px 16px 0;
+  }
+  .mockup-browser { background: #0f1f2e; border-radius: 10px 10px 0 0; overflow: hidden; }
+  .mockup-bar {
+    background: #f5f5f7; padding: 10px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .mockup-dots { display: flex; gap: 6px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; }
+  .dot.y { background: #febc2e; }
+  .dot.g { background: #28c840; }
+  .mockup-url {
+    flex: 1; background: white; border-radius: 6px;
+    padding: 4px 12px; font-size: 12px; color: var(--text-muted);
+    text-align: center; max-width: 200px; margin: 0 auto;
+  }
+  .mockup-inner { display: flex; height: 220px; }
+  .mockup-sidebar {
+    width: 160px; background: #0f1f2e; padding: 16px 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .sidebar-item {
+    display: flex; align-items: center; gap: 8px;
+    padding: 7px 10px; border-radius: 6px; font-size: 12px;
+    color: rgba(255,255,255,.4); cursor: pointer;
+  }
+  .sidebar-item.active { background: var(--primary); color: white; }
+  .sidebar-item svg { width: 14px; height: 14px; fill: currentColor; opacity: .8; }
+  .mockup-main { flex: 1; background: #f8f9fb; position: relative; overflow: hidden; }
+  .map-bg {
+    width: 100%; height: 100%;
+    background: linear-gradient(135deg, #d4f0ea 0%, #c8ece4 50%, #cef0e8 100%);
+    position: relative;
+  }
+  .map-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,150,120,.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,150,120,.08) 1px, transparent 1px);
+    background-size: 30px 30px;
+  }
+  .map-pin {
+    position: absolute; width: 10px; height: 10px;
+    background: var(--primary); border-radius: 50%;
+    border: 2px solid white; box-shadow: 0 2px 6px rgba(0,201,167,.4);
+  }
+  .mockup-panel {
+    width: 160px; background: white; padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+    border-left: 1px solid var(--border);
+  }
+  .panel-title { font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
+  .panel-driver {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px; background: #f9fafb; border-radius: 6px;
+  }
+  .driver-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white; flex-shrink: 0;
+  }
+  .driver-info { flex: 1; min-width: 0; }
+  .driver-name { font-size: 11px; font-weight: 600; color: var(--text-dark); }
+  .driver-tags { display: flex; gap: 3px; margin-top: 2px; }
+  .tag { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 500; }
+  .tag.teal { background: #d1faf4; color: #00897b; }
+  .tag.green { background: #d1fae5; color: #059669; }
+  .tag.red { background: #fee2e2; color: #dc2626; }
+
+  /* ── TRUSTED ── */
+  .trusted { background: white; padding: 64px 40px 0; text-align: center; }
+  .trusted-label {
+    font-size: 11px; font-weight: 600; letter-spacing: .1em;
+    color: var(--text-muted); text-transform: uppercase; margin-bottom: 24px;
+  }
+  .trusted-logos {
+    display: flex; justify-content: center; align-items: center;
+    gap: 48px; flex-wrap: wrap; margin-bottom: 52px;
+  }
+  .trusted-logo {
+    display: flex; align-items: center; gap: 8px;
+    color: #9ca3af; font-weight: 600; font-size: 15px; transition: color .2s;
+  }
+  .trusted-logo:hover { color: var(--primary); }
+  .trusted-logo svg { width: 20px; height: 20px; fill: currentColor; }
+
+  /* ── TESTIMONIAL ── */
+  .testimonial-wrap { background: white; padding: 0 40px 80px; display: flex; justify-content: center; }
+  .testimonial-card {
+    background: linear-gradient(135deg, #f0fdf9, #e6faf5);
+    border-radius: 16px; padding: 40px 48px; max-width: 680px; text-align: center;
+    border: 1px solid rgba(0,201,167,.2);
+  }
+  .quote-icon { color: #6ee7d4; font-size: 36px; line-height: 1; margin-bottom: 16px; }
+  .testimonial-text {
+    font-size: 17px; font-weight: 500; color: var(--text-dark);
+    line-height: 1.65; margin-bottom: 24px;
+  }
+  .testimonial-author { display: flex; align-items: center; justify-content: center; gap: 12px; }
+  .author-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), #00a98a);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: white; font-size: 14px;
+  }
+  .author-name { font-weight: 700; font-size: 14px; color: var(--text-dark); }
+  .author-role { font-size: 12px; color: var(--text-muted); }
+
+  /* ── FEATURES ── */
+  .features { background: var(--bg-light); padding: 88px 40px; text-align: center; }
+  .section-title { font-size: 38px; font-weight: 800; color: var(--text-dark); margin-bottom: 12px; }
+  .section-sub { font-size: 15px; color: var(--text-muted); max-width: 480px; margin: 0 auto 52px; }
+  .features-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+    max-width: 980px; margin: 0 auto;
+  }
+  .feature-card {
+    background: white; border-radius: 16px; padding: 30px 26px; text-align: left;
+    border: 1px solid rgba(0,201,167,.1); transition: box-shadow .2s, transform .2s;
+  }
+  .feature-card:hover { box-shadow: 0 8px 30px rgba(0,201,167,.15); transform: translateY(-2px); }
+  .feature-icon {
+    width: 46px; height: 46px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center; margin-bottom: 18px;
+  }
+  .feature-icon svg { width: 22px; height: 22px; }
+  .fi-teal  { background: #ccfbf1; } .fi-teal  svg { fill: #0d9488; }
+  .fi-cyan  { background: #cffafe; } .fi-cyan  svg { fill: #0891b2; }
+  .fi-emerald { background: #d1fae5; } .fi-emerald svg { fill: #059669; }
+  .fi-mint  { background: #e0fdf4; } .fi-mint  svg { fill: #10b981; }
+  .fi-orange { background: #ffedd5; } .fi-orange svg { fill: #ea580c; }
+  .fi-green { background: #dcfce7; } .fi-green svg { fill: #16a34a; }
+  .feature-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+  .feature-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  /* ── HOW IT WORKS ── */
+  .how { background: white; padding: 88px 40px 0; text-align: center; }
+  .steps-row {
+    display: flex; justify-content: center; align-items: flex-start;
+    gap: 0; max-width: 800px; margin: 52px auto 0; position: relative;
+  }
+  .step { flex: 1; text-align: center; padding: 0 20px; position: relative; }
+  .step-line {
+    position: absolute; top: 26px; left: 50%; right: -50%;
+    height: 2px; background: rgba(0,201,167,.2); z-index: 0;
+  }
+  .step:last-child .step-line { display: none; }
+  .step-num {
+    width: 52px; height: 52px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700; margin: 0 auto 22px; position: relative; z-index: 1;
+  }
+  .sn-1 { background: #ccfbf1; color: var(--primary); }
+  .sn-2 { background: #cffafe; color: #0891b2; }
+  .sn-3 { background: #d1fae5; color: #059669; }
+  .step-title { font-size: 15px; font-weight: 700; color: var(--text-dark); margin-bottom: 8px; }
+  .step-desc { font-size: 13px; color: var(--text-muted); }
+
+  /* ── CTA DARK ── */
+  .cta-dark {
+    background: linear-gradient(135deg, #0f1f2e 0%, #0a2e25 100%);
+    padding: 88px 40px; text-align: center; margin-top: 88px;
+  }
+  .cta-dark h2 {
+    font-size: 44px; font-weight: 800; color: white;
+    max-width: 620px; margin: 0 auto 16px; line-height: 1.2;
+  }
+  .cta-dark p { color: rgba(255,255,255,.55); font-size: 15px; margin-bottom: 38px; }
+  .cta-buttons { display: flex; gap: 14px; justify-content: center; margin-bottom: 16px; }
+  .btn-cta-primary {
+    background: var(--primary); color: white; border: none;
+    border-radius: 50px; padding: 14px 32px; font-size: 15px;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: background .2s; box-shadow: 0 4px 20px rgba(0,201,167,.3);
+  }
+  .btn-cta-primary:hover { background: var(--primary-dark); }
+  .btn-cta-secondary {
+    background: transparent; color: white;
+    border: 1.5px solid rgba(255,255,255,.25);
+    border-radius: 50px; padding: 14px 32px; font-size: 15px;
+    font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: border-color .2s, color .2s;
+  }
+  .btn-cta-secondary:hover { border-color: var(--primary); color: var(--primary); }
+  .cta-note { font-size: 12px; color: rgba(255,255,255,.3); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: white; padding: 52px 60px 32px;
+    border-top: 1px solid rgba(0,201,167,.1);
+  }
+  .footer-top {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 40px; margin-bottom: 40px;
+  }
+  .footer-brand p { font-size: 13px; color: var(--text-muted); margin-top: 10px; max-width: 220px; }
+  .footer-socials { display: flex; gap: 10px; margin-top: 16px; }
+  .social-icon {
+    width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); text-decoration: none; font-size: 13px;
+    transition: border-color .2s, color .2s;
+  }
+  .social-icon:hover { border-color: var(--primary); color: var(--primary); }
+  .footer-col h4 { font-size: 13px; font-weight: 700; color: var(--text-dark); margin-bottom: 14px; }
+  .footer-col a {
+    display: block; font-size: 13px; color: var(--text-muted);
+    text-decoration: none; margin-bottom: 10px; transition: color .2s;
+  }
+  .footer-col a:hover { color: var(--primary); }
+  .footer-bottom {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid var(--border); padding-top: 24px;
+    font-size: 12px; color: var(--text-muted);
+  }
+  .heart { color: #ef4444; }
+  /* ── RESPONSIVE ── */
+  @@media (max-width: 1024px) {
+    .hero h1 { font-size: 48px; }
+    .hero-mockup { max-width: 90%; }
+    .features-grid { grid-template-columns: repeat(2, 1fr); }
+    .footer-top { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @@media (max-width: 768px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    .hero { padding: 60px 20px 0; }
+    .hero h1 { font-size: 38px; }
+    .hero-mockup { display: none; }
+    .features-grid { grid-template-columns: 1fr; }
+    .steps-row { flex-direction: column; gap: 40px; margin-top: 30px; }
+    .step { width: 100%; padding: 0; }
+    .step-line { display: none; }
+    .trusted-logos { gap: 24px; }
+    .testimonial-card { padding: 30px 20px; }
+    .cta-dark { padding: 60px 20px; }
+    .cta-buttons { flex-direction: column; }
+    .footer-top { grid-template-columns: 1fr; gap: 30px; }
+    footer { padding: 40px 20px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a asp-controller="Home" asp-action="Index" class="nav-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5S5.17 15.5 6 15.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+    </div>
+    Fast Drop
+  </a>
+  <ul class="nav-links">
+    <li><a href="#">Features</a></li>
+    <li><a href="#">How it Works</a></li>
+    <li><a href="#">Pricing</a></li>
+    <li><a href="#">About</a></li>
+  </ul>
+  <div class="nav-actions">
+    <button class="btn-login" onclick="window.location.href='@Url.Action("Login", "Account")'">Log in</button>
+    <button class="btn-primary" onclick="window.location.href='@Url.Action("Signup", "Account")'">Get Started</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge"><span></span> Built for Modern Delivery Businesses</div>
+  <h1>Deliver Faster.<br><span class="accent">Manage Smarter.</span></h1>
+  <p>All-in-one platform to manage orders, dispatch drivers, and track deliveries in real time with unprecedented clarity and control.</p>
+  <div class="hero-buttons">
+    <button class="btn-hero-primary" onclick="window.location.href='@Url.Action("Signup", "Account")'">Start Free →</button>
+    <button class="btn-hero-secondary">📅 Book Demo</button>
+  </div>
+
+  <div class="hero-mockup">
+    <div class="mockup-browser">
+      <div class="mockup-bar">
+        <div class="mockup-dots">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+        </div>
+        <div class="mockup-url">🔒 app.fastdrop.io</div>
+      </div>
+      <div class="mockup-inner">
+        <div class="mockup-sidebar">
+          <div class="sidebar-item active">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Dashboard
+          </div>
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2"/></svg>
+            Orders
+          </div>
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            Dispatch
+          </div>
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+            Drivers
+          </div>
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+            Analytics
+          </div>
+          <div class="sidebar-item">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+            Settings
+          </div>
+        </div>
+        <div class="mockup-main">
+          <div class="map-bg">
+            <div class="map-grid"></div>
+            <div class="map-pin" style="top:35%;left:28%"></div>
+            <div class="map-pin" style="top:52%;left:44%"></div>
+            <div class="map-pin" style="top:38%;left:60%"></div>
+            <div class="map-pin" style="top:65%;left:33%"></div>
+            <div class="map-pin" style="top:28%;left:68%"></div>
+            <div class="map-pin" style="top:70%;left:62%"></div>
+          </div>
+        </div>
+        <div class="mockup-panel">
+          <div class="panel-title">Log/Drops</div>
+          <div class="panel-driver">
+            <div class="driver-avatar" style="background:linear-gradient(135deg,#00c9a7,#00a98a)">M</div>
+            <div class="driver-info">
+              <div class="driver-name">$71.99</div>
+              <div class="driver-tags">
+                <span class="tag teal">Route A</span>
+                <span class="tag green">Fast</span>
+                <span class="tag red">Late</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel-driver">
+            <div class="driver-avatar" style="background:linear-gradient(135deg,#0ea5e9,#0891b2)">F</div>
+            <div class="driver-info">
+              <div class="driver-name">Fgbs</div>
+              <div style="display:flex;gap:3px;align-items:center;margin-top:4px">
+                <div style="height:4px;background:#e5e7eb;border-radius:2px;flex:1">
+                  <div style="height:4px;background:#00c9a7;border-radius:2px;width:60%"></div>
+                </div>
+                <span style="font-size:10px;color:#9ca3af">60%</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel-driver">
+            <div class="driver-avatar" style="background:linear-gradient(135deg,#10b981,#059669)">W</div>
+            <div class="driver-info">
+              <div class="driver-name">Wardar</div>
+              <div style="font-size:10px;color:#00c9a7">● Online</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUSTED BY -->
+<section class="trusted">
+  <div class="trusted-label">Trusted by scaling delivery teams worldwide</div>
+  <div class="trusted-logos">
+    <div class="trusted-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15H9V8h2v9zm4 0h-2V8h2v9z"/></svg>Amazon
+    </div>
+    <div class="trusted-logo">
+      <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12z"/></svg>Shopify
+    </div>
+    <div class="trusted-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Express
+    </div>
+    <div class="trusted-logo">
+      <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5S5.17 15.5 6 15.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>LogisticsCo
+    </div>
+    <div class="trusted-logo">
+      <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>SwiftDeliver
+    </div>
+  </div>
+
+  <div class="testimonial-wrap" style="padding-top:0">
+    <div class="testimonial-card">
+      <div class="quote-icon">"</div>
+      <p class="testimonial-text">"Fast Drop helped us cut delivery time by 40% and scale effortlessly. The real-time visibility changed how we operate entirely."</p>
+      <div class="testimonial-author">
+        <div class="author-avatar">MC</div>
+        <div>
+          <div class="author-name">Michael Chen</div>
+          <div class="author-role">Operations Director, SwiftCommerce</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features">
+  <h2 class="section-title">Everything you need to deliver faster</h2>
+  <p class="section-sub">A complete toolkit designed to streamline your entire delivery workflow from dispatch to drop-off.</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon fi-teal">
+        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+      </div>
+      <div class="feature-title">Real-time Tracking</div>
+      <div class="feature-desc">Live GPS tracking for all your drivers. Know exactly where every order is at any given moment.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-cyan">
+        <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div class="feature-title">Smart Dispatch</div>
+      <div class="feature-desc">Auto-assign orders to the nearest available driver based on distance, load, and traffic.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-emerald">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      </div>
+      <div class="feature-title">Driver Management</div>
+      <div class="feature-desc">Manage schedules, track performance, and communicate instantly with your fleet.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-mint">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+      </div>
+      <div class="feature-title">Order Management</div>
+      <div class="feature-desc">Centralized hub for all incoming orders. Bulk import, edit, and organize with ease.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-orange">
+        <svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg>
+      </div>
+      <div class="feature-title">Analytics & Insights</div>
+      <div class="feature-desc">Detailed reports on delivery times, success rates, and driver efficiency to optimize operations.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon fi-green">
+        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/><circle cx="20" cy="8" r="3" fill="currentColor"/></svg>
+      </div>
+      <div class="feature-title">Multi-role System</div>
+      <div class="feature-desc">Custom access levels for admins, dispatchers, and drivers to ensure secure operations.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <h2 class="section-title">How Fast Drop Works</h2>
+  <p class="section-sub">Streamline your operations in three simple steps.</p>
+  <div class="steps-row">
+    <div class="step">
+      <div class="step-line"></div>
+      <div class="step-num sn-1">1</div>
+      <div class="step-title">Create Orders</div>
+      <div class="step-desc">Import orders automatically from your store or create them manually in seconds.</div>
+    </div>
+    <div class="step">
+      <div class="step-line"></div>
+      <div class="step-num sn-2">2</div>
+      <div class="step-title">Assign Drivers</div>
+      <div class="step-desc">Our smart system assigns the best driver, or you can drag-and-drop to dispatch manually.</div>
+    </div>
+    <div class="step">
+      <div class="step-line"></div>
+      <div class="step-num sn-3">3</div>
+      <div class="step-title">Track Live</div>
+      <div class="step-desc">Watch deliveries happen in real-time and keep your customers updated automatically.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA DARK -->
+<section class="cta-dark">
+  <h2>Ready to upgrade your delivery operations?</h2>
+  <p>Join thousands of businesses scaling their delivery fleet with Fast Drop. Setup takes less than 5 minutes.</p>
+  <div class="cta-buttons">
+    <button class="btn-cta-primary" onclick="window.location.href='@Url.Action("Signup", "Account")'">Get Started for Free</button>
+    <button class="btn-cta-secondary">Talk to Sales</button>
+  </div>
+  <div class="cta-note">No credit card required. 14-day free trial.</div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-brand">
+      <a asp-controller="Home" asp-action="Index" class="nav-logo" style="text-decoration:none;color:inherit">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:white"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5S5.17 15.5 6 15.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+        </div>
+        Fast Drop
+      </a>
+      <p>The intelligent delivery management platform for modern businesses.</p>
+      <div class="footer-socials">
+        <a href="#" class="social-icon">𝕏</a>
+        <a href="#" class="social-icon">in</a>
+        <a href="#" class="social-icon">⌥</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Product</h4>
+      <a href="#">Features</a>
+      <a href="#">Pricing</a>
+      <a href="#">Integrations</a>
+      <a href="#">Changelog</a>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <a href="#">About Us</a>
+      <a href="#">Careers</a>
+      <a href="#">Blog</a>
+      <a href="#">Contact</a>
+    </div>
+    <div class="footer-col">
+      <h4>Legal</h4>
+      <a href="#">Privacy Policy</a>
+      <a href="#">Terms of Service</a>
+      <a href="#">Cookie Policy</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2024 Fast Drop Inc. All rights reserved.</span>
+    <span>Designed with <span class="heart">❤</span> for speed</span>
+  </div>
+</footer>
+
+</body>
+</html>
+

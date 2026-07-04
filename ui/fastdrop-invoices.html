@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Drop – Invoices</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#00c9a7;--primary-dark:#00a98a;--primary-light:#e6faf6;--primary-mid:#ccfbf1;
+  --sidebar-bg:#0a1628;--sidebar-hover:#111e35;
+  --page-bg:#f4f7f9;--card-bg:#ffffff;
+  --text-dark:#0d1b2a;--text-mid:#374151;--text-muted:#6b7280;--text-light:#9ca3af;
+  --border:#e8ecf0;--border-light:#f1f5f9;
+  --warning:#f59e0b;--warning-light:#fffbeb;
+  --error:#ef4444;--error-light:#fef2f2;
+  --info:#3b82f6;--info-light:#eff6ff;
+  --success:#10b981;--success-light:#ecfdf5;
+  --purple:#8b5cf6;--purple-light:#f5f3ff;
+  --sidebar-w:240px;--topbar-h:64px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--page-bg);color:var(--text-dark);min-height:100vh;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.06);text-decoration:none}
+.logo-mark{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:20px;height:20px;fill:white}
+.logo-text{font-size:16px;font-weight:800;color:white}
+.logo-badge{font-size:9px;font-weight:700;background:var(--primary);color:white;border-radius:4px;padding:1px 5px;margin-left:auto;letter-spacing:.04em}
+.sidebar-section{padding:18px 12px 8px}
+.sidebar-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.45);font-size:13px;font-weight:500;transition:all .18s;text-decoration:none;margin-bottom:2px}
+.nav-item:hover{background:var(--sidebar-hover);color:rgba(255,255,255,.8)}
+.nav-item.active{background:linear-gradient(135deg,rgba(0,201,167,.18),rgba(0,201,167,.08));color:var(--primary);border:1px solid rgba(0,201,167,.2)}
+.nav-icon{width:16px;height:16px;flex-shrink:0}.nav-icon svg{width:16px;height:16px;fill:currentColor}
+.nav-badge{margin-left:auto;background:var(--error);color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.nav-badge.warn{background:var(--warning)}.nav-badge.teal{background:var(--primary)}
+.sidebar-footer{margin-top:auto;padding:16px 12px;border-top:1px solid rgba(255,255,255,.06)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:background .18s}
+.user-card:hover{background:var(--sidebar-hover)}
+.user-avatar{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0}
+.user-name{font-size:12px;font-weight:700;color:white}.user-role{font-size:10px;color:rgba(255,255,255,.35)}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+.topbar{height:var(--topbar-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px;flex:1}
+.page-title{font-size:18px;font-weight:800;color:var(--text-dark)}
+.page-subtitle{font-size:12px;color:var(--text-muted);font-weight:500}
+.topbar-divider{width:1px;height:24px;background:var(--border)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .2s}
+.icon-btn:hover{border-color:var(--primary)}
+.icon-btn svg{width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:2}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--error);border-radius:50%;border:1.5px solid white}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s}
+.btn-primary{background:var(--primary);color:white;box-shadow:0 4px 14px rgba(0,201,167,.25)}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn-secondary{background:white;color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:var(--error-light);color:var(--error);border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:var(--error);color:white}
+.btn-warning{background:var(--warning-light);color:var(--warning);border:1px solid rgba(245,158,11,.2)}
+.btn-warning:hover{background:var(--warning);color:white}
+.btn-success{background:var(--success-light);color:var(--success);border:1px solid rgba(16,185,129,.2)}
+.btn-success:hover{background:var(--success);color:white}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn svg{width:14px;height:14px;fill:currentColor}
+
+/* ── CONTENT ── */
+.content{padding:24px 28px;flex:1}
+
+/* ── SUMMARY CARDS ── */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.sum-card{background:white;border-radius:16px;padding:20px;border:1px solid var(--border-light);cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.sum-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:16px 16px 0 0;background:var(--card-accent,var(--primary));transform:scaleX(0);transform-origin:left;transition:transform .3s}
+.sum-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.08);transform:translateY(-2px)}
+.sum-card:hover::after{transform:scaleX(1)}
+.sum-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.sum-icon svg{width:20px;height:20px}
+.sum-value{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:3px}
+.sum-label{font-size:12px;color:var(--text-muted);font-weight:500}
+.sum-sub{font-size:11px;color:var(--text-light);margin-top:5px}
+.sum-trend{display:inline-flex;align-items:center;gap:3px;font-size:11px;font-weight:700;padding:3px 7px;border-radius:20px;margin-top:6px}
+.trend-up{background:var(--success-light);color:var(--success)}
+.trend-down{background:var(--error-light);color:var(--error)}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:white;border-radius:14px;border:1px solid var(--border-light);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-search{display:flex;align-items:center;gap:8px;background:var(--page-bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;flex:1;min-width:200px;transition:border-color .2s}
+.filter-search:focus-within{border-color:var(--primary)}
+.filter-search svg{width:13px;height:13px;fill:none;stroke:var(--text-muted);stroke-width:2;flex-shrink:0}
+.filter-search input{border:none;background:transparent;outline:none;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);width:100%}
+.filter-search input::placeholder{color:var(--text-light)}
+.filter-select{border:1.5px solid var(--border);border-radius:8px;padding:7px 28px 7px 10px;font-size:12px;font-weight:500;color:var(--text-mid);background:var(--page-bg);cursor:pointer;appearance:none;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border-color .2s;min-width:120px}
+.filter-select:focus{border-color:var(--primary)}
+.filter-divider{width:1px;height:24px;background:var(--border);flex-shrink:0}
+.filter-count{font-size:11px;color:var(--text-muted);white-space:nowrap;margin-left:auto}
+
+/* ── TABLE ── */
+.table-wrap{background:white;border-radius:16px;border:1px solid var(--border-light);overflow:hidden;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light)}
+.table-title{font-size:15px;font-weight:700;color:var(--text-dark)}
+.table-actions{display:flex;gap:8px}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--border-light);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{background:#e8ecf0}
+tbody tr{border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f9fafb}
+td{padding:13px 14px;font-size:13px;color:var(--text-mid);white-space:nowrap}
+td.id-cell{font-weight:700;color:var(--primary);font-size:12px}
+td.merchant-cell{font-weight:600;color:var(--text-dark)}
+td.amount-cell{font-weight:700;color:var(--text-dark)}
+td.overdue-cell{color:var(--error);font-weight:700}
+
+/* Status badge */
+.s-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.s-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.s-paid{background:var(--success-light);color:var(--success)}
+.s-pending{background:var(--warning-light);color:var(--warning)}
+.s-overdue{background:var(--error-light);color:var(--error)}
+.s-partial{background:var(--info-light);color:var(--info)}
+.s-draft{background:var(--border-light);color:var(--text-muted)}
+.s-disputed{background:var(--purple-light);color:var(--purple)}
+
+/* Row actions */
+.row-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+tbody tr:hover .row-actions{opacity:1}
+.row-action-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative}
+.row-action-btn:hover{border-color:var(--primary);background:var(--primary-light)}
+.row-action-btn.success:hover{border-color:var(--success);background:var(--success-light)}
+.row-action-btn.warn:hover{border-color:var(--warning);background:var(--warning-light)}
+.row-action-btn.danger:hover{border-color:var(--error);background:var(--error-light);color:var(--error)}
+.row-action-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+.row-action-btn[data-tip]:hover::before{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1f2937;color:white;font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;white-space:nowrap;z-index:99}
+
+.cb{width:15px;height:15px;accent-color:var(--primary);cursor:pointer}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--border-light)}
+.page-info{font-size:12px;color:var(--text-muted)}
+.page-btns{display:flex;gap:4px}
+.page-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid);transition:all .15s}
+.page-btn:hover{border-color:var(--primary);color:var(--primary)}
+.page-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
+.page-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+
+/* ── SLIDE PANEL ── */
+.panel-overlay{position:fixed;inset:0;background:rgba(10,22,40,.5);backdrop-filter:blur(3px);z-index:400;display:none}
+.panel-overlay.show{display:block}
+.slide-panel{position:fixed;top:0;right:0;bottom:0;width:700px;background:white;z-index:500;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.slide-panel.open{transform:translateX(0)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-size:17px;font-weight:800;color:var(--text-dark)}
+.panel-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.panel-close{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+.panel-close:hover{border-color:var(--error);color:var(--error)}
+.panel-close svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+.panel-body{flex:1;overflow-y:auto;padding:0}
+.panel-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:white;flex-wrap:wrap}
+
+/* Detail panel sections */
+.inv-hero{background:linear-gradient(135deg,#0a1628,#0f2540);padding:24px;position:relative;overflow:hidden}
+.inv-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(0,201,167,.06)}
+.inv-hero::after{content:'';position:absolute;bottom:-40px;left:-20px;width:160px;height:160px;border-radius:50%;background:rgba(0,201,167,.04)}
+.inv-hero-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:18px;position:relative;z-index:1}
+.inv-num{font-size:13px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px}
+.inv-merchant{font-size:22px;font-weight:800;color:white;margin-bottom:6px}
+.inv-period{font-size:12px;color:rgba(255,255,255,.4)}
+.inv-amount-hero{text-align:right}
+.inv-amount-label{font-size:11px;color:rgba(255,255,255,.35);margin-bottom:4px}
+.inv-amount-val{font-size:32px;font-weight:800;color:var(--primary);letter-spacing:-.02em}
+.inv-hero-badges{display:flex;gap:8px;flex-wrap:wrap;position:relative;z-index:1}
+.inv-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700}
+.inv-meta-row{display:flex;gap:16px;margin-top:14px;position:relative;z-index:1;flex-wrap:wrap}
+.inv-meta-item label{font-size:10px;color:rgba(255,255,255,.3);font-weight:600;display:block;margin-bottom:2px;text-transform:uppercase;letter-spacing:.05em}
+.inv-meta-item span{font-size:12px;font-weight:600;color:rgba(255,255,255,.7)}
+
+.detail-section{padding:20px 24px;border-bottom:1px solid var(--border-light)}
+.detail-section-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.detail-section-title svg{width:13px;height:13px;fill:currentColor;opacity:.6}
+
+/* Line items table */
+.line-items-table{width:100%;border-collapse:collapse}
+.line-items-table th{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:7px 12px;background:var(--border-light);text-align:left}
+.line-items-table td{padding:10px 12px;border-bottom:1px solid var(--border-light);font-size:12px;color:var(--text-mid)}
+.line-items-table tr:last-child td{border-bottom:none}
+.line-items-table tr:hover td{background:var(--border-light)}
+.li-id{font-weight:700;color:var(--primary)}
+.li-fee{font-weight:700;color:var(--text-dark)}
+.li-cod{color:var(--success);font-weight:600}
+
+/* Fee breakdown */
+.fee-breakdown{background:var(--border-light);border-radius:12px;padding:16px 18px}
+.fee-line{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border)}
+.fee-line:last-child{border-bottom:none}
+.fee-line label{color:var(--text-muted);font-weight:500}
+.fee-line span{font-weight:600;color:var(--text-dark)}
+.fee-line.total-line{padding-top:12px;margin-top:4px;border-top:2px solid var(--border)}
+.fee-line.total-line label{font-weight:800;color:var(--text-dark);font-size:14px}
+.fee-line.total-line span{font-size:18px;font-weight:800;color:var(--primary)}
+.fee-line.discount span{color:var(--success)}
+
+/* Payment history */
+.payment-card{background:var(--border-light);border-radius:10px;padding:13px 15px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.payment-icon{width:34px;height:34px;border-radius:9px;background:var(--success-light);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.payment-icon svg{width:16px;height:16px;fill:var(--success)}
+.payment-info{flex:1}
+.payment-method{font-size:13px;font-weight:600;color:var(--text-dark)}
+.payment-date{font-size:11px;color:var(--text-muted);margin-top:1px}
+.payment-amount{font-size:15px;font-weight:800;color:var(--success)}
+
+/* Timeline */
+.tl-item{display:flex;gap:14px;position:relative}
+.tl-item:not(:last-child){padding-bottom:0}
+.tl-col{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0}
+.tl-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:1;border:2px solid white;box-shadow:0 0 0 2px var(--border)}
+.tl-dot svg{width:12px;height:12px;fill:white}
+.tl-line{width:2px;flex:1;background:var(--border-light);min-height:20px;margin:3px 0}
+.tl-content{flex:1;padding:4px 0 18px}
+.tl-title{font-size:13px;font-weight:700;color:var(--text-dark)}
+.tl-time{font-size:10px;color:var(--text-light);margin-top:2px}
+.tl-desc{font-size:11px;color:var(--text-muted);margin-top:3px}
+
+/* Mark paid modal */
+.mini-modal{position:fixed;inset:0;z-index:600;display:none;align-items:center;justify-content:center;padding:20px}
+.mini-modal.show{display:flex}
+.mini-modal-bg{position:absolute;inset:0;background:rgba(10,22,40,.5);backdrop-filter:blur(4px)}
+.mini-modal-box{background:white;border-radius:20px;padding:28px;width:100%;max-width:400px;position:relative;z-index:1;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:popIn .3s cubic-bezier(.34,1.56,.64,1)}
+@keyframes popIn{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.mini-modal-title{font-size:17px;font-weight:800;color:var(--text-dark);margin-bottom:6px}
+.mini-modal-sub{font-size:13px;color:var(--text-muted);margin-bottom:20px}
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.form-group label{font-size:11px;font-weight:600;color:var(--text-mid)}
+.form-control{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s}
+.form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,201,167,.1)}
+select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer}
+
+/* Create form */
+.form-steps{display:flex;align-items:center;padding:14px 24px;background:var(--border-light);gap:0;border-bottom:1px solid var(--border)}
+.form-step{display:flex;align-items:center;gap:7px;flex:1}
+.form-step:not(:last-child)::after{content:'';flex:1;height:2px;background:var(--border);margin:0 8px}
+.step-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;transition:all .2s}
+.step-dot.done{background:var(--primary);color:white}
+.step-dot.active{background:var(--primary);color:white;box-shadow:0 0 0 3px rgba(0,201,167,.2)}
+.step-dot.pending{background:var(--border);color:var(--text-muted)}
+.step-label{font-size:11px;font-weight:600;color:var(--text-muted);white-space:nowrap}
+
+.form-section{padding:20px 24px;border-bottom:1px solid var(--border-light)}
+.form-section-title{font-size:12px;font-weight:700;color:var(--text-dark);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.form-section-icon{width:24px;height:24px;border-radius:6px;background:var(--primary-light);display:flex;align-items:center;justify-content:center}
+.form-section-icon svg{width:12px;height:12px;fill:var(--primary-dark)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group.full{grid-column:1/-1}
+
+/* Preview table */
+.preview-table{width:100%;border-collapse:collapse;margin-bottom:12px}
+.preview-table th{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:7px 10px;background:var(--border-light);text-align:left}
+.preview-table td{padding:9px 10px;border-bottom:1px solid var(--border-light);font-size:12px;color:var(--text-mid)}
+.preview-table tr:last-child td{border-bottom:none}
+.preview-table tr:hover td{background:var(--border-light)}
+
+/* Totals summary */
+.total-summary{background:linear-gradient(135deg,#0a1628,#0f2540);border-radius:12px;padding:16px 18px;margin-top:4px}
+.ts-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px}
+.ts-row label{color:rgba(255,255,255,.45);font-weight:500}
+.ts-row span{color:white;font-weight:600}
+.ts-row.ts-total{border-top:1px solid rgba(255,255,255,.1);padding-top:10px;margin-top:4px;font-size:14px}
+.ts-row.ts-total label{color:rgba(255,255,255,.7);font-weight:700}
+.ts-row.ts-total span{color:var(--primary);font-weight:800;font-size:18px}
+
+/* Adjust row */
+.adj-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.adj-row input,.adj-row select{border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;outline:none}
+.adj-row input:focus,.adj-row select:focus{border-color:var(--primary)}
+.adj-remove{background:none;border:none;cursor:pointer;color:var(--error);font-size:16px;line-height:1;padding:4px}
+.btn-add-adj{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--primary);background:none;border:none;cursor:pointer;padding:4px 0;font-family:inherit}
+
+/* Overdue highlight */
+tr.overdue-row td{background:rgba(239,68,68,.02)}
+tr.overdue-row:hover td{background:rgba(239,68,68,.05)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#0a1628;color:white;border-left:4px solid var(--primary);border-radius:12px;padding:14px 20px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;animation:fadeUp .3s ease}
+.toast svg{width:16px;height:16px;fill:var(--primary);flex-shrink:0}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+@media(max-width:1100px){.summary-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){:root{--sidebar-w:0px}.sidebar{transform:translateX(-240px)}.main{margin-left:0}.slide-panel{width:100%}}
+@media(max-width:600px){.summary-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5S5.17 15.5 6 15.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
+    <span class="logo-text">Fast Drop</span><span class="logo-badge">ADMIN</span>
+  </a>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Overview</div>
+    <a class="nav-item" href="fastdrop-admin-dashboard.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Shipments<span class="nav-badge teal">1,284</span></a>
+    <a class="nav-item" href="fastdrop-drivers.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span>Drivers</a>
+    <a class="nav-item" href="fastdrop-dispatcher.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Fleet</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Business</div>
+    <a class="nav-item" href="fastdrop-merchants.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>Merchants</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></span>Zones</a>
+    <a class="nav-item active" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm-1 7V3.5L18.5 9H13zm-2 8H7v-2h4v2zm4-4H7v-2h8v2z"/></svg></span>Invoices<span class="nav-badge warn">5</span></a>
+    <a class="nav-item" href="fastdrop-analytics.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg></span>Analytics</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">System</div>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg></span>Settings</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">SA</div>
+      <div style="flex:1"><div class="user-name">Sara Ahmed</div><div class="user-role">Super Admin</div></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,.3)"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title">Invoices</div>
+        <div class="page-subtitle">Merchant billing & collections</div>
+      </div>
+      <div class="topbar-divider"></div>
+      <span class="s-badge s-overdue" style="font-size:10px">5 Overdue</span>
+      <span class="s-badge s-pending" style="font-size:10px">8 Pending</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openCreate()">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Create Invoice
+      </button>
+      <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-dot"></div></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid">
+      <div class="sum-card" style="--card-accent:var(--primary)" onclick="filterByStat('')">
+        <div class="sum-icon" style="background:var(--primary-light)"><svg viewBox="0 0 24 24" fill="var(--primary-dark)"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></div>
+        <div class="sum-value" style="color:var(--primary)">$192,400</div>
+        <div class="sum-label">Total Invoiced (Month)</div>
+        <div class="sum-sub">42 invoices · March 2026</div>
+        <div class="sum-trend trend-up">↑ +14.2% vs last month</div>
+      </div>
+      <div class="sum-card" style="--card-accent:var(--success)" onclick="filterByStat('Paid')">
+        <div class="sum-icon" style="background:var(--success-light)"><svg viewBox="0 0 24 24" fill="var(--success)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+        <div class="sum-value" style="color:var(--success)">$167,760</div>
+        <div class="sum-label">Total Collected</div>
+        <div class="sum-sub">29 invoices paid · 87.2%</div>
+        <div class="sum-trend trend-up">↑ +9.8%</div>
+      </div>
+      <div class="sum-card" style="--card-accent:var(--warning)" onclick="filterByStat('Pending')">
+        <div class="sum-icon" style="background:var(--warning-light)"><svg viewBox="0 0 24 24" fill="var(--warning)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
+        <div class="sum-value" style="color:var(--warning)">$12,240</div>
+        <div class="sum-label">Pending Collection</div>
+        <div class="sum-sub">8 invoices · awaiting payment</div>
+        <div class="sum-trend trend-down">↑ 3 new this week</div>
+      </div>
+      <div class="sum-card" style="--card-accent:var(--error)" onclick="filterByStat('Overdue')">
+        <div class="sum-icon" style="background:var(--error-light)"><svg viewBox="0 0 24 24" fill="var(--error)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div>
+        <div class="sum-value" style="color:var(--error)">$12,400</div>
+        <div class="sum-label">Overdue Amount</div>
+        <div class="sum-sub">5 invoices · action required</div>
+        <div class="sum-trend trend-down">↑ Oldest: 11 days</div>
+      </div>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="filter-search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search invoice ID, merchant, amount…" oninput="filterInvoices(this.value)">
+      </div>
+      <div class="filter-divider"></div>
+      <select class="filter-select" id="statusFilter" onchange="filterByStat(this.value)">
+        <option value="">All Statuses</option>
+        <option>Paid</option><option>Pending</option><option>Overdue</option>
+        <option>Partial</option><option>Draft</option><option>Disputed</option>
+      </select>
+      <select class="filter-select" onchange="filterByMerchant(this.value)">
+        <option value="">All Merchants</option>
+        <option>SwiftMart</option><option>TechShop Cairo</option>
+        <option>HomeGoods</option><option>Pharmacy Plus</option><option>Fashion Hub</option>
+      </select>
+      <select class="filter-select">
+        <option>All Periods</option><option>March 2026</option><option>February 2026</option>
+        <option>January 2026</option><option>Q1 2026</option>
+      </select>
+      <select class="filter-select">
+        <option>All Amounts</option><option>Under $1,000</option><option>$1k – $5k</option>
+        <option>$5k – $20k</option><option>Over $20k</option>
+      </select>
+      <div class="filter-count" id="filterCount">Showing 1–12 of 42 invoices</div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div class="table-head">
+        <div class="table-title">All Invoices</div>
+        <div class="table-actions">
+          <button class="btn btn-secondary btn-sm">
+            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export CSV
+          </button>
+          <button class="btn btn-secondary btn-sm">
+            <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Bulk PDF
+          </button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px"><input type="checkbox" class="cb"></th>
+              <th>Invoice ID</th>
+              <th>Merchant</th>
+              <th>Period</th>
+              <th>Shipments</th>
+              <th>Delivery Fees</th>
+              <th>COD Collected</th>
+              <th>Total Due</th>
+              <th>Status</th>
+              <th>Due Date</th>
+              <th style="width:130px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="invoiceTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="page-info" id="pageInfo">Showing 1–12 of 42 invoices</div>
+        <div class="page-btns">
+          <div class="page-btn"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="page-btn active">1</div>
+          <div class="page-btn">2</div>
+          <div class="page-btn">3</div>
+          <div class="page-btn">4</div>
+          <div class="page-btn"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ OVERLAY ══ -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanels()"></div>
+
+<!-- ══ DETAIL PANEL ══ -->
+<div class="slide-panel" id="detailPanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="detailTitle">Invoice Detail</div>
+      <div class="panel-sub" id="detailSub">Full breakdown & payment history</div>
+    </div>
+    <div class="panel-close" onclick="closePanels()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="panel-body" id="detailBody"></div>
+  <div class="panel-footer" id="detailFooter"></div>
+</div>
+
+<!-- ══ CREATE PANEL ══ -->
+<div class="slide-panel" id="createPanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">Create New Invoice</div>
+      <div class="panel-sub">Generate merchant billing for a period</div>
+    </div>
+    <div class="panel-close" onclick="closePanels()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="form-steps">
+    <div class="form-step"><div class="step-dot active" id="cs1">1</div><span class="step-label">Merchant & Period</span></div>
+    <div class="form-step"><div class="step-dot pending" id="cs2">2</div><span class="step-label">Review Line Items</span></div>
+    <div class="form-step"><div class="step-dot pending" id="cs3">3</div><span class="step-label">Adjustments & Send</span></div>
+  </div>
+  <div class="panel-body" id="createBody">
+    <!-- Step 1 -->
+    <div id="cStep1">
+      <div class="form-section">
+        <div class="form-section-title"><div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>Merchant & Billing Period</div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Select Merchant *</label>
+            <select class="form-control" onchange="updatePreview()">
+              <option value="">— Choose merchant —</option>
+              <option>SwiftMart</option><option>TechShop Cairo</option>
+              <option>HomeGoods</option><option>Pharmacy Plus</option><option>Fashion Hub</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Period Start *</label>
+            <input type="date" class="form-control" value="2026-03-01" onchange="updatePreview()">
+          </div>
+          <div class="form-group">
+            <label>Period End *</label>
+            <input type="date" class="form-control" value="2026-03-15" onchange="updatePreview()">
+          </div>
+          <div class="form-group">
+            <label>Due Date *</label>
+            <input type="date" class="form-control" value="2026-03-29">
+          </div>
+          <div class="form-group">
+            <label>Invoice Type</label>
+            <select class="form-control">
+              <option>Standard (Delivery Fees)</option>
+              <option>COD Settlement</option>
+              <option>Combined (Fees + COD)</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Notes (optional)</label>
+            <textarea class="form-control" rows="2" placeholder="e.g. March first half billing…" style="resize:vertical"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/></svg></div>Send Options</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Action After Creating</label>
+            <select class="form-control">
+              <option>Send via Email Immediately</option>
+              <option>Save as Draft</option>
+              <option>Send via WhatsApp</option>
+              <option>Send via Email + WhatsApp</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Currency</label>
+            <select class="form-control">
+              <option>USD ($)</option><option>EGP (LE)</option><option>EUR (€)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="cStep2" style="display:none">
+      <div class="form-section">
+        <div class="form-section-title"><div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></div>Auto-fetched Shipments (Mar 1–15)</div>
+        <div style="background:var(--primary-light);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--primary-dark);font-weight:500;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--primary)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+          14 delivered shipments found for SwiftMart in this period. Uncheck any to exclude.
+        </div>
+        <table class="preview-table">
+          <thead><tr><th style="width:30px"><input type="checkbox" class="cb" checked></th><th>SHP ID</th><th>Date</th><th>Zone</th><th>Delivery Fee</th><th>COD</th><th>Status</th></tr></thead>
+          <tbody id="previewBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="cStep3" style="display:none">
+      <div class="form-section">
+        <div class="form-section-title"><div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg></div>Manual Adjustments</div>
+        <div id="adjustments">
+          <div class="adj-row">
+            <select style="flex:1.5"><option>Discount</option><option>Penalty</option><option>Credit Note</option><option>Correction</option></select>
+            <input placeholder="Description" style="flex:2">
+            <input type="number" placeholder="Amount" style="flex:1">
+            <button class="adj-remove" onclick="this.closest('.adj-row').remove();recalcCreate()">×</button>
+          </div>
+        </div>
+        <button class="btn-add-adj" onclick="addAdjRow()">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add adjustment
+        </button>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title"><div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61z"/></svg></div>Invoice Summary</div>
+        <div class="total-summary">
+          <div class="ts-row"><label>Delivery Fees (14 shipments)</label><span>$91.00</span></div>
+          <div class="ts-row"><label>COD Collection Fee (2%)</label><span>$18.40</span></div>
+          <div class="ts-row"><label>Express Surcharges</label><span>$12.50</span></div>
+          <div class="ts-row"><label>Adjustments</label><span id="adjTotal">$0.00</span></div>
+          <div class="ts-row ts-total"><label>Total Due</label><span id="createTotal">$121.90</span></div>
+        </div>
+      </div>
+      <div class="form-section" style="border-bottom:none">
+        <div class="form-section-title"><div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4v2l8 5 8-5V4zm0 4.236l-8 5-8-5V20h16V8.236z"/></svg></div>Send Preview</div>
+        <div style="background:var(--border-light);border-radius:12px;padding:16px 18px">
+          <div style="font-size:13px;font-weight:700;color:var(--text-dark);margin-bottom:4px">📧 To: billing@swiftmart.com</div>
+          <div style="font-size:12px;color:var(--text-muted)">Subject: Invoice INV-3340 — Fast Drop Delivery Services (Mar 1–15, 2026)</div>
+          <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text-muted)">Invoice PDF will be attached automatically. Merchant can pay via portal link included in the email.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn btn-secondary" id="prevBtn" onclick="createPrev()" style="display:none">← Back</button>
+    <span style="flex:1"></span>
+    <button class="btn btn-secondary" onclick="closePanels()">Cancel</button>
+    <button class="btn btn-primary" id="nextBtn" onclick="createNext()">Next Step →</button>
+  </div>
+</div>
+
+<!-- ══ MARK PAID MODAL ══ -->
+<div class="mini-modal" id="paidModal">
+  <div class="mini-modal-bg" onclick="closePaidModal()"></div>
+  <div class="mini-modal-box">
+    <div style="width:48px;height:48px;border-radius:14px;background:var(--success-light);display:flex;align-items:center;justify-content:center;margin-bottom:16px">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--success)"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg>
+    </div>
+    <div class="mini-modal-title">Mark Invoice as Paid</div>
+    <div class="mini-modal-sub" id="paidModalSub">Record a payment for <strong>INV-3315</strong></div>
+    <div class="form-group">
+      <label>Payment Amount</label>
+      <input class="form-control" type="number" id="paidAmount" placeholder="0.00">
+    </div>
+    <div class="form-group">
+      <label>Payment Method</label>
+      <select class="form-control">
+        <option>Bank Transfer</option><option>Cash</option>
+        <option>Cheque</option><option>Credit Card</option><option>Online Portal</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Payment Date</label>
+      <input class="form-control" type="date" value="2026-03-19">
+    </div>
+    <div class="form-group">
+      <label>Reference / Transaction ID (optional)</label>
+      <input class="form-control" placeholder="TXN-XXXXXXXX">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:4px">
+      <button class="btn btn-secondary" style="flex:1" onclick="closePaidModal()">Cancel</button>
+      <button class="btn btn-success" style="flex:1" onclick="confirmPaid()">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Confirm Payment
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const invoices = [
+  {id:'INV-3340',merchant:'SwiftMart',period:'Mar 1–15, 2026',shipments:14,fees:'$91.00',cod:'$920.00',total:'$121.90',status:'Draft',due:'Mar 29, 2026',daysLeft:10,email:'billing@swiftmart.com'},
+  {id:'INV-3335',merchant:'SwiftMart',period:'Feb 16–28, 2026',shipments:22,fees:'$143.00',cod:'$1,840.00',total:'$189.60',status:'Paid',due:'Mar 14, 2026',daysLeft:null,email:'billing@swiftmart.com'},
+  {id:'INV-3330',merchant:'TechShop Cairo',period:'Mar 1–15, 2026',shipments:18,fees:'$117.00',cod:'$3,200.00',total:'$181.00',status:'Pending',due:'Mar 24, 2026',daysLeft:5,email:'accounts@techshop.eg'},
+  {id:'INV-3325',merchant:'Fashion Hub',period:'Mar 1–15, 2026',shipments:9,fees:'$58.50',cod:'$680.00',total:'$72.10',status:'Partial',due:'Mar 22, 2026',daysLeft:3,email:'pay@fashionhub.com'},
+  {id:'INV-3320',merchant:'Pharmacy Plus',period:'Feb 16–28, 2026',shipments:31,fees:'$201.50',cod:'$4,100.00',total:'$283.50',status:'Paid',due:'Mar 14, 2026',daysLeft:null,email:'finance@pharmacyplus.eg'},
+  {id:'INV-3315',merchant:'TechShop Cairo',period:'Feb 1–15, 2026',shipments:24,fees:'$156.00',cod:'$4,800.00',total:'$252.00',status:'Overdue',due:'Mar 10, 2026',daysLeft:-9,email:'accounts@techshop.eg'},
+  {id:'INV-3310',merchant:'HomeGoods',period:'Mar 1–15, 2026',shipments:11,fees:'$71.50',cod:'$1,200.00',total:'$95.50',status:'Pending',due:'Mar 25, 2026',daysLeft:6,email:'billing@homegoods.eg'},
+  {id:'INV-3305',merchant:'Fashion Hub',period:'Feb 16–28, 2026',shipments:7,fees:'$45.50',cod:'$420.00',total:'$53.90',status:'Paid',due:'Mar 12, 2026',daysLeft:null,email:'pay@fashionhub.com'},
+  {id:'INV-3300',merchant:'SwiftMart',period:'Feb 1–15, 2026',shipments:19,fees:'$123.50',cod:'$1,560.00',total:'$154.70',status:'Paid',due:'Mar 1, 2026',daysLeft:null,email:'billing@swiftmart.com'},
+  {id:'INV-3298',merchant:'HomeGoods',period:'Feb 1–15, 2026',shipments:13,fees:'$84.50',cod:'$1,440.00',total:'$113.30',status:'Overdue',due:'Mar 8, 2026',daysLeft:-11,email:'billing@homegoods.eg'},
+  {id:'INV-3295',merchant:'Pharmacy Plus',period:'Mar 1–15, 2026',shipments:28,fees:'$182.00',cod:'$3,800.00',total:'$258.00',status:'Pending',due:'Mar 28, 2026',daysLeft:9,email:'finance@pharmacyplus.eg'},
+  {id:'INV-3290',merchant:'TechShop Cairo',period:'Jan 16–31, 2026',shipments:16,fees:'$104.00',cod:'$2,100.00',total:'$146.00',status:'Disputed',due:'Feb 28, 2026',daysLeft:-19,email:'accounts@techshop.eg'},
+];
+
+const statusCls={Paid:'s-paid',Pending:'s-pending',Overdue:'s-overdue',Partial:'s-partial',Draft:'s-draft',Disputed:'s-disputed'};
+const merchantColors={'SwiftMart':'#00c9a7','TechShop Cairo':'#3b82f6','HomeGoods':'#f97316','Pharmacy Plus':'#8b5cf6','Fashion Hub':'#f59e0b'};
+
+function initials(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+function merchantChip(m){
+  const c=merchantColors[m]||'#6b7280';
+  const bg=c+'22';
+  return `<div style="display:flex;align-items:center;gap:7px"><div style="width:26px;height:26px;border-radius:7px;background:${bg};color:${c};font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center">${initials(m)}</div><span style="font-weight:600;color:var(--text-dark)">${m}</span></div>`;
+}
+
+let currentData = [...invoices];
+
+function renderTable(data){
+  const tbody = document.getElementById('invoiceTableBody');
+  tbody.innerHTML = data.map(inv=>{
+    const isOverdue = inv.status==='Overdue';
+    const dueLabel = inv.daysLeft===null?'—':inv.daysLeft<0?`<span style="color:var(--error);font-weight:700">${Math.abs(inv.daysLeft)}d overdue</span>`:`<span style="color:${inv.daysLeft<=3?'var(--warning)':'var(--text-muted)'}">${inv.daysLeft}d left</span>`;
+    return `<tr class="${isOverdue?'overdue-row':''}" onclick="openDetail('${inv.id}')">
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="cb"></td>
+      <td class="id-cell">${inv.id}</td>
+      <td>${merchantChip(inv.merchant)}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${inv.period}</td>
+      <td style="font-weight:600;color:var(--text-dark);text-align:center">${inv.shipments}</td>
+      <td style="font-weight:600">${inv.fees}</td>
+      <td class="li-cod">${inv.cod}</td>
+      <td class="amount-cell">${inv.total}</td>
+      <td><span class="s-badge ${statusCls[inv.status]||'s-draft'}">${inv.status}</span></td>
+      <td style="font-size:12px">${dueLabel}</td>
+      <td onclick="event.stopPropagation()">
+        <div class="row-actions">
+          <div class="row-action-btn" data-tip="View" onclick="openDetail('${inv.id}')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          ${inv.status!=='Paid'?`<div class="row-action-btn success" data-tip="Mark Paid" onclick="openPaidModal('${inv.id}','${inv.total}')"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>`:''}
+          <div class="row-action-btn warn" data-tip="Send Reminder" onclick="sendReminder('${inv.id}','${inv.merchant}')"><svg viewBox="0 0 24 24"><path d="M20 4H4v2l8 5 8-5V4zm0 4.236l-8 5-8-5V20h16V8.236z"/></svg></div>
+          <div class="row-action-btn" data-tip="Download PDF"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg></div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('filterCount').textContent=`Showing 1–${Math.min(12,data.length)} of ${data.length} invoices`;
+  document.getElementById('pageInfo').textContent=`Showing 1–${Math.min(12,data.length)} of ${data.length} invoices`;
+}
+
+renderTable(invoices);
+
+function filterInvoices(q){
+  currentData = invoices.filter(inv=>
+    inv.id.toLowerCase().includes(q.toLowerCase())||
+    inv.merchant.toLowerCase().includes(q.toLowerCase())||
+    inv.total.includes(q)||inv.period.toLowerCase().includes(q.toLowerCase())
+  );
+  renderTable(currentData);
+}
+
+function filterByStat(st){
+  document.getElementById('statusFilter').value=st;
+  currentData = st ? invoices.filter(i=>i.status===st) : [...invoices];
+  renderTable(currentData);
+}
+
+function filterByMerchant(m){
+  currentData = m ? invoices.filter(i=>i.merchant===m) : [...invoices];
+  renderTable(currentData);
+}
+
+// ── DETAIL ──
+function openDetail(id){
+  const inv = invoices.find(x=>x.id===id);
+  if(!inv) return;
+  document.getElementById('detailTitle').textContent = inv.id;
+  document.getElementById('detailSub').textContent = `${inv.merchant} · ${inv.status}`;
+  document.getElementById('detailBody').innerHTML = buildDetailHTML(inv);
+  buildDetailFooter(inv);
+  openPanel('detailPanel');
+}
+
+function buildDetailHTML(inv){
+  const c=merchantColors[inv.merchant]||'#6b7280';
+  const sc=statusCls[inv.status]||'s-draft';
+  const statusColors={Paid:'var(--success)',Pending:'var(--warning)',Overdue:'var(--error)',Partial:'var(--info)',Draft:'var(--text-muted)',Disputed:'var(--purple)'};
+  const sc2=statusColors[inv.status]||'var(--text-muted)';
+  return `
+  <div class="inv-hero">
+    <div class="inv-hero-top">
+      <div>
+        <div class="inv-num">${inv.id}</div>
+        <div class="inv-merchant">${inv.merchant}</div>
+        <div class="inv-period">📅 ${inv.period}</div>
+      </div>
+      <div class="inv-amount-hero">
+        <div class="inv-amount-label">Total Due</div>
+        <div class="inv-amount-val">${inv.total}</div>
+      </div>
+    </div>
+    <div class="inv-hero-badges">
+      <span class="s-badge ${sc}">${inv.status}</span>
+      <span class="inv-badge" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)">${inv.shipments} shipments</span>
+      <span class="inv-badge" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)">COD ${inv.cod}</span>
+    </div>
+    <div class="inv-meta-row">
+      <div class="inv-meta-item"><label>Issued</label><span>Mar 16, 2026</span></div>
+      <div class="inv-meta-item"><label>Due Date</label><span style="color:${inv.daysLeft!==null&&inv.daysLeft<0?'var(--error)':'rgba(255,255,255,.7)'}">${inv.due}</span></div>
+      <div class="inv-meta-item"><label>Contact</label><span>${inv.email}</span></div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-title"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>Line Items — Shipments (${inv.shipments})</div>
+    <table class="line-items-table">
+      <thead><tr><th>SHP ID</th><th>Date</th><th>Zone</th><th>Delivery Fee</th><th>COD</th><th>Status</th></tr></thead>
+      <tbody>${buildLineItems(inv)}</tbody>
+    </table>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-title"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16z"/></svg>Fee Breakdown</div>
+    <div class="fee-breakdown">
+      <div class="fee-line"><label>Delivery Fees (${inv.shipments} shipments)</label><span>${inv.fees}</span></div>
+      <div class="fee-line"><label>COD Collection Fee (2% of ${inv.cod})</label><span>$${(parseFloat(inv.cod.replace('$','').replace(',',''))*0.02).toFixed(2)}</span></div>
+      <div class="fee-line"><label>Express / Priority Surcharges</label><span>$8.50</span></div>
+      ${inv.status==='Partial'?'<div class="fee-line discount"><label>Early Payment Discount (2%)</label><span>−$2.40</span></div>':''}
+      ${inv.status==='Disputed'?'<div class="fee-line" style="color:var(--purple)"><label>Under Dispute — Held</label><span style="color:var(--purple)">Pending review</span></div>':''}
+      <div class="fee-line total-line"><label>Total Due</label><span>${inv.total}</span></div>
+      ${inv.status==='Partial'?'<div class="fee-line"><label>Amount Paid So Far</label><span style="color:var(--success)">$36.05</span></div>':''} 
+      ${inv.status==='Partial'?`<div class="fee-line"><label>Remaining Balance</label><span style="color:var(--warning)">$36.05</span></div>`:''}
+    </div>
+  </div>
+
+  ${inv.status==='Paid'||inv.status==='Partial'?`
+  <div class="detail-section">
+    <div class="detail-section-title"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>Payment History</div>
+    ${inv.status==='Paid'?`
+    <div class="payment-card">
+      <div class="payment-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></div>
+      <div class="payment-info"><div class="payment-method">Bank Transfer · TXN-928471</div><div class="payment-date">Paid on Mar 12, 2026 · 10:34 AM</div></div>
+      <div class="payment-amount">${inv.total}</div>
+    </div>`:`
+    <div class="payment-card">
+      <div class="payment-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85z"/></svg></div>
+      <div class="payment-info"><div class="payment-method">Online Portal · Partial Payment</div><div class="payment-date">Paid on Mar 18, 2026</div></div>
+      <div class="payment-amount">$36.05</div>
+    </div>`}
+  </div>`:''}
+
+  <div class="detail-section">
+    <div class="detail-section-title"><svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 10.001 18A9 9 0 0013 3z"/></svg>Invoice Timeline</div>
+    <div class="timeline" style="padding:0">
+      ${buildInvTimeline(inv)}
+    </div>
+  </div>`;
+}
+
+function buildLineItems(inv){
+  const zones=['Downtown','Westside','East Hub','North Ring','South Bay'];
+  const rows=[];
+  for(let i=0;i<Math.min(inv.shipments,6);i++){
+    const z=zones[i%zones.length];
+    const fee=(5.50+Math.random()*3).toFixed(2);
+    const cod=(40+Math.random()*200).toFixed(2);
+    const delivered=Math.random()>.15;
+    rows.push(`<tr><td class="li-id">SHP-${8800+i}</td><td style="font-size:11px;color:var(--text-muted)">Mar ${i+1}, 2026</td><td style="font-size:11px">${z}</td><td class="li-fee">$${fee}</td><td class="li-cod">$${cod}</td><td><span class="s-badge ${delivered?'s-paid':'s-overdue'}" style="font-size:10px">${delivered?'Delivered':'Returned'}</span></td></tr>`);
+  }
+  if(inv.shipments>6) rows.push(`<tr><td colspan="6" style="text-align:center;font-size:11px;color:var(--primary);font-weight:600;padding:10px;cursor:pointer">+ ${inv.shipments-6} more shipments — click to expand</td></tr>`);
+  return rows.join('');
+}
+
+function buildInvTimeline(inv){
+  const steps=[
+    {label:'Invoice Generated',desc:'System auto-generated from shipment data',time:'Mar 16, 2026 · 08:00',done:true,color:'#00c9a7'},
+    {label:'Sent to Merchant',desc:`Email sent to ${inv.email}`,time:'Mar 16, 2026 · 08:02',done:inv.status!=='Draft',color:'#3b82f6'},
+    {label:'Invoice Viewed',desc:'Merchant opened invoice email',time:'Mar 16, 2026 · 09:14',done:['Paid','Partial','Overdue'].includes(inv.status),color:'#8b5cf6'},
+    {label:inv.status==='Paid'?'Payment Received':inv.status==='Partial'?'Partial Payment Received':inv.status==='Overdue'?'Payment Overdue':inv.status==='Disputed'?'Dispute Raised':'Awaiting Payment',
+     desc:inv.status==='Paid'?'Full payment confirmed via bank transfer':inv.status==='Partial'?'Partial payment received — balance outstanding':inv.status==='Overdue'?`${Math.abs(inv.daysLeft)} days past due date — reminder sent`:inv.status==='Disputed'?'Merchant raised dispute — under review':'—',
+     time:inv.status==='Paid'?'Mar 12, 2026 · 10:34':inv.status==='Overdue'?inv.due:'—',
+     done:['Paid','Partial','Overdue','Disputed'].includes(inv.status),
+     color:inv.status==='Paid'?'#10b981':inv.status==='Overdue'?'#ef4444':inv.status==='Disputed'?'#8b5cf6':'#9ca3af'},
+  ];
+  return steps.map((s,i)=>`
+    <div class="tl-item">
+      <div class="tl-col">
+        <div class="tl-dot" style="background:${s.done?s.color:'#e5e7eb'};box-shadow:${s.done?`0 0 0 3px ${s.color}22`:'none'}">
+          <svg viewBox="0 0 24 24"><path d="${s.done?'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z':'M12 5v14M5 12h14'}"/></svg>
+        </div>
+        ${i<steps.length-1?'<div class="tl-line"></div>':''}
+      </div>
+      <div class="tl-content">
+        <div class="tl-title" style="color:${s.done?'var(--text-dark)':'var(--text-light)'}">${s.label}</div>
+        <div class="tl-desc">${s.desc}</div>
+        <div class="tl-time">${s.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function buildDetailFooter(inv){
+  const f=document.getElementById('detailFooter');
+  let btns=`<button class="btn btn-secondary btn-sm" onclick="downloadPDF('${inv.id}')"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Download PDF</button>`;
+  if(inv.status!=='Paid') btns+=`<button class="btn btn-success btn-sm" onclick="openPaidModal('${inv.id}','${inv.total}')"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Mark Paid</button>`;
+  if(inv.status==='Overdue'||inv.status==='Pending') btns+=`<button class="btn btn-warning btn-sm" onclick="sendReminder('${inv.id}','${inv.merchant}')"><svg viewBox="0 0 24 24"><path d="M20 4H4v2l8 5 8-5V4zm0 4.236l-8 5-8-5V20h16V8.236z"/></svg> Send Reminder</button>`;
+  if(inv.status!=='Disputed') btns+=`<button class="btn btn-secondary btn-sm" style="margin-left:auto;color:var(--purple);border-color:var(--purple)">⚠ Dispute</button>`;
+  if(inv.status!=='Paid') btns+=`<button class="btn btn-danger btn-sm" onclick="cancelInvoice('${inv.id}')"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg> Cancel</button>`;
+  f.innerHTML=btns;
+}
+
+// ── MARK PAID ──
+let currentPaidId='';
+function openPaidModal(id,amount){
+  currentPaidId=id;
+  document.getElementById('paidModalSub').innerHTML=`Record a payment for <strong>${id}</strong>`;
+  document.getElementById('paidAmount').value=parseFloat(amount.replace('$','').replace(',',''));
+  document.getElementById('paidModal').classList.add('show');
+}
+function closePaidModal(){document.getElementById('paidModal').classList.remove('show')}
+function confirmPaid(){
+  closePaidModal();
+  const inv=invoices.find(i=>i.id===currentPaidId);
+  if(inv) inv.status='Paid';
+  renderTable(currentData);
+  showToast(`✓ ${currentPaidId} marked as paid — merchant notified`);
+  closePanels();
+}
+
+// ── SEND REMINDER ──
+function sendReminder(id,merchant){
+  showToast(`📧 Payment reminder sent to ${merchant} for ${id}`);
+}
+
+function downloadPDF(id){
+  showToast(`⬇ Downloading ${id}.pdf…`);
+}
+
+function cancelInvoice(id){
+  if(confirm(`Cancel invoice ${id}? This cannot be undone.`)){
+    closePanels();
+    showToast(`Invoice ${id} has been cancelled`,'error');
+  }
+}
+
+// ── CREATE FLOW ──
+let createStep=1;
+const previewShipments=[
+  {id:'SHP-8821',date:'Mar 1',zone:'Downtown',fee:'$6.50',cod:'$120.00'},
+  {id:'SHP-8820',date:'Mar 2',zone:'Westside',fee:'$5.50',cod:'—'},
+  {id:'SHP-8819',date:'Mar 3',zone:'East Hub',fee:'$7.00',cod:'$340.00'},
+  {id:'SHP-8817',date:'Mar 5',zone:'Westside',fee:'$5.50',cod:'$210.00'},
+  {id:'SHP-8816',date:'Mar 7',zone:'North Ring',fee:'$8.00',cod:'$55.00'},
+  {id:'SHP-8812',date:'Mar 10',zone:'Westside',fee:'$5.50',cod:'$430.00'},
+];
+
+function openCreate(){
+  createStep=1;updateCreateSteps();
+  openPanel('createPanel');
+}
+
+function createNext(){
+  if(createStep<3){createStep++;updateCreateSteps();}
+  else{submitCreate();}
+}
+function createPrev(){if(createStep>1){createStep--;updateCreateSteps();}}
+
+function updateCreateSteps(){
+  [1,2,3].forEach(i=>{
+    document.getElementById('cStep'+i).style.display=i===createStep?'block':'none';
+    const d=document.getElementById('cs'+i);
+    if(i<createStep){d.className='step-dot done';d.textContent='✓';}
+    else if(i===createStep){d.className='step-dot active';d.textContent=i;}
+    else{d.className='step-dot pending';d.textContent=i;}
+  });
+  document.getElementById('prevBtn').style.display=createStep>1?'flex':'none';
+  document.getElementById('nextBtn').textContent=createStep===3?'Create & Send Invoice ✓':'Next Step →';
+  if(createStep===2) renderPreview();
+}
+
+function renderPreview(){
+  document.getElementById('previewBody').innerHTML=previewShipments.map(s=>`
+    <tr><td><input type="checkbox" class="cb" checked></td>
+    <td class="li-id">${s.id}</td>
+    <td style="font-size:11px;color:var(--text-muted)">${s.date}</td>
+    <td style="font-size:11px">${s.zone}</td>
+    <td class="li-fee">${s.fee}</td>
+    <td class="li-cod">${s.cod}</td>
+    <td><span class="s-badge s-paid" style="font-size:10px">Delivered</span></td></tr>`).join('');
+}
+
+function addAdjRow(){
+  const div=document.createElement('div');
+  div.className='adj-row';
+  div.innerHTML=`<select style="flex:1.5"><option>Discount</option><option>Penalty</option><option>Credit Note</option><option>Correction</option></select><input placeholder="Description" style="flex:2"><input type="number" placeholder="Amount" style="flex:1" oninput="recalcCreate()"><button class="adj-remove" onclick="this.closest('.adj-row').remove();recalcCreate()">×</button>`;
+  document.getElementById('adjustments').appendChild(div);
+}
+
+function recalcCreate(){
+  let adj=0;
+  document.querySelectorAll('#adjustments .adj-row input[type=number]').forEach(inp=>{adj+=parseFloat(inp.value||0);});
+  document.getElementById('adjTotal').textContent=`${adj>=0?'+':'-'}$${Math.abs(adj).toFixed(2)}`;
+  document.getElementById('createTotal').textContent=`$${(121.90+adj).toFixed(2)}`;
+}
+
+function submitCreate(){
+  closePanels();
+  showToast('✓ INV-3340 created and sent to billing@swiftmart.com');
+}
+
+function updatePreview(){}
+
+// ── PANELS ──
+function openPanel(id){
+  document.getElementById('panelOverlay').classList.add('show');
+  document.getElementById(id).classList.add('open');
+}
+function closePanels(){
+  document.getElementById('panelOverlay').classList.remove('show');
+  document.querySelectorAll('.slide-panel').forEach(p=>p.classList.remove('open'));
+}
+
+// ── TOAST ──
+function showToast(msg,type='success'){
+  const el=document.createElement('div');
+  el.className='toast';
+  el.style.borderLeftColor=type==='error'?'var(--error)':'var(--primary)';
+  el.innerHTML=`<svg viewBox="0 0 24 24" style="fill:${type==='error'?'var(--error)':'var(--primary)'}"><path d="${type==='error'?'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z':'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'}"/></svg>${msg}`;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},3500);
+}
+
+// Animate summary values on load
+document.querySelectorAll('.sum-value').forEach(el=>{
+  const raw=parseFloat(el.textContent.replace(/[$,]/g,''));
+  if(!isNaN(raw)&&raw>100){
+    const orig=el.textContent;const prefix=orig.startsWith('$')?'$':'';
+    el.textContent=prefix+'0';
+    const dur=800,st=performance.now();
+    function step(now){
+      const p=Math.min((now-st)/dur,1),e=1-Math.pow(1-p,3);
+      el.textContent=prefix+Math.round(raw*e).toLocaleString();
+      if(p<1)requestAnimationFrame(step);else el.textContent=orig;
+    }
+    setTimeout(()=>requestAnimationFrame(step),100+Math.random()*150);
+  }
+});
+</script>
+</body>
+</html>

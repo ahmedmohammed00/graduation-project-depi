@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Drop – Merchants</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#00c9a7;--primary-dark:#00a98a;--primary-light:#e6faf6;--primary-mid:#ccfbf1;
+  --sidebar-bg:#0a1628;--sidebar-hover:#111e35;
+  --page-bg:#f4f7f9;--card-bg:#ffffff;
+  --text-dark:#0d1b2a;--text-mid:#374151;--text-muted:#6b7280;--text-light:#9ca3af;
+  --border:#e8ecf0;--border-light:#f1f5f9;
+  --warning:#f59e0b;--warning-light:#fffbeb;
+  --error:#ef4444;--error-light:#fef2f2;
+  --info:#3b82f6;--info-light:#eff6ff;
+  --success:#10b981;--success-light:#ecfdf5;
+  --purple:#8b5cf6;--purple-light:#f5f3ff;
+  --orange:#f97316;--orange-light:#fff7ed;
+  --sidebar-w:240px;--topbar-h:64px;
+}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--page-bg);color:var(--text-dark);min-height:100vh;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.06);text-decoration:none}
+.logo-mark{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:20px;height:20px;fill:white}
+.logo-text{font-size:16px;font-weight:800;color:white}
+.logo-badge{font-size:9px;font-weight:700;background:var(--primary);color:white;border-radius:4px;padding:1px 5px;margin-left:auto;letter-spacing:.04em}
+.sidebar-section{padding:18px 12px 8px}
+.sidebar-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.45);font-size:13px;font-weight:500;transition:all .18s;text-decoration:none;margin-bottom:2px}
+.nav-item:hover{background:var(--sidebar-hover);color:rgba(255,255,255,.8)}
+.nav-item.active{background:linear-gradient(135deg,rgba(0,201,167,.18),rgba(0,201,167,.08));color:var(--primary);border:1px solid rgba(0,201,167,.2)}
+.nav-icon{width:16px;height:16px;flex-shrink:0}.nav-icon svg{width:16px;height:16px;fill:currentColor}
+.nav-badge{margin-left:auto;background:var(--error);color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.nav-badge.teal{background:var(--primary)}.nav-badge.warn{background:var(--warning)}
+.sidebar-footer{margin-top:auto;padding:16px 12px;border-top:1px solid rgba(255,255,255,.06)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:background .18s}
+.user-card:hover{background:var(--sidebar-hover)}
+.u-avatar{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0}
+.u-name{font-size:12px;font-weight:700;color:white}.u-role{font-size:10px;color:rgba(255,255,255,.35)}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+.topbar{height:var(--topbar-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px;flex:1}
+.page-title{font-size:18px;font-weight:800;color:var(--text-dark)}
+.page-subtitle{font-size:12px;color:var(--text-muted);font-weight:500}
+.topbar-divider{width:1px;height:24px;background:var(--border)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .2s}
+.icon-btn:hover{border-color:var(--primary)}
+.icon-btn svg{width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:2}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--error);border-radius:50%;border:1.5px solid white}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s}
+.btn-primary{background:var(--primary);color:white;box-shadow:0 4px 14px rgba(0,201,167,.25)}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn-secondary{background:white;color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:var(--error-light);color:var(--error);border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:var(--error);color:white}
+.btn-success{background:var(--success-light);color:var(--success);border:1px solid rgba(16,185,129,.2)}
+.btn-success:hover{background:var(--success);color:white}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px}
+.btn svg{width:14px;height:14px;fill:currentColor}
+
+/* ── CONTENT ── */
+.content{padding:24px 28px;flex:1}
+
+/* ── VIEW TOGGLE + SUMMARY ── */
+.top-controls{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px}
+.view-toggle{display:flex;background:white;border:1.5px solid var(--border);border-radius:10px;padding:3px;gap:2px}
+.view-btn{width:34px;height:34px;border-radius:7px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s}
+.view-btn.active{background:var(--primary);color:white}
+.view-btn:not(.active){color:var(--text-muted)}
+.view-btn:not(.active):hover{background:var(--border-light)}
+.view-btn svg{width:15px;height:15px;fill:currentColor}
+
+/* ── SUMMARY STRIP ── */
+.summary-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
+.strip-card{background:white;border-radius:14px;padding:16px 18px;border:1px solid var(--border-light);display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.strip-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:14px 14px 0 0;background:var(--sc-color,var(--primary));transform:scaleX(0);transform-origin:left;transition:transform .3s ease}
+.strip-card:hover{box-shadow:0 6px 22px rgba(0,0,0,.07);transform:translateY(-1px)}
+.strip-card:hover::after{transform:scaleX(1)}
+.strip-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.strip-icon svg{width:19px;height:19px}
+.strip-val{font-size:24px;font-weight:800;letter-spacing:-.02em}
+.strip-lbl{font-size:11px;color:var(--text-muted);font-weight:500;margin-top:1px}
+.strip-trend{font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;display:inline-block;margin-top:4px}
+.trend-up{background:var(--success-light);color:var(--success)}
+.trend-down{background:var(--error-light);color:var(--error)}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:white;border-radius:14px;border:1px solid var(--border-light);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--page-bg);border:1.5px solid var(--border);border-radius:9px;padding:7px 12px;flex:1;min-width:200px;transition:border-color .2s}
+.search-box:focus-within{border-color:var(--primary)}
+.search-box svg{width:13px;height:13px;fill:none;stroke:var(--text-muted);stroke-width:2;flex-shrink:0}
+.search-box input{border:none;background:transparent;outline:none;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);width:100%}
+.search-box input::placeholder{color:var(--text-light)}
+.fsel{border:1.5px solid var(--border);border-radius:8px;padding:7px 28px 7px 10px;font-size:12px;font-weight:500;color:var(--text-mid);background:var(--page-bg);cursor:pointer;appearance:none;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;min-width:120px;transition:border-color .2s}
+.fsel:focus{border-color:var(--primary)}
+.filter-divider{width:1px;height:24px;background:var(--border);flex-shrink:0}
+.filter-count{font-size:11px;color:var(--text-muted);white-space:nowrap;margin-left:auto}
+
+/* ── TABLE VIEW ── */
+.table-wrap{background:white;border-radius:16px;border:1px solid var(--border-light);overflow:hidden;animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light);gap:12px;flex-wrap:wrap}
+.table-title{font-size:15px;font-weight:700;color:var(--text-dark)}
+.table-actions{display:flex;gap:8px}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--border-light);white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{background:#e8ecf0}
+tbody tr{border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f9fafb}
+td{padding:13px 14px;font-size:13px;color:var(--text-mid);white-space:nowrap}
+
+/* Merchant cell */
+.merchant-cell{display:flex;align-items:center;gap:10px}
+.m-avatar{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0}
+.m-name{font-size:13px;font-weight:700;color:var(--text-dark)}
+.m-id{font-size:10px;color:var(--text-muted);margin-top:1px}
+
+/* Status badge */
+.s-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.s-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.sb-active{background:var(--success-light);color:var(--success)}
+.sb-inactive{background:var(--border-light);color:var(--text-muted)}
+.sb-suspended{background:var(--error-light);color:var(--error)}
+.sb-pending{background:var(--warning-light);color:var(--warning)}
+
+/* Row actions */
+.row-acts{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+tbody tr:hover .row-acts{opacity:1}
+.ra-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;position:relative}
+.ra-btn:hover{border-color:var(--primary);background:var(--primary-light)}
+.ra-btn.danger:hover{border-color:var(--error);background:var(--error-light);color:var(--error)}
+.ra-btn.success:hover{border-color:var(--success);background:var(--success-light)}
+.ra-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+.ra-btn[data-tip]:hover::before{content:attr(data-tip);position:absolute;bottom:calc(100%+5px);left:50%;transform:translateX(-50%);background:#1f2937;color:white;font-size:10px;font-weight:600;padding:3px 7px;border-radius:5px;white-space:nowrap;z-index:99;pointer-events:none}
+.cb{width:15px;height:15px;accent-color:var(--primary);cursor:pointer}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--border-light)}
+.page-info{font-size:12px;color:var(--text-muted)}
+.page-btns{display:flex;gap:4px}
+.pg-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid);transition:all .15s}
+.pg-btn:hover{border-color:var(--primary);color:var(--primary)}
+.pg-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
+.pg-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+
+/* ── CARD VIEW ── */
+.cards-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;animation:fadeUp .35s ease both}
+.merchant-card{background:white;border-radius:16px;border:1px solid var(--border-light);overflow:hidden;cursor:pointer;transition:all .22s}
+.merchant-card:hover{box-shadow:0 10px 32px rgba(0,0,0,.09);transform:translateY(-3px)}
+.mc-top{padding:20px 20px 16px;position:relative}
+.mc-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.mc-avatar{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px;color:white;flex-shrink:0}
+.mc-status-dot{width:10px;height:10px;border-radius:50%;border:2px solid white;position:absolute;top:24px;right:20px}
+.mc-name{font-size:15px;font-weight:800;color:var(--text-dark);margin-bottom:2px}
+.mc-id{font-size:11px;color:var(--text-muted)}
+.mc-contact{font-size:12px;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:5px}
+.mc-contact svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;flex-shrink:0}
+.mc-divider{height:1px;background:var(--border-light);margin:0 20px}
+.mc-stats{display:grid;grid-template-columns:repeat(3,1fr);padding:14px 20px 16px;gap:0}
+.mc-stat{text-align:center;border-right:1px solid var(--border-light)}
+.mc-stat:last-child{border-right:none}
+.mc-stat-val{font-size:17px;font-weight:800;color:var(--text-dark);letter-spacing:-.01em}
+.mc-stat-lbl{font-size:10px;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+.mc-footer{padding:10px 20px 16px;display:flex;align-items:center;justify-content:space-between}
+.mc-zone{font-size:11px;font-weight:600;color:var(--info);background:var(--info-light);padding:3px 8px;border-radius:5px}
+.mc-joined{font-size:11px;color:var(--text-light)}
+
+/* ── SLIDE PANEL ── */
+.panel-overlay{position:fixed;inset:0;background:rgba(10,22,40,.5);backdrop-filter:blur(3px);z-index:400;display:none}
+.panel-overlay.show{display:block}
+.slide-panel{position:fixed;top:0;right:0;bottom:0;width:720px;background:white;z-index:500;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.slide-panel.narrow{width:520px}
+.slide-panel.open{transform:translateX(0)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-size:17px;font-weight:800;color:var(--text-dark)}
+.panel-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.panel-close{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+.panel-close:hover{border-color:var(--error);color:var(--error)}
+.panel-close svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+.panel-body{flex:1;overflow-y:auto;padding:0}
+.panel-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:white;flex-wrap:wrap}
+
+/* ── MERCHANT DETAIL ── */
+.merch-hero{background:linear-gradient(135deg,#0a1628 0%,#0f2540 100%);padding:24px;position:relative;overflow:hidden}
+.merch-hero::before{content:'';position:absolute;top:-60px;right:-60px;width:220px;height:220px;border-radius:50%;background:rgba(0,201,167,.07)}
+.merch-hero::after{content:'';position:absolute;bottom:-30px;left:-20px;width:140px;height:140px;border-radius:50%;background:rgba(0,201,167,.04)}
+.hero-inner{display:flex;align-items:flex-start;gap:18px;position:relative;z-index:1}
+.hero-logo{width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:24px;color:white;flex-shrink:0;border:2px solid rgba(255,255,255,.15)}
+.hero-name{font-size:22px;font-weight:800;color:white;margin-bottom:3px}
+.hero-id{font-size:12px;color:rgba(255,255,255,.35);margin-bottom:8px}
+.hero-badges{display:flex;gap:7px;flex-wrap:wrap}
+.hero-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700}
+.hero-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid rgba(255,255,255,.08);margin-top:18px;position:relative;z-index:1}
+.hkpi{padding:14px 16px;border-right:1px solid rgba(255,255,255,.08);text-align:center}
+.hkpi:last-child{border-right:none}
+.hkpi-val{font-size:20px;font-weight:800;color:white;letter-spacing:-.02em}
+.hkpi-lbl{font-size:10px;color:rgba(255,255,255,.35);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-top:2px}
+
+/* Detail tabs */
+.detail-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:white;flex-shrink:0;overflow-x:auto}
+.dtab{padding:12px 20px;font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap}
+.dtab.active{color:var(--primary);border-bottom-color:var(--primary)}
+.dtab:hover:not(.active){color:var(--text-dark)}
+
+/* Detail sections */
+.dsection{padding:20px 24px;border-bottom:1px solid var(--border-light)}
+.dsection:last-child{border-bottom:none}
+.dsec-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;display:flex;align-items:center;gap:7px}
+.dsec-title svg{width:13px;height:13px;fill:currentColor;opacity:.6}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.dfield{padding:9px 0;border-bottom:1px solid var(--border-light)}
+.dfield:nth-last-child(-n+2){border-bottom:none}
+.dfield label{font-size:10px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:3px}
+.dfield span{font-size:13px;font-weight:600;color:var(--text-dark)}
+
+/* Summary quad */
+.summary-quad{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:0}
+.sq-card{border-radius:12px;padding:16px;text-align:center;position:relative;overflow:hidden}
+.sq-val{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.sq-lbl{font-size:11px;font-weight:600;margin-top:3px;text-transform:uppercase;letter-spacing:.04em}
+.sq-sub{font-size:11px;margin-top:4px;opacity:.7}
+
+/* Invoice summary mini */
+.inv-summary-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-light)}
+.inv-summary-row:last-child{border-bottom:none}
+.inv-summary-row label{font-size:12px;font-weight:600;color:var(--text-mid);display:flex;align-items:center;gap:6px}
+.inv-summary-row span{font-size:13px;font-weight:800;color:var(--text-dark)}
+
+/* Products table */
+.mini-table{width:100%;border-collapse:collapse}
+.mini-table th{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:7px 12px;background:var(--border-light);text-align:left}
+.mini-table td{padding:10px 12px;border-bottom:1px solid var(--border-light);font-size:12px;color:var(--text-mid)}
+.mini-table tr:last-child td{border-bottom:none}
+.mini-table tr:hover td{background:var(--border-light);cursor:pointer}
+
+/* Shipments mini table */
+.shp-id{font-weight:700;color:var(--primary);font-size:12px}
+
+/* Form */
+.form-section{padding:20px 24px;border-bottom:1px solid var(--border-light)}
+.form-section:last-child{border-bottom:none}
+.fsec-title{font-size:11px;font-weight:700;color:var(--text-dark);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.fsec-icon{width:24px;height:24px;border-radius:6px;background:var(--primary-light);display:flex;align-items:center;justify-content:center}
+.fsec-icon svg{width:12px;height:12px;fill:var(--primary-dark)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;font-weight:600;color:var(--text-mid)}
+.form-control{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s;background:white}
+.form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,201,167,.1)}
+.form-control::placeholder{color:var(--text-light)}
+select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;cursor:pointer}
+.form-hint{font-size:10px;color:var(--text-muted)}
+
+/* Toggle */
+.toggle{position:relative;width:40px;height:22px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle-track{position:absolute;inset:0;background:#e5e7eb;border-radius:11px;cursor:pointer;transition:background .2s}
+.toggle-track::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:white;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle input:checked+.toggle-track{background:var(--primary)}
+.toggle input:checked+.toggle-track::after{transform:translateX(18px)}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:#0a1628;color:white;border-left:4px solid var(--primary);border-radius:12px;padding:14px 20px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px;animation:fadeUp .3s ease}
+.toast svg{width:16px;height:16px;fill:currentColor;flex-shrink:0}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+@media(max-width:1100px){.cards-grid{grid-template-columns:repeat(2,1fr)}.summary-strip{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){:root{--sidebar-w:0px}.sidebar{transform:translateX(-240px)}.main{margin-left:0}.slide-panel,.slide-panel.narrow{width:100%}}
+@media(max-width:600px){.cards-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.hero-kpis{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></div>
+    <span class="logo-text">Fast Drop</span><span class="logo-badge">ADMIN</span>
+  </a>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Overview</div>
+    <a class="nav-item" href="fastdrop-admin-dashboard.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></span>Dashboard</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Shipments<span class="nav-badge teal">1,284</span></a>
+    <a class="nav-item" href="fastdrop-drivers.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></span>Drivers</a>
+    <a class="nav-item" href="fastdrop-dispatcher.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Fleet</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Business</div>
+    <a class="nav-item active" href="fastdrop-merchants.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>Merchants</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></span>Zones</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg></span>Invoices<span class="nav-badge warn">5</span></a>
+    <a class="nav-item" href="fastdrop-analytics.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg></span>Analytics</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">System</div>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2z"/></svg></span>User Roles</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/></svg></span>Settings</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="u-avatar">SA</div>
+      <div style="flex:1"><div class="u-name">Sara Ahmed</div><div class="u-role">Super Admin</div></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="rgba(255,255,255,.3)"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title">Merchants</div>
+        <div class="page-subtitle">237 registered · 218 active</div>
+      </div>
+      <div class="topbar-divider"></div>
+      <span class="s-badge sb-active" style="font-size:10px">218 Active</span>
+      <span class="s-badge sb-pending" style="font-size:10px">11 Pending</span>
+      <span class="s-badge sb-inactive" style="font-size:10px">8 Inactive</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-primary btn-sm" onclick="openCreate()">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        Add Merchant
+      </button>
+      <div class="icon-btn"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-dot"></div></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- SUMMARY STRIP -->
+    <div class="summary-strip">
+      <div class="strip-card" style="--sc-color:var(--primary)">
+        <div class="strip-icon" style="background:var(--primary-light)"><svg viewBox="0 0 24 24" fill="var(--primary-dark)"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+        <div><div class="strip-val" style="color:var(--primary)">237</div><div class="strip-lbl">Total Merchants</div><div class="strip-trend trend-up">↑ +14 this month</div></div>
+      </div>
+      <div class="strip-card" style="--sc-color:var(--success)">
+        <div class="strip-icon" style="background:var(--success-light)"><svg viewBox="0 0 24 24" fill="var(--success)"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></div>
+        <div><div class="strip-val" style="color:var(--success)">8,421</div><div class="strip-lbl">Shipments This Month</div><div class="strip-trend trend-up">↑ +12.3%</div></div>
+      </div>
+      <div class="strip-card" style="--sc-color:var(--purple)">
+        <div class="strip-icon" style="background:var(--purple-light)"><svg viewBox="0 0 24 24" fill="var(--purple)"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg></div>
+        <div><div class="strip-val" style="color:var(--purple)">$192k</div><div class="strip-lbl">Total Revenue (Month)</div><div class="strip-trend trend-up">↑ +18.3%</div></div>
+      </div>
+      <div class="strip-card" style="--sc-color:var(--warning)">
+        <div class="strip-icon" style="background:var(--warning-light)"><svg viewBox="0 0 24 24" fill="var(--warning)"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg></div>
+        <div><div class="strip-val" style="color:var(--warning)">11</div><div class="strip-lbl">Pending Approval</div><div class="strip-trend trend-down">↑ 3 new today</div></div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="top-controls">
+      <div class="filter-bar" style="margin-bottom:0;flex:1;border-radius:14px">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="Search by shop name, contact, email, ID…" oninput="filterMerchants(this.value)">
+        </div>
+        <div class="filter-divider"></div>
+        <select class="fsel" onchange="filterStatus(this.value)">
+          <option value="">All Statuses</option>
+          <option>Active</option><option>Inactive</option><option>Pending</option><option>Suspended</option>
+        </select>
+        <select class="fsel">
+          <option>All Zones</option><option>Downtown</option><option>Westside</option>
+          <option>East Hub</option><option>North Ring</option><option>South Bay</option><option>Airport</option>
+        </select>
+        <select class="fsel">
+          <option>All Time</option><option>This Month</option><option>This Quarter</option><option>This Year</option>
+        </select>
+        <div class="filter-count" id="filterCount">Showing 1–10 of 237</div>
+      </div>
+      <div class="view-toggle">
+        <button class="view-btn active" id="vTable" onclick="setView('table',this)" title="Table view">
+          <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+        </button>
+        <button class="view-btn" id="vCards" onclick="setView('cards',this)" title="Card view">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- TABLE VIEW -->
+    <div id="tableView" class="table-wrap">
+      <div class="table-head">
+        <div class="table-title">All Merchants</div>
+        <div class="table-actions">
+          <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px"><input type="checkbox" class="cb"></th>
+              <th>Merchant</th>
+              <th>Contact</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Zone</th>
+              <th>Status</th>
+              <th>Shipments</th>
+              <th>Joined</th>
+              <th style="width:120px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="merchantTableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="page-info" id="pageInfo">Showing 1–10 of 237 merchants</div>
+        <div class="page-btns">
+          <div class="pg-btn"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="pg-btn active">1</div>
+          <div class="pg-btn">2</div>
+          <div class="pg-btn">3</div>
+          <div class="pg-btn">…</div>
+          <div class="pg-btn">24</div>
+          <div class="pg-btn"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD VIEW -->
+    <div id="cardView" class="cards-grid" style="display:none" id="cardViewGrid"></div>
+
+  </div>
+</div>
+
+<!-- ══ OVERLAY ══ -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanels()"></div>
+
+<!-- ══ DETAIL PANEL ══ -->
+<div class="slide-panel" id="detailPanel">
+  <div class="panel-header" style="padding:16px 24px">
+    <div><div class="panel-title" id="dpTitle">Merchant Detail</div><div class="panel-sub" id="dpSub">Full profile</div></div>
+    <div class="panel-close" onclick="closePanels()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="detail-tabs">
+    <div class="dtab active" onclick="switchTab('info',this)">Profile</div>
+    <div class="dtab" onclick="switchTab('shipments',this)">Shipments</div>
+    <div class="dtab" onclick="switchTab('invoices',this)">Invoices</div>
+    <div class="dtab" onclick="switchTab('products',this)">Products</div>
+  </div>
+  <div class="panel-body" id="detailBody"></div>
+  <div class="panel-footer" id="detailFooter"></div>
+</div>
+
+<!-- ══ CREATE PANEL ══ -->
+<div class="slide-panel narrow" id="createPanel">
+  <div class="panel-header">
+    <div><div class="panel-title" id="createTitle">Add New Merchant</div><div class="panel-sub">Register a new merchant account</div></div>
+    <div class="panel-close" onclick="closePanels()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="panel-body">
+    <div class="form-section">
+      <div class="fsec-title"><div class="fsec-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>Business Information</div>
+      <div class="form-grid">
+        <div class="form-group full"><label>Shop / Business Name *</label><input class="form-control" placeholder="e.g. SwiftMart Egypt"></div>
+        <div class="form-group full"><label>Business Address *</label><input class="form-control" placeholder="Street, Building, City"></div>
+        <div class="form-group"><label>Business Type</label><select class="form-control"><option>Retail</option><option>Pharmacy</option><option>Electronics</option><option>Fashion</option><option>Food & Beverage</option><option>Other</option></select></div>
+        <div class="form-group"><label>Tax / Commercial Reg. No.</label><input class="form-control" placeholder="CR-XXXXXXXXX"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="fsec-title"><div class="fsec-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></div>Contact Person</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Contact First Name *</label><input class="form-control" placeholder="Mohamed"></div>
+        <div class="form-group"><label>Contact Last Name *</label><input class="form-control" placeholder="Adel"></div>
+        <div class="form-group full"><label>Email Address *</label><input class="form-control" type="email" placeholder="contact@business.com"></div>
+        <div class="form-group"><label>Phone Number *</label><input class="form-control" placeholder="+20 (10) 000-0000"></div>
+        <div class="form-group"><label>WhatsApp Number</label><input class="form-control" placeholder="+20 (10) 000-0000"></div>
+      </div>
+    </div>
+    <div class="form-section">
+      <div class="fsec-title"><div class="fsec-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>Zone & Billing</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Primary Zone *</label><select class="form-control"><option>— Select zone —</option><option>Downtown</option><option>Westside</option><option>East Hub</option><option>North Ring</option><option>South Bay</option><option>Airport</option></select></div>
+        <div class="form-group"><label>Account Status</label><select class="form-control"><option>Active</option><option>Pending</option><option>Inactive</option></select></div>
+        <div class="form-group"><label>Billing Email</label><input class="form-control" type="email" placeholder="billing@business.com"></div>
+        <div class="form-group"><label>Payment Terms</label><select class="form-control"><option>Net 15</option><option>Net 30</option><option>Weekly</option><option>Monthly</option></select></div>
+        <div class="form-group full"><label>Notes</label><textarea class="form-control" rows="2" placeholder="Any special notes about this merchant…" style="resize:vertical"></textarea></div>
+      </div>
+    </div>
+    <div class="form-section" style="border-bottom:none">
+      <div class="fsec-title"><div class="fsec-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>Portal Access</div>
+      <div class="form-grid">
+        <div class="form-group full"><label>Portal Email (login)</label><input class="form-control" type="email" placeholder="merchant@business.com"></div>
+        <div class="form-group full" style="display:flex;align-items:center;justify-content:space-between;padding:12px;background:var(--border-light);border-radius:10px">
+          <div><div style="font-size:13px;font-weight:600;color:var(--text-dark)">Send Welcome Email</div><div style="font-size:11px;color:var(--text-muted)">Send portal access credentials to merchant</div></div>
+          <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div></label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel-footer">
+    <button class="btn btn-secondary" onclick="closePanels()">Cancel</button>
+    <button class="btn btn-primary" style="margin-left:auto" onclick="saveMerchant()"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Create Merchant Account</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const MERCHANTS = [
+  {id:'MCH-001',name:'SwiftMart',contact:'Mohamed Adel',email:'billing@swiftmart.com',phone:'+20 100 111 2233',zone:'Downtown',status:'Active',shipments:284,joined:'Jan 2024',joinDate:'2024-01-15',address:'44 Tahrir Sq, Cairo',business:'Retail',color:'#00c9a7',revenue:'$31,540',invoicePaid:8,invoicePending:1,invoiceOverdue:0,products:12,delivered:248,pending:22,failed:14},
+  {id:'MCH-002',name:'TechShop Cairo',contact:'Amira Sayed',email:'accounts@techshop.eg',phone:'+20 101 222 3344',zone:'North Ring',status:'Active',shipments:198,joined:'Feb 2024',joinDate:'2024-02-08',address:'17 Salah Salem, Cairo',business:'Electronics',color:'#3b82f6',revenue:'$48,200',invoicePaid:5,invoicePending:2,invoiceOverdue:2,products:34,delivered:168,pending:14,failed:16},
+  {id:'MCH-003',name:'HomeGoods Egypt',contact:'Tarek Nasser',email:'billing@homegoods.eg',phone:'+20 102 333 4455',zone:'Westside',status:'Active',shipments:142,joined:'Mar 2024',joinDate:'2024-03-20',address:'88 Dokki St, Cairo',business:'Retail',color:'#f97316',revenue:'$14,820',invoicePaid:3,invoicePending:1,invoiceOverdue:1,products:28,delivered:118,pending:12,failed:12},
+  {id:'MCH-004',name:'Pharmacy Plus',contact:'Dina Khalil',email:'finance@pharmacyplus.eg',phone:'+20 103 444 5566',zone:'East Hub',status:'Active',shipments:321,joined:'Jan 2024',joinDate:'2024-01-22',address:'12 Nasr City Blvd',business:'Pharmacy',color:'#10b981',revenue:'$24,100',invoicePaid:9,invoicePending:2,invoiceOverdue:0,products:8,delivered:290,pending:18,failed:13},
+  {id:'MCH-005',name:'Fashion Hub',contact:'Nour Mostafa',email:'pay@fashionhub.com',phone:'+20 104 555 6677',zone:'Westside',status:'Active',shipments:89,joined:'Apr 2024',joinDate:'2024-04-05',address:'33 Agouza Rd',business:'Fashion',color:'#ec4899',revenue:'$8,640',invoicePaid:4,invoicePending:1,invoiceOverdue:0,products:45,delivered:76,pending:8,failed:5},
+  {id:'MCH-006',name:'Fresh Eats Co.',contact:'Youssef Ramadan',email:'ops@fresheats.eg',phone:'+20 105 666 7788',zone:'South Bay',status:'Active',shipments:178,joined:'May 2024',joinDate:'2024-05-12',address:'9 Maadi Corniche',business:'Food',color:'#84cc16',revenue:'$19,200',invoicePaid:6,invoicePending:1,invoiceOverdue:0,products:6,delivered:162,pending:10,failed:6},
+  {id:'MCH-007',name:'GadgetZone',contact:'Hossam Ali',email:'info@gadgetzone.eg',phone:'+20 106 777 8899',zone:'Airport',status:'Active',shipments:66,joined:'Jun 2024',joinDate:'2024-06-18',address:'91 Airport Access Rd',business:'Electronics',color:'#8b5cf6',revenue:'$12,300',invoicePaid:2,invoicePending:1,invoiceOverdue:0,products:19,delivered:58,pending:5,failed:3},
+  {id:'MCH-008',name:'BookWorld Egypt',contact:'Rana Ibrahim',email:'orders@bookworld.eg',phone:'+20 107 888 9900',zone:'Downtown',status:'Inactive',shipments:22,joined:'Jul 2024',joinDate:'2024-07-03',address:'55 Tahrir St',business:'Retail',color:'#f59e0b',revenue:'$1,840',invoicePaid:1,invoicePending:0,invoiceOverdue:0,products:120,delivered:18,pending:3,failed:1},
+  {id:'MCH-009',name:'QuickMeds',contact:'Sherif Omar',email:'billing@quickmeds.eg',phone:'+20 108 999 0011',zone:'North Ring',status:'Pending',shipments:0,joined:'Mar 2026',joinDate:'2026-03-15',address:'28 Ring Road',business:'Pharmacy',color:'#0891b2',revenue:'$0',invoicePaid:0,invoicePending:0,invoiceOverdue:0,products:0,delivered:0,pending:0,failed:0},
+  {id:'MCH-010',name:'StyleCraft',contact:'Fatima Hany',email:'info@stylecraft.eg',phone:'+20 109 000 1122',zone:'East Hub',status:'Suspended',shipments:31,joined:'Aug 2024',joinDate:'2024-08-22',address:'14 Heliopolis Sq',business:'Fashion',color:'#ef4444',revenue:'$2,180',invoicePaid:1,invoicePending:0,invoiceOverdue:1,products:22,delivered:24,pending:2,failed:5},
+];
+
+const statusCls={Active:'sb-active',Inactive:'sb-inactive',Pending:'sb-pending',Suspended:'sb-suspended'};
+const statusDot={Active:'#10b981',Inactive:'#9ca3af',Pending:'#f59e0b',Suspended:'#ef4444'};
+let currentData=[...MERCHANTS];
+let currentView='table';
+let currentMerchant=null;
+let currentTab='info';
+
+function initials(n){return n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+
+// ── RENDER TABLE ──
+function renderTable(data){
+  const tbody=document.getElementById('merchantTableBody');
+  tbody.innerHTML=data.map(m=>`
+    <tr onclick="openDetail('${m.id}')">
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="cb"></td>
+      <td><div class="merchant-cell">
+        <div class="m-avatar" style="background:${m.color}">${initials(m.name)}</div>
+        <div><div class="m-name">${m.name}</div><div class="m-id">${m.id}</div></div>
+      </div></td>
+      <td style="font-weight:600;color:var(--text-dark)">${m.contact}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${m.email}</td>
+      <td style="font-size:12px">${m.phone}</td>
+      <td><span style="font-size:12px;font-weight:600;color:var(--info);background:var(--info-light);padding:3px 8px;border-radius:5px">${m.zone}</span></td>
+      <td><span class="s-badge ${statusCls[m.status]}">${m.status}</span></td>
+      <td style="font-weight:700;color:var(--text-dark)">${m.shipments.toLocaleString()}</td>
+      <td style="font-size:12px;color:var(--text-muted)">${m.joined}</td>
+      <td onclick="event.stopPropagation()">
+        <div class="row-acts">
+          <div class="ra-btn" data-tip="View" onclick="openDetail('${m.id}')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="ra-btn" data-tip="Edit" onclick="openEdit('${m.id}',event)"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
+          <div class="ra-btn ${m.status==='Active'?'danger':'success'}" data-tip="${m.status==='Active'?'Deactivate':'Activate'}" onclick="toggleStatus('${m.id}',event)">
+            <svg viewBox="0 0 24 24">${m.status==='Active'?'<path d="M18.36 6.64a9 9 0 11-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/>':'<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>'}
+            </svg>
+          </div>
+        </div>
+      </td>
+    </tr>`).join('');
+  document.getElementById('filterCount').textContent=`Showing 1–${Math.min(10,data.length)} of ${data.length}`;
+  document.getElementById('pageInfo').textContent=`Showing 1–${Math.min(10,data.length)} of ${data.length} merchants`;
+}
+
+// ── RENDER CARDS ──
+function renderCards(data){
+  const grid=document.getElementById('cardView');
+  grid.innerHTML=data.map(m=>`
+    <div class="merchant-card" onclick="openDetail('${m.id}')">
+      <div class="mc-top">
+        <div class="mc-header">
+          <div class="mc-avatar" style="background:${m.color}">${initials(m.name)}</div>
+        </div>
+        <div class="mc-status-dot" style="background:${statusDot[m.status]}"></div>
+        <div class="mc-name">${m.name}</div>
+        <div class="mc-id">${m.id}</div>
+        <div class="mc-contact"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg>${m.contact}</div>
+        <div class="mc-contact" style="margin-top:3px"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>${m.email}</div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+          <span class="s-badge ${statusCls[m.status]}" style="font-size:10px">${m.status}</span>
+          <span style="font-size:10px;font-weight:600;color:var(--info);background:var(--info-light);padding:3px 7px;border-radius:5px">${m.zone}</span>
+          <span style="font-size:10px;font-weight:600;color:var(--text-muted);background:var(--border-light);padding:3px 7px;border-radius:5px">${m.business}</span>
+        </div>
+      </div>
+      <div class="mc-divider"></div>
+      <div class="mc-stats">
+        <div class="mc-stat"><div class="mc-stat-val" style="color:var(--primary)">${m.shipments}</div><div class="mc-stat-lbl">Shipments</div></div>
+        <div class="mc-stat"><div class="mc-stat-val" style="color:var(--success)">${m.delivered}</div><div class="mc-stat-lbl">Delivered</div></div>
+        <div class="mc-stat"><div class="mc-stat-val" style="color:var(--purple)">${m.products}</div><div class="mc-stat-lbl">Products</div></div>
+      </div>
+      <div class="mc-footer">
+        <span class="mc-zone">${m.revenue}</span>
+        <span class="mc-joined">Joined ${m.joined}</span>
+      </div>
+    </div>`).join('');
+}
+
+renderTable(MERCHANTS);
+renderCards(MERCHANTS);
+
+// ── VIEW TOGGLE ──
+function setView(v,btn){
+  currentView=v;
+  document.querySelectorAll('.view-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tableView').style.display=v==='table'?'block':'none';
+  document.getElementById('cardView').style.display=v==='cards'?'grid':'none';
+}
+
+// ── FILTERS ──
+function filterMerchants(q){
+  currentData=MERCHANTS.filter(m=>m.name.toLowerCase().includes(q.toLowerCase())||m.contact.toLowerCase().includes(q.toLowerCase())||m.email.toLowerCase().includes(q.toLowerCase())||m.id.toLowerCase().includes(q.toLowerCase()));
+  renderTable(currentData);renderCards(currentData);
+}
+function filterStatus(st){
+  currentData=st?MERCHANTS.filter(m=>m.status===st):[...MERCHANTS];
+  renderTable(currentData);renderCards(currentData);
+}
+
+// ── DETAIL ──
+function openDetail(id){
+  currentMerchant=MERCHANTS.find(m=>m.id===id);
+  if(!currentMerchant)return;
+  currentTab='info';
+  document.querySelectorAll('.dtab').forEach((t,i)=>t.classList.toggle('active',i===0));
+  document.getElementById('dpTitle').textContent=currentMerchant.name;
+  document.getElementById('dpSub').textContent=`${currentMerchant.id} · ${currentMerchant.zone}`;
+  buildDetail();
+  buildFooter();
+  openPanel('detailPanel');
+}
+
+function switchTab(tab,el){
+  currentTab=tab;
+  document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  buildDetail();
+}
+
+function buildDetail(){
+  const m=currentMerchant;
+  const body=document.getElementById('detailBody');
+  const hero=`<div class="merch-hero">
+    <div class="hero-inner">
+      <div class="hero-logo" style="background:${m.color}30"><span style="color:${m.color};font-weight:800;font-size:22px">${initials(m.name)}</span></div>
+      <div>
+        <div class="hero-name">${m.name}</div>
+        <div class="hero-id">${m.id} · ${m.business}</div>
+        <div class="hero-badges">
+          <span class="s-badge ${statusCls[m.status]}">${m.status}</span>
+          <span class="hero-badge" style="background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)">${m.zone}</span>
+          <span class="hero-badge" style="background:rgba(139,92,246,.2);color:#c4b5fd">${m.revenue} revenue</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-kpis">
+      <div class="hkpi"><div class="hkpi-val">${m.shipments}</div><div class="hkpi-lbl">Shipments</div></div>
+      <div class="hkpi"><div class="hkpi-val" style="color:var(--primary)">${m.delivered}</div><div class="hkpi-lbl">Delivered</div></div>
+      <div class="hkpi"><div class="hkpi-val" style="color:var(--warning)">${m.pending}</div><div class="hkpi-lbl">Pending</div></div>
+      <div class="hkpi"><div class="hkpi-val" style="color:var(--error)">${m.failed}</div><div class="hkpi-lbl">Failed</div></div>
+    </div>
+  </div>`;
+
+  if(currentTab==='info'){
+    body.innerHTML=hero+`
+    <div class="dsection">
+      <div class="dsec-title"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>Business Details</div>
+      <div class="detail-grid">
+        <div class="dfield"><label>Shop Name</label><span>${m.name}</span></div>
+        <div class="dfield"><label>Business Type</label><span>${m.business}</span></div>
+        <div class="dfield full" style="grid-column:1/-1"><label>Address</label><span>${m.address}</span></div>
+        <div class="dfield"><label>Contact Name</label><span>${m.contact}</span></div>
+        <div class="dfield"><label>Phone</label><span>${m.phone}</span></div>
+        <div class="dfield"><label>Email</label><span>${m.email}</span></div>
+        <div class="dfield"><label>Zone</label><span style="color:var(--info);font-weight:700">${m.zone}</span></div>
+        <div class="dfield"><label>Joined</label><span>${m.joined}</span></div>
+        <div class="dfield"><label>Account Status</label><span class="s-badge ${statusCls[m.status]}">${m.status}</span></div>
+      </div>
+    </div>
+    <div class="dsection">
+      <div class="dsec-title"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>Shipment Summary</div>
+      <div class="summary-quad">
+        <div class="sq-card" style="background:var(--primary-light)"><div class="sq-val" style="color:var(--primary)">${m.shipments}</div><div class="sq-lbl" style="color:var(--primary-dark)">Total</div></div>
+        <div class="sq-card" style="background:var(--success-light)"><div class="sq-val" style="color:var(--success)">${m.delivered}</div><div class="sq-lbl" style="color:var(--success)">Delivered</div><div class="sq-sub" style="color:var(--success)">${m.shipments>0?Math.round(m.delivered/m.shipments*100):0}% rate</div></div>
+        <div class="sq-card" style="background:var(--warning-light)"><div class="sq-val" style="color:var(--warning)">${m.pending}</div><div class="sq-lbl" style="color:var(--warning)">Pending</div></div>
+        <div class="sq-card" style="background:var(--error-light)"><div class="sq-val" style="color:var(--error)">${m.failed}</div><div class="sq-lbl" style="color:var(--error)">Failed</div><div class="sq-sub" style="color:var(--error)">${m.shipments>0?Math.round(m.failed/m.shipments*100):0}% rate</div></div>
+      </div>
+    </div>
+    <div class="dsection" style="border-bottom:none">
+      <div class="dsec-title"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>Invoice Summary</div>
+      <div class="inv-summary-row"><label><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--success);margin-right:4px"></span>Paid Invoices</label><span style="color:var(--success)">${m.invoicePaid}</span></div>
+      <div class="inv-summary-row"><label><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--warning);margin-right:4px"></span>Pending Invoices</label><span style="color:var(--warning)">${m.invoicePending}</span></div>
+      <div class="inv-summary-row"><label><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--error);margin-right:4px"></span>Overdue Invoices</label><span style="color:var(--error)">${m.invoiceOverdue}</span></div>
+      <div class="inv-summary-row" style="border-top:2px solid var(--border);padding-top:12px;margin-top:4px"><label style="font-weight:800;color:var(--text-dark);font-size:14px">Total Revenue</label><span style="font-size:18px;color:var(--primary)">${m.revenue}</span></div>
+    </div>`;
+  }
+
+  else if(currentTab==='shipments'){
+    const shps=[
+      {id:'SHP-8821',date:'Mar 19',status:'Delivered',cod:'$120',driver:'Ahmed K.',zone:m.zone},
+      {id:'SHP-8819',date:'Mar 19',status:'Delivered',cod:'$340',driver:'Ahmed K.',zone:m.zone},
+      {id:'SHP-8818',date:'Mar 19',status:'Pending',cod:'$85',driver:'—',zone:m.zone},
+      {id:'SHP-8817',date:'Mar 18',status:'Delivered',cod:'$210',driver:'Karim Y.',zone:m.zone},
+      {id:'SHP-8814',date:'Mar 18',status:'Failed',cod:'$85',driver:'Yasser H.',zone:m.zone},
+      {id:'SHP-8812',date:'Mar 17',status:'Delivered',cod:'$430',driver:'Mohamed S.',zone:m.zone},
+    ];
+    const scls={Delivered:'sb-active',Pending:'sb-pending',Failed:'sb-suspended',Returned:'sb-inactive'};
+    body.innerHTML=hero+`
+    <div class="dsection">
+      <div class="dsec-title"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>Recent Shipments (${shps.length} of ${m.shipments})</div>
+      <table class="mini-table">
+        <thead><tr><th>SHP ID</th><th>Date</th><th>Status</th><th>COD</th><th>Driver</th></tr></thead>
+        <tbody>${shps.map(s=>`<tr>
+          <td class="shp-id">${s.id}</td>
+          <td style="color:var(--text-muted)">${s.date}</td>
+          <td><span class="s-badge ${scls[s.status]||'sb-inactive'}" style="font-size:10px">${s.status}</span></td>
+          <td style="font-weight:700;color:${s.cod==='—'?'var(--text-light)':'var(--success)'}">${s.cod}</td>
+          <td style="font-size:12px">${s.driver}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+      <div style="text-align:center;margin-top:12px"><button class="btn btn-secondary btn-sm">View all ${m.shipments} shipments</button></div>
+    </div>`;
+  }
+
+  else if(currentTab==='invoices'){
+    const invs=[
+      {id:'INV-3335',period:'Mar 1–15',total:'$121.90',status:'Draft',due:'Mar 29'},
+      {id:'INV-3320',period:'Feb 16–28',total:'$189.60',status:'Paid',due:'Mar 14'},
+      {id:'INV-3300',period:'Feb 1–15',total:'$154.70',status:'Paid',due:'Mar 1'},
+    ];
+    const isc={Paid:'sb-active',Pending:'sb-pending',Overdue:'sb-suspended',Draft:'sb-inactive'};
+    body.innerHTML=hero+`
+    <div class="dsection">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+        <div style="background:var(--success-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--success)">${m.invoicePaid}</div><div style="font-size:10px;color:var(--success);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:2px">Paid</div></div>
+        <div style="background:var(--warning-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--warning)">${m.invoicePending}</div><div style="font-size:10px;color:var(--warning);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:2px">Pending</div></div>
+        <div style="background:var(--error-light);border-radius:10px;padding:12px;text-align:center"><div style="font-size:20px;font-weight:800;color:var(--error)">${m.invoiceOverdue}</div><div style="font-size:10px;color:var(--error);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-top:2px">Overdue</div></div>
+      </div>
+      <div class="dsec-title"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg>Invoice History</div>
+      <table class="mini-table">
+        <thead><tr><th>Invoice ID</th><th>Period</th><th>Total</th><th>Status</th><th>Due</th></tr></thead>
+        <tbody>${invs.map(i=>`<tr>
+          <td style="font-weight:700;color:var(--primary);font-size:12px">${i.id}</td>
+          <td style="color:var(--text-muted)">${i.period}</td>
+          <td style="font-weight:700">${i.total}</td>
+          <td><span class="s-badge ${isc[i.status]||'sb-inactive'}" style="font-size:10px">${i.status}</span></td>
+          <td style="color:var(--text-muted)">${i.due}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+      <div style="margin-top:12px;display:flex;gap:8px">
+        <button class="btn btn-secondary btn-sm" style="flex:1">View all invoices</button>
+        <button class="btn btn-primary btn-sm" style="flex:1" onclick="showToast('Opening create invoice for ${m.name}…')">+ New Invoice</button>
+      </div>
+    </div>`;
+  }
+
+  else if(currentTab==='products'){
+    const prods=[
+      {sku:'PRD-001',name:'Premium Widget A',category:'Electronics',price:'$29.99',weight:'0.5kg',active:true},
+      {sku:'PRD-002',name:'Starter Bundle B',category:'Retail',price:'$49.99',weight:'1.2kg',active:true},
+      {sku:'PRD-003',name:'Deluxe Package C',category:'Retail',price:'$89.99',weight:'2.1kg',active:true},
+      {sku:'PRD-004',name:'Eco Bag Set',category:'Retail',price:'$15.00',weight:'0.3kg',active:false},
+      {sku:'PRD-005',name:'Pro Toolkit D',category:'Electronics',price:'$120.00',weight:'3.5kg',active:true},
+    ].slice(0,Math.max(1,Math.min(m.products,5)));
+    body.innerHTML=hero+`
+    <div class="dsection">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="dsec-title" style="margin-bottom:0"><svg viewBox="0 0 24 24"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 3H8a2 2 0 00-2 2v2h12V5a2 2 0 00-2-2z"/></svg>Products (${m.products} registered)</div>
+        <button class="btn btn-primary btn-sm" onclick="showToast('Opening add product for ${m.name}…')">+ Add Product</button>
+      </div>
+      ${m.products===0?'<div style="font-size:13px;color:var(--text-muted);padding:12px 0;text-align:center">No products registered yet.</div>':`
+      <table class="mini-table">
+        <thead><tr><th>SKU</th><th>Product Name</th><th>Category</th><th>Price</th><th>Weight</th><th>Status</th></tr></thead>
+        <tbody>${prods.map(p=>`<tr>
+          <td style="font-weight:700;color:var(--primary);font-size:11px">${p.sku}</td>
+          <td style="font-weight:600;color:var(--text-dark)">${p.name}</td>
+          <td style="color:var(--text-muted)">${p.category}</td>
+          <td style="font-weight:700">${p.price}</td>
+          <td style="color:var(--text-muted)">${p.weight}</td>
+          <td><span class="s-badge ${p.active?'sb-active':'sb-inactive'}" style="font-size:10px">${p.active?'Active':'Inactive'}</span></td>
+        </tr>`).join('')}</tbody>
+      </table>
+      ${m.products>5?`<div style="text-align:center;margin-top:12px"><button class="btn btn-secondary btn-sm">View all ${m.products} products</button></div>`:''}`}
+    </div>`;
+  }
+}
+
+function buildFooter(){
+  const m=currentMerchant;
+  document.getElementById('detailFooter').innerHTML=`
+    <button class="btn btn-secondary btn-sm" onclick="openEdit('${m.id}',null)"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit Merchant</button>
+    <button class="btn btn-secondary btn-sm" onclick="switchTab('shipments',document.querySelectorAll('.dtab')[1]);document.querySelectorAll('.dtab').forEach((t,i)=>t.classList.toggle('active',i===1))"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg> Shipments</button>
+    <button class="btn btn-secondary btn-sm" onclick="switchTab('invoices',document.querySelectorAll('.dtab')[2]);document.querySelectorAll('.dtab').forEach((t,i)=>t.classList.toggle('active',i===2))"><svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg> Invoices</button>
+    <button class="btn ${m.status==='Active'?'btn-danger':'btn-success'} btn-sm" style="margin-left:auto" onclick="toggleStatus('${m.id}',null)">
+      ${m.status==='Active'?'⊘ Deactivate':'✓ Activate'} Account
+    </button>`;
+}
+
+// ── ACTIONS ──
+function toggleStatus(id,event){
+  if(event)event.stopPropagation();
+  const m=MERCHANTS.find(x=>x.id===id);if(!m)return;
+  m.status=m.status==='Active'?'Inactive':'Active';
+  renderTable(currentData);renderCards(currentData);
+  showToast(`${m.name} is now ${m.status}`);
+  if(currentMerchant&&currentMerchant.id===id){buildDetail();buildFooter();}
+}
+function openEdit(id,event){
+  if(event)event.stopPropagation();
+  const m=MERCHANTS.find(x=>x.id===id);
+  document.getElementById('createTitle').textContent=`Edit Merchant — ${m.name}`;
+  openPanel('createPanel');
+}
+function openCreate(){
+  document.getElementById('createTitle').textContent='Add New Merchant';
+  openPanel('createPanel');
+}
+function saveMerchant(){closePanels();showToast('✓ Merchant account saved successfully');}
+
+// ── PANELS ──
+function openPanel(id){document.getElementById('panelOverlay').classList.add('show');document.getElementById(id).classList.add('open')}
+function closePanels(){document.getElementById('panelOverlay').classList.remove('show');document.querySelectorAll('.slide-panel').forEach(p=>p.classList.remove('open'))}
+
+// ── TOAST ──
+function showToast(msg,type='success'){
+  const el=document.createElement('div');el.className='toast';
+  const c={success:'var(--primary)',error:'var(--error)',warn:'var(--warning)'};
+  el.style.borderLeftColor=c[type]||c.success;
+  el.innerHTML=`<svg viewBox="0 0 24 24" style="fill:${c[type]||c.success}"><path d="${type==='error'?'M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z':'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'}"/></svg>${msg}`;
+  document.body.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transition='opacity .3s';setTimeout(()=>el.remove(),300)},3500);
+}
+
+// Animate strips
+document.querySelectorAll('.strip-val').forEach(el=>{
+  const raw=parseFloat(el.textContent.replace(/[$k,]/g,''));
+  if(!isNaN(raw)&&raw>0){
+    const orig=el.textContent;const isK=orig.includes('k');const isPre=orig.startsWith('$');
+    el.textContent=(isPre?'$':'')+'0'+(isK?'k':'');
+    const dur=700,st=performance.now();
+    function step(now){const p=Math.min((now-st)/dur,1),e=1-Math.pow(1-p,3);const v=Math.round(raw*e);el.textContent=(isPre?'$':'')+v.toLocaleString()+(isK?'k':'');if(p<1)requestAnimationFrame(step);else el.textContent=orig;}
+    setTimeout(()=>requestAnimationFrame(step),100+Math.random()*150);
+  }
+});
+</script>
+</body>
+</html>

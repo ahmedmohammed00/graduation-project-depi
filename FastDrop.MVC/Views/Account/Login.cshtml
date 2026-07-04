@@ -1,0 +1,500 @@
+@model FastDrop.MVC.ViewModels.LoginViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Drop – Log In</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --teal: #00c9a7;
+    --teal-dark: #00a98a;
+    --teal-light: #e6faf6;
+    --text-dark: #111827;
+    --text-mid: #374151;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --white: #ffffff;
+    --bg: #f0faf8;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: linear-gradient(150deg, #e8f8f4 0%, #f0fdf9 40%, #eafaf6 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* NAV */
+  nav {
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+  }
+  .nav-logo {
+    display: flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 16px; color: var(--text-dark);
+    text-decoration: none;
+  }
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: var(--teal);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 20px; height: 20px; fill: white; }
+
+  /* MAIN LAYOUT */
+  .page {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 80px 60px;
+    gap: 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* LEFT */
+  .left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  .left h1 {
+    font-size: 38px; font-weight: 800; color: var(--text-dark);
+    line-height: 1.2;
+  }
+  .left p {
+    font-size: 14px; color: var(--text-muted); line-height: 1.6;
+    max-width: 300px; margin-top: -16px;
+  }
+
+  /* Dashboard Mockup */
+  .mockup-wrap {
+    background: var(--teal);
+    border-radius: 16px;
+    padding: 20px;
+    position: relative;
+    max-width: 360px;
+  }
+  .mockup-inner {
+    background: #0f1f2e;
+    border-radius: 10px;
+    overflow: hidden;
+    padding: 14px;
+  }
+  .mockup-topbar {
+    display: flex; gap: 8px; align-items: center; margin-bottom: 12px;
+  }
+  .m-tab {
+    font-size: 9px; color: rgba(255,255,255,.4);
+    padding: 3px 8px; border-radius: 4px;
+    cursor: pointer; font-weight: 500;
+  }
+  .m-tab.active { background: var(--teal); color: white; }
+  .mockup-stats {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+  }
+  .stat-card {
+    background: #162435; border-radius: 8px; padding: 10px 12px;
+  }
+  .stat-label { font-size: 8px; color: rgba(255,255,255,.4); margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 800; color: white; }
+  .stat-sub { font-size: 8px; color: var(--teal); margin-top: 2px; }
+
+  /* mini chart area */
+  .chart-area {
+    background: #162435; border-radius: 8px; padding: 10px; margin-bottom: 10px; height: 80px; position: relative; overflow: hidden;
+  }
+  .chart-label { font-size: 8px; color: rgba(255,255,255,.4); margin-bottom: 6px; }
+  .chart-svg { width: 100%; height: 50px; }
+
+  .mockup-bottom { display: flex; gap: 8px; }
+  .mini-card {
+    flex: 1; background: #162435; border-radius: 8px; padding: 8px;
+  }
+  .mini-label { font-size: 7px; color: rgba(255,255,255,.3); margin-bottom: 3px; }
+  .mini-value { font-size: 13px; font-weight: 700; color: white; }
+  .mini-bars { display: flex; align-items: flex-end; gap: 2px; margin-top: 5px; height: 20px; }
+  .mini-bar { flex: 1; border-radius: 2px; background: var(--teal); opacity: .5; }
+
+  /* map mini */
+  .mini-map {
+    flex: 1; background: #162435; border-radius: 8px; padding: 8px; position: relative; overflow: hidden;
+  }
+  .map-bg-mini {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #1a3040 0%, #162030 100%);
+  }
+  .map-grid-mini {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,201,167,.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,201,167,.07) 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
+  .m-pin {
+    position: absolute; width: 6px; height: 6px;
+    background: var(--teal); border-radius: 50%;
+    border: 1.5px solid white;
+  }
+
+  /* Social proof */
+  .social-proof {
+    display: flex; align-items: center; gap: 12px;
+    background: white; border-radius: 12px;
+    padding: 12px 16px; width: fit-content;
+    box-shadow: 0 4px 16px rgba(0,0,0,.08);
+  }
+  .avatar-stack { display: flex; }
+  .sp-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid white; margin-left: -8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: white;
+  }
+  .sp-avatar:first-child { margin-left: 0; }
+  .sp-text strong { display: block; font-size: 13px; font-weight: 700; color: var(--text-dark); }
+  .sp-text span { font-size: 11px; color: var(--text-muted); }
+
+  /* RIGHT – Login Card */
+  .card {
+    background: white;
+    border-radius: 20px;
+    padding: 40px 36px;
+    width: 340px;
+    flex-shrink: 0;
+    box-shadow: 0 8px 40px rgba(0,0,0,.08);
+  }
+  .card h2 { font-size: 22px; font-weight: 800; color: var(--text-dark); margin-bottom: 4px; }
+  .card-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
+
+  .field-label {
+    font-size: 12px; font-weight: 600; color: var(--text-mid);
+    margin-bottom: 6px; display: block;
+  }
+  .field-group { margin-bottom: 18px; }
+
+  /* Select */
+  .select-wrap { position: relative; }
+  .select-wrap select {
+    width: 100%; appearance: none;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 10px 36px 10px 12px;
+    font-size: 13px; font-family: 'Inter', sans-serif;
+    color: var(--text-dark); background: white; cursor: pointer;
+    outline: none; transition: border-color .2s;
+  }
+  .select-wrap select:focus { border-color: var(--teal); }
+  .select-arrow {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    pointer-events: none; color: var(--text-muted);
+    font-size: 10px;
+  }
+
+  /* Input */
+  .input-wrap {
+    position: relative; display: flex; align-items: center;
+  }
+  .input-wrap input {
+    width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 10px 36px 10px 36px;
+    font-size: 13px; font-family: 'Inter', sans-serif;
+    color: var(--text-dark); outline: none; transition: border-color .2s;
+  }
+  .input-wrap input:focus { border-color: var(--teal); }
+  .input-wrap input::placeholder { color: #c0c5cc; }
+  .input-icon-left {
+    position: absolute; left: 12px;
+    color: var(--text-muted); font-size: 13px;
+    display: flex; align-items: center;
+  }
+  .input-icon-right {
+    position: absolute; right: 12px;
+    color: var(--text-muted); font-size: 13px; cursor: pointer;
+    display: flex; align-items: center;
+  }
+
+  /* Remember + Forgot */
+  .remember-row {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 22px;
+  }
+  .remember-label {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; color: var(--text-muted); cursor: pointer;
+  }
+  .remember-label input[type="checkbox"] {
+    width: 14px; height: 14px; accent-color: var(--teal); cursor: pointer;
+  }
+  .forgot { font-size: 12px; font-weight: 600; color: var(--teal); text-decoration: none; }
+  .forgot:hover { text-decoration: underline; }
+
+  /* Log In button */
+  .btn-login {
+    width: 100%; background: var(--teal); color: white;
+    border: none; border-radius: 50px; padding: 13px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    font-family: 'Inter', sans-serif; transition: background .2s;
+    margin-bottom: 20px;
+  }
+  .btn-login:hover { background: var(--teal-dark); }
+
+  /* Divider */
+  .divider {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px;
+  }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-text { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+
+  /* Social buttons */
+  .social-row { display: flex; gap: 10px; margin-bottom: 24px; }
+  .btn-social {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; font-size: 13px; font-weight: 600;
+    color: var(--text-dark); background: white; cursor: pointer;
+    font-family: 'Inter', sans-serif; transition: border-color .2s;
+  }
+  .btn-social:hover { border-color: #aaa; }
+  .btn-social svg { width: 16px; height: 16px; }
+
+  /* Sign up row */
+  .signup-row { text-align: center; font-size: 12px; color: var(--text-muted); margin-bottom: 20px; }
+  .signup-row a { color: var(--teal); font-weight: 600; text-decoration: none; }
+  .signup-row a:hover { text-decoration: underline; }
+
+  /* Footer links */
+  .card-footer { display: flex; justify-content: center; gap: 8px; }
+  .card-footer a { font-size: 11px; color: var(--text-muted); text-decoration: none; }
+  .card-footer a:hover { color: var(--teal); }
+  .card-footer span { font-size: 11px; color: var(--border); }
+  /* ── RESPONSIVE ── */
+  @@media (max-width: 900px) {
+    .page { flex-direction: column; padding: 20px 40px 60px; gap: 40px; }
+    .mockup-wrap { max-width: 100%; }
+    .card { width: 100%; max-width: 400px; margin: 0 auto; }
+  }
+  @@media (max-width: 480px) {
+    .page { padding: 20px 20px 60px; }
+    nav { padding: 20px; }
+    .card { padding: 30px 20px; }
+    .left h1 { font-size: 32px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a asp-controller="Home" asp-action="Index" class="nav-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>
+    </div>
+    Fast Drop
+  </a>
+</nav>
+
+<!-- PAGE -->
+<div class="page">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div>
+      <h1>Streamline your<br>delivery operations.</h1>
+      <p style="margin-top:12px">The ultimate delivery management platform designed to optimize routes, track fleets, and delight customers.</p>
+    </div>
+
+    <!-- Dashboard Mockup -->
+    <div class="mockup-wrap">
+      <div class="mockup-inner">
+        <div class="mockup-topbar">
+          <div class="m-tab active">Dashboard</div>
+          <div class="m-tab">Routes</div>
+          <div class="m-tab">Drivers</div>
+          <div class="m-tab">Settings</div>
+        </div>
+        <div class="mockup-stats">
+          <div class="stat-card">
+            <div class="stat-label">Active Deliveries</div>
+            <div class="stat-value">231</div>
+            <div class="stat-sub">↑ 12% today</div>
+          </div>
+          <div class="stat-card" style="position:relative;overflow:hidden">
+            <div class="stat-label">On-time Rate</div>
+            <div class="stat-value" style="color:var(--teal)">96%</div>
+            <div class="stat-sub" style="color:rgba(255,255,255,.3)">Last 7 days</div>
+            <!-- tiny map in top-right -->
+            <div style="position:absolute;top:6px;right:6px;width:48px;height:36px;border-radius:5px;overflow:hidden">
+              <div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a3040,#162030)"></div>
+              <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(0,201,167,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(0,201,167,.1) 1px,transparent 1px);background-size:8px 8px"></div>
+              <div style="position:absolute;top:30%;left:25%;width:5px;height:5px;background:var(--teal);border-radius:50%;border:1px solid white"></div>
+              <div style="position:absolute;top:55%;left:55%;width:5px;height:5px;background:var(--teal);border-radius:50%;border:1px solid white"></div>
+            </div>
+          </div>
+        </div>
+        <div class="chart-area">
+          <div class="chart-label">Delivery Volume</div>
+          <svg class="chart-svg" viewBox="0 0 220 44" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#00c9a7" stop-opacity=".35"/>
+                <stop offset="100%" stop-color="#00c9a7" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,38 C20,32 35,14 55,16 C75,18 90,30 110,22 C130,14 145,6 165,10 C185,14 200,24 220,18 L220,44 L0,44 Z" fill="url(#cg)"/>
+            <path d="M0,38 C20,32 35,14 55,16 C75,18 90,30 110,22 C130,14 145,6 165,10 C185,14 200,24 220,18" fill="none" stroke="#00c9a7" stroke-width="2"/>
+            <!-- dot -->
+            <circle cx="165" cy="10" r="3" fill="#00c9a7"/>
+            <circle cx="165" cy="10" r="6" fill="#00c9a7" fill-opacity=".2"/>
+          </svg>
+        </div>
+        <div class="mockup-bottom">
+          <div class="mini-card">
+            <div class="mini-label">Today Earnings</div>
+            <div class="mini-value" style="color:var(--teal)">$3,241</div>
+            <div class="mini-bars">
+              <div class="mini-bar" style="height:40%;opacity:.3"></div>
+              <div class="mini-bar" style="height:60%;opacity:.4"></div>
+              <div class="mini-bar" style="height:80%;opacity:.6"></div>
+              <div class="mini-bar" style="height:55%;opacity:.4"></div>
+              <div class="mini-bar" style="height:100%;opacity:1"></div>
+              <div class="mini-bar" style="height:70%;opacity:.6"></div>
+              <div class="mini-bar" style="height:85%;opacity:.8"></div>
+            </div>
+          </div>
+          <div class="mini-map">
+            <div class="map-bg-mini"></div>
+            <div class="map-grid-mini"></div>
+            <div class="m-pin" style="top:30%;left:20%"></div>
+            <div class="m-pin" style="top:55%;left:50%"></div>
+            <div class="m-pin" style="top:25%;left:65%"></div>
+            <div class="m-pin" style="top:65%;left:35%"></div>
+            <div class="m-pin" style="top:40%;left:80%"></div>
+          </div>
+          <div class="mini-card">
+            <div class="mini-label">Drivers Active</div>
+            <div class="mini-value">48</div>
+            <div style="margin-top:6px;display:flex;flex-direction:column;gap:3px">
+              <div style="display:flex;justify-content:space-between;font-size:7px;color:rgba(255,255,255,.3)"><span>Online</span><span style="color:var(--teal)">38</span></div>
+              <div style="height:3px;background:#1e3040;border-radius:2px"><div style="height:3px;background:var(--teal);border-radius:2px;width:79%"></div></div>
+              <div style="display:flex;justify-content:space-between;font-size:7px;color:rgba(255,255,255,.3)"><span>Busy</span><span style="color:#f59e0b">10</span></div>
+              <div style="height:3px;background:#1e3040;border-radius:2px"><div style="height:3px;background:#f59e0b;border-radius:2px;width:21%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Social Proof -->
+    <div class="social-proof">
+      <div class="avatar-stack">
+        <div class="sp-avatar" style="background:#f97316">A</div>
+        <div class="sp-avatar" style="background:#6366f1">B</div>
+        <div class="sp-avatar" style="background:#0ea5e9">C</div>
+      </div>
+      <div class="sp-text">
+        <strong>Join 10k+ businesses!</strong>
+        <span>Optimizing deliveries daily.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT – Card -->
+  <div class="card">
+    <h2>Welcome back</h2>
+    <p class="card-sub">Please enter your details to sign in.</p>
+
+    <div asp-validation-summary="ModelOnly" style="color:var(--error); font-size:13px; margin-bottom:10px;"></div>
+
+    <form asp-action="Login" method="post">
+      <!-- Email -->
+      <div class="field-group">
+        <label class="field-label" asp-for="Email">Email Address</label>
+        <div class="input-wrap">
+          <span class="input-icon-left">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </span>
+          <input type="email" asp-for="Email" placeholder="name@company.com">
+        </div>
+        <span asp-validation-for="Email" style="color:var(--error); font-size:11px;"></span>
+      </div>
+
+      <!-- Password -->
+      <div class="field-group">
+        <label class="field-label" asp-for="Password">Password</label>
+        <div class="input-wrap">
+          <span class="input-icon-left">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <input type="password" asp-for="Password" placeholder="••••••••">
+          <span class="input-icon-right">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </span>
+        </div>
+        <span asp-validation-for="Password" style="color:var(--error); font-size:11px;"></span>
+      </div>
+
+      <!-- Remember / Forgot -->
+      <div class="remember-row">
+        <label class="remember-label">
+          <input type="checkbox"> Remember me
+        </label>
+        <a href="#" class="forgot">Forgot password?</a>
+      </div>
+
+      <!-- Login -->
+      <button type="submit" class="btn-login">Log In</button>
+    </form>
+
+    <!-- Divider -->
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-text">OR CONTINUE WITH</div>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- Social -->
+    <div class="social-row">
+      <button class="btn-social">
+        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Google
+      </button>
+      <button class="btn-social">
+        <svg viewBox="0 0 24 24"><path d="M0 0h23v23H0z" fill="#f3f3f3"/><path d="M1 1h10v10H1z" fill="#f35325"/><path d="M12 1h10v10H12z" fill="#81bc06"/><path d="M1 12h10v10H1z" fill="#05a6f0"/><path d="M12 12h10v10H12z" fill="#ffba08"/></svg>
+        Microsoft
+      </button>
+    </div>
+
+    <!-- Sign up -->
+    <div class="signup-row">
+      Don't have an account? <a asp-controller="Account" asp-action="Signup">Sign up</a>
+    </div>
+
+    <!-- Footer links -->
+    <div class="card-footer">
+      <a href="#">Terms</a>
+      <span>•</span>
+      <a href="#">Privacy</a>
+      <span>•</span>
+      <a href="#">Help</a>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
+

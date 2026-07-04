@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Drop – Shipments</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --primary:#00c9a7;--primary-dark:#00a98a;--primary-light:#e6faf6;--primary-mid:#ccfbf1;
+  --sidebar-bg:#0a1628;--sidebar-hover:#111e35;
+  --page-bg:#f4f7f9;--card-bg:#ffffff;
+  --text-dark:#0d1b2a;--text-mid:#374151;--text-muted:#6b7280;--text-light:#9ca3af;
+  --border:#e8ecf0;--border-light:#f1f5f9;
+  --warning:#f59e0b;--warning-light:#fffbeb;
+  --error:#ef4444;--error-light:#fef2f2;
+  --info:#3b82f6;--info-light:#eff6ff;
+  --success:#10b981;--success-light:#ecfdf5;
+  --purple:#8b5cf6;--purple-light:#f5f3ff;
+  --orange:#f97316;--orange-light:#fff7ed;
+  --sidebar-w:240px;--topbar-h:64px;
+}
+
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--page-bg);color:var(--text-dark);min-height:100vh;display:flex}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar-w);background:var(--sidebar-bg);min-height:100vh;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:200}
+.sidebar-logo{display:flex;align-items:center;gap:10px;padding:22px 20px 18px;border-bottom:1px solid rgba(255,255,255,.06);text-decoration:none}
+.logo-mark{width:36px;height:36px;background:var(--primary);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-mark svg{width:20px;height:20px;fill:white}
+.logo-text{font-size:16px;font-weight:800;color:white}
+.logo-badge{font-size:9px;font-weight:700;background:var(--primary);color:white;border-radius:4px;padding:1px 5px;margin-left:auto;letter-spacing:.04em}
+.sidebar-section{padding:18px 12px 8px}
+.sidebar-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.25);text-transform:uppercase;letter-spacing:.1em;padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;color:rgba(255,255,255,.45);font-size:13px;font-weight:500;transition:all .18s;text-decoration:none;margin-bottom:2px}
+.nav-item:hover{background:var(--sidebar-hover);color:rgba(255,255,255,.8)}
+.nav-item.active{background:linear-gradient(135deg,rgba(0,201,167,.18),rgba(0,201,167,.08));color:var(--primary);border:1px solid rgba(0,201,167,.2)}
+.nav-icon{width:16px;height:16px;flex-shrink:0}.nav-icon svg{width:16px;height:16px;fill:currentColor}
+.nav-badge{margin-left:auto;background:var(--error);color:white;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px}
+.nav-badge.teal{background:var(--primary)}
+.sidebar-footer{margin-top:auto;padding:16px 12px;border-top:1px solid rgba(255,255,255,.06)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;cursor:pointer;transition:background .18s}
+.user-card:hover{background:var(--sidebar-hover)}
+.user-avatar{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:white;flex-shrink:0}
+.user-name{font-size:12px;font-weight:700;color:white}.user-role{font-size:10px;color:rgba(255,255,255,.35)}
+.user-menu svg{width:14px;height:14px;fill:rgba(255,255,255,.3)}
+
+/* ── MAIN ── */
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* TOPBAR */
+.topbar{height:var(--topbar-h);background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 28px;gap:16px;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px;flex:1}
+.page-title{font-size:18px;font-weight:800;color:var(--text-dark)}
+.page-subtitle{font-size:12px;color:var(--text-muted);font-weight:500}
+.topbar-divider{width:1px;height:24px;background:var(--border)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.icon-btn{width:38px;height:38px;border-radius:10px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .2s}
+.icon-btn:hover{border-color:var(--primary)}
+.icon-btn svg{width:16px;height:16px;fill:none;stroke:var(--text-muted);stroke-width:2}
+.notif-dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--error);border-radius:50%;border:1.5px solid white}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:10px;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:all .18s}
+.btn-primary{background:var(--primary);color:white;box-shadow:0 4px 14px rgba(0,201,167,.25)}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.btn-secondary{background:white;color:var(--text-mid);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--primary);color:var(--primary)}
+.btn-danger{background:var(--error-light);color:var(--error);border:1px solid rgba(239,68,68,.2)}
+.btn-danger:hover{background:var(--error);color:white}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn svg{width:14px;height:14px;fill:currentColor}
+
+/* ── CONTENT ── */
+.content{padding:24px 28px;flex:1}
+
+/* ── FILTER BAR ── */
+.filter-bar{background:white;border-radius:16px;border:1px solid var(--border-light);padding:16px 20px;margin-bottom:18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.filter-group{display:flex;align-items:center;gap:6px}
+.filter-label{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em}
+.filter-select{border:1.5px solid var(--border);border-radius:8px;padding:7px 28px 7px 10px;font-size:12px;font-weight:500;color:var(--text-mid);background:var(--page-bg);cursor:pointer;appearance:none;font-family:'Plus Jakarta Sans',sans-serif;outline:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border-color .2s;min-width:110px}
+.filter-select:focus{border-color:var(--primary)}
+.filter-search{display:flex;align-items:center;gap:8px;background:var(--page-bg);border:1.5px solid var(--border);border-radius:8px;padding:7px 12px;flex:1;min-width:200px;transition:border-color .2s}
+.filter-search:focus-within{border-color:var(--primary)}
+.filter-search svg{width:13px;height:13px;fill:none;stroke:var(--text-muted);stroke-width:2;flex-shrink:0}
+.filter-search input{border:none;background:transparent;outline:none;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);width:100%}
+.filter-search input::placeholder{color:var(--text-light)}
+.filter-divider{width:1px;height:24px;background:var(--border);margin:0 4px}
+.filter-chip{display:flex;align-items:center;gap:5px;background:var(--primary-light);color:var(--primary-dark);border-radius:6px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer}
+.filter-chip svg{width:10px;height:10px;fill:currentColor}
+.filter-count{font-size:11px;color:var(--text-muted);white-space:nowrap;margin-left:auto}
+
+/* ── TABLE ── */
+.table-wrap{background:white;border-radius:16px;border:1px solid var(--border-light);overflow:hidden}
+.table-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 12px;border-bottom:1px solid var(--border-light)}
+.table-title{font-size:15px;font-weight:700;color:var(--text-dark)}
+.table-actions{display:flex;gap:8px}
+
+table{width:100%;border-collapse:collapse}
+thead th{padding:11px 16px;text-align:left;font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em;background:var(--border-light);white-space:nowrap;cursor:pointer;user-select:none;transition:background .15s}
+thead th:hover{background:#e8ecf0}
+thead th.sorted{color:var(--primary)}
+thead th svg{width:10px;height:10px;margin-left:3px;vertical-align:middle}
+tbody tr{border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .15s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:#f9fafb}
+tbody tr.selected{background:var(--primary-light)}
+td{padding:13px 16px;font-size:13px;color:var(--text-mid);white-space:nowrap}
+td.id-cell{font-weight:700;color:var(--primary);font-size:12px}
+td.merchant-cell{font-weight:600;color:var(--text-dark)}
+td.addr-cell{max-width:160px;overflow:hidden;text-overflow:ellipsis;color:var(--text-muted);font-size:12px}
+td.cod-cell{font-weight:700;color:var(--text-dark)}
+
+/* Status badge */
+.status-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.status-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0}
+.s-delivered{background:var(--success-light);color:var(--success)}
+.s-transit{background:var(--warning-light);color:var(--warning)}
+.s-pending{background:var(--orange-light);color:var(--orange)}
+.s-assigned{background:var(--info-light);color:var(--info)}
+.s-failed{background:var(--error-light);color:var(--error)}
+.s-returned{background:var(--purple-light);color:var(--purple)}
+.s-cancelled{background:var(--border-light);color:var(--text-muted)}
+
+.driver-cell{display:flex;align-items:center;gap:6px}
+.driver-chip{width:24px;height:24px;border-radius:6px;background:var(--primary-mid);color:var(--primary-dark);font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* Row actions */
+.row-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+tbody tr:hover .row-actions{opacity:1}
+.row-action-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.row-action-btn:hover{border-color:var(--primary);background:var(--primary-light)}
+.row-action-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+.row-action-btn.danger:hover{border-color:var(--error);background:var(--error-light);color:var(--error)}
+
+/* Checkbox */
+.cb{width:16px;height:16px;accent-color:var(--primary);cursor:pointer}
+
+/* Pagination */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-top:1px solid var(--border-light)}
+.page-info{font-size:12px;color:var(--text-muted)}
+.page-btns{display:flex;gap:4px}
+.page-btn{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--border);background:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--text-mid);transition:all .15s}
+.page-btn:hover{border-color:var(--primary);color:var(--primary)}
+.page-btn.active{background:var(--primary);color:white;border-color:var(--primary)}
+.page-btn svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2}
+
+/* ── SLIDE PANEL (Detail / Create) ── */
+.panel-overlay{position:fixed;inset:0;background:rgba(10,22,40,.5);backdrop-filter:blur(3px);z-index:400;display:none}
+.panel-overlay.show{display:block}
+.slide-panel{position:fixed;top:0;right:0;bottom:0;width:680px;background:white;z-index:500;display:flex;flex-direction:column;box-shadow:-8px 0 40px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.slide-panel.open{transform:translateX(0)}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-title{font-size:17px;font-weight:800;color:var(--text-dark)}
+.panel-sub{font-size:12px;color:var(--text-muted);margin-top:2px}
+.panel-close{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;flex-shrink:0}
+.panel-close:hover{border-color:var(--error);color:var(--error)}
+.panel-close svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2}
+.panel-body{flex:1;overflow-y:auto;padding:0}
+.panel-footer{padding:16px 24px;border-top:1px solid var(--border);display:flex;gap:10px;flex-shrink:0;background:white}
+
+/* ── DETAIL PANEL ── */
+.detail-hero{padding:20px 24px;background:linear-gradient(135deg,#0a1628,#0f2540);position:relative;overflow:hidden}
+.detail-hero::after{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:rgba(0,201,167,.08)}
+.detail-shp-id{font-size:13px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px}
+.detail-merchant{font-size:20px;font-weight:800;color:white;margin-bottom:8px}
+.detail-badges{display:flex;gap:8px;flex-wrap:wrap}
+.detail-badge{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700}
+
+.detail-section{padding:20px 24px;border-bottom:1px solid var(--border-light)}
+.detail-section-title{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.detail-section-title svg{width:13px;height:13px;fill:currentColor}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.detail-field label{font-size:11px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:3px}
+.detail-field span{font-size:13px;font-weight:600;color:var(--text-dark)}
+.detail-field.full{grid-column:1/-1}
+
+/* Timeline */
+.timeline{padding:0}
+.tl-item{display:flex;gap:14px;padding:0 24px 0 24px;position:relative}
+.tl-item:not(:last-child){padding-bottom:0}
+.tl-left{display:flex;flex-direction:column;align-items:center;width:28px;flex-shrink:0}
+.tl-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;z-index:1;border:2px solid white;box-shadow:0 0 0 2px var(--border)}
+.tl-dot svg{width:12px;height:12px;fill:white}
+.tl-line{width:2px;flex:1;background:var(--border-light);min-height:24px;margin:4px 0}
+.tl-content{flex:1;padding:6px 0 20px}
+.tl-title{font-size:13px;font-weight:700;color:var(--text-dark)}
+.tl-sub{font-size:11px;color:var(--text-muted);margin-top:2px}
+.tl-time{font-size:10px;color:var(--text-light);margin-top:3px}
+.tl-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;margin-top:4px}
+
+/* Attempts */
+.attempt-card{background:var(--border-light);border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.attempt-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.attempt-num{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.06em}
+.attempt-result{font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px}
+.attempt-details{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.attempt-field label{font-size:10px;color:var(--text-muted);font-weight:600;display:block;margin-bottom:2px}
+.attempt-field span{font-size:12px;font-weight:600;color:var(--text-dark)}
+.pod-thumbs{display:flex;gap:8px;margin-top:10px}
+.pod-thumb{width:56px;height:56px;border-radius:8px;background:linear-gradient(135deg,var(--primary-mid),var(--primary-light));border:2px solid var(--primary-light);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.pod-thumb:hover{border-color:var(--primary);transform:scale(1.05)}
+.pod-thumb svg{width:20px;height:20px;fill:var(--primary-dark)}
+.pod-thumb span{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:8px;font-weight:700;color:var(--primary-dark)}
+
+/* Map placeholder */
+.map-placeholder{height:160px;background:linear-gradient(135deg,#d4f0ea,#c8ece4);border-radius:12px;position:relative;overflow:hidden;margin-top:4px}
+.map-grid-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(0,150,120,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(0,150,120,.07) 1px,transparent 1px);background-size:24px 24px}
+.map-pin-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.map-pin-dot{width:14px;height:14px;background:var(--primary);border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,201,167,.5);margin:0 auto}
+.map-pin-ring{width:32px;height:32px;border-radius:50%;border:2px solid rgba(0,201,167,.4);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:ripple 2s ease infinite}
+.map-pin-ring2{width:50px;height:50px;border-radius:50%;border:2px solid rgba(0,201,167,.2);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);animation:ripple 2s ease .5s infinite}
+@keyframes ripple{0%{transform:translate(-50%,-50%) scale(.8);opacity:1}100%{transform:translate(-50%,-50%) scale(1.4);opacity:0}}
+.map-label{position:absolute;bottom:12px;left:12px;background:white;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:600;color:var(--text-dark);box-shadow:0 2px 8px rgba(0,0,0,.1)}
+
+/* Invoice summary */
+.invoice-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border-light);font-size:13px}
+.invoice-row:last-child{border-bottom:none}
+.invoice-row.total{font-weight:800;color:var(--text-dark);font-size:14px;padding-top:12px}
+.invoice-row label{color:var(--text-muted);font-weight:500}
+.invoice-row span{font-weight:600;color:var(--text-dark)}
+
+/* ── CREATE FORM ── */
+.form-section{padding:20px 24px;border-bottom:1px solid var(--border-light)}
+.form-section-title{font-size:12px;font-weight:700;color:var(--text-dark);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.form-section-icon{width:24px;height:24px;border-radius:6px;background:var(--primary-light);display:flex;align-items:center;justify-content:center}
+.form-section-icon svg{width:13px;height:13px;fill:var(--primary-dark)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-group.full{grid-column:1/-1}
+.form-group label{font-size:11px;font-weight:600;color:var(--text-mid)}
+.form-control{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s;background:white}
+.form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,201,167,.1)}
+.form-control::placeholder{color:var(--text-light)}
+select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:10px;cursor:pointer}
+.form-hint{font-size:10px;color:var(--text-muted)}
+.form-auto{background:var(--primary-light);border-color:var(--primary);color:var(--primary-dark);font-weight:600}
+
+/* Products table */
+.products-table{width:100%;border-collapse:collapse;margin-bottom:10px}
+.products-table th{font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 10px;background:var(--border-light);text-align:left}
+.products-table td{padding:8px 10px;border-bottom:1px solid var(--border-light);font-size:12px}
+.products-table td input{width:100%;border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:12px;font-family:inherit;outline:none}
+.products-table td input:focus{border-color:var(--primary)}
+.btn-add-row{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--primary);background:none;border:none;cursor:pointer;padding:4px 0;font-family:inherit}
+.btn-add-row svg{width:13px;height:13px;fill:currentColor}
+
+/* Fee calculation card */
+.fee-card{background:linear-gradient(135deg,#0a1628,#0f2540);border-radius:12px;padding:16px 18px;margin-top:4px}
+.fee-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:12px}
+.fee-row label{color:rgba(255,255,255,.5);font-weight:500}
+.fee-row span{color:white;font-weight:600}
+.fee-row.total{border-top:1px solid rgba(255,255,255,.1);padding-top:10px;margin-top:4px;font-size:14px}
+.fee-row.total label{color:rgba(255,255,255,.7);font-weight:700}
+.fee-row.total span{color:var(--primary);font-weight:800;font-size:16px}
+
+/* Progress steps */
+.form-steps{display:flex;align-items:center;padding:16px 24px;background:var(--border-light);gap:0;border-bottom:1px solid var(--border)}
+.form-step{display:flex;align-items:center;gap:8px;flex:1}
+.form-step:not(:last-child)::after{content:'';flex:1;height:2px;background:var(--border);margin:0 8px}
+.step-dot{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;transition:all .2s}
+.step-dot.done{background:var(--primary);color:white}
+.step-dot.active{background:var(--primary);color:white;box-shadow:0 0 0 3px rgba(0,201,167,.2)}
+.step-dot.pending{background:var(--border);color:var(--text-muted)}
+.step-label{font-size:11px;font-weight:600;color:var(--text-muted);white-space:nowrap}
+.form-step .step-dot.active ~ .step-label{color:var(--primary)}
+.form-step .step-dot.done ~ .step-label{color:var(--text-mid)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Animations */
+.table-wrap{animation:fadeUp .35s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.filter-bar{animation:fadeUp .25s ease both}
+
+/* Tooltip */
+[data-tip]{position:relative}
+[data-tip]:hover::before{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1f2937;color:white;font-size:10px;font-weight:600;padding:4px 8px;border-radius:6px;white-space:nowrap;z-index:999;pointer-events:none}
+
+@media(max-width:900px){
+  :root{--sidebar-w:0px}
+  .sidebar{transform:translateX(-240px)}
+  .main{margin-left:0}
+  .slide-panel{width:100%}
+  .form-grid{grid-template-columns:1fr}
+  .detail-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="logo-mark"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4zM6 18.5c-.83 0-1.5-.67-1.5-1.5S5.17 15.5 6 15.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm13.5-9l1.96 2.5H17V9.5h2.5zm-1.5 9c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg></div>
+    <span class="logo-text">Fast Drop</span>
+    <span class="logo-badge">ADMIN</span>
+  </a>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Overview</div>
+    <a class="nav-item" href="fastdrop-admin-dashboard.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></span>Dashboard</a>
+    <a class="nav-item active" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Shipments<span class="nav-badge teal">1,284</span></a>
+    <a class="nav-item" href="fastdrop-drivers.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span>Drivers</a>
+    <a class="nav-item" href="fastdrop-dispatcher.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Fleet</a>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Business</div>
+    <a class="nav-item" href="fastdrop-merchants.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span>Merchants</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></span>Zones</a>
+    <a class="nav-item" href="#"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></span>Invoices<span class="nav-badge" style="background:var(--warning)">5</span></a>
+    <a class="nav-item" href="fastdrop-analytics.html"><span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg></span>Analytics</a>
+  </div>
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">SA</div>
+      <div style="flex:1"><div class="user-name">Sara Ahmed</div><div class="user-role">Super Admin</div></div>
+      <div class="user-menu"><svg viewBox="0 0 24 24"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg></div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <div>
+        <div class="page-title">Shipments</div>
+        <div class="page-subtitle">1,284 total · 183 in transit</div>
+      </div>
+      <div class="topbar-divider"></div>
+      <div style="display:flex;gap:6px">
+        <span class="status-badge s-transit" style="font-size:10px">183 In Transit</span>
+        <span class="status-badge s-pending" style="font-size:10px">86 Pending</span>
+        <span class="status-badge s-failed" style="font-size:10px">47 Failed</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn btn-secondary btn-sm" onclick="openCreate()">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> New Shipment
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="openCreate()">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Bulk Import
+      </button>
+      <div class="icon-btn" data-tip="Notifications"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg><div class="notif-dot"></div></div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+      <div class="filter-search">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Search by ID, merchant, customer, address…" oninput="filterTable(this.value)">
+      </div>
+      <div class="filter-divider"></div>
+      <select class="filter-select" onchange="filterByStatus(this.value)">
+        <option value="">All Statuses</option>
+        <option>Delivered</option><option>In Transit</option><option>Pending</option>
+        <option>Assigned</option><option>Failed</option><option>Returned</option><option>Cancelled</option>
+      </select>
+      <select class="filter-select">
+        <option>All Merchants</option><option>SwiftMart</option><option>TechShop Cairo</option>
+        <option>HomeGoods</option><option>Pharmacy Plus</option>
+      </select>
+      <select class="filter-select">
+        <option>All Drivers</option><option>Ahmed Kamel</option><option>Mohamed Samir</option>
+        <option>Karim Youssef</option><option>Omar Fathy</option>
+      </select>
+      <select class="filter-select">
+        <option>All Zones</option><option>Downtown</option><option>Westside</option>
+        <option>East Hub</option><option>North Ring</option><option>South Bay</option>
+      </select>
+      <select class="filter-select">
+        <option>All Dates</option><option>Today</option><option>This Week</option><option>This Month</option>
+      </select>
+      <div class="filter-chip" onclick="this.remove()">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+        COD Only ×
+      </div>
+      <div class="filter-count" id="filterCount">Showing 1–20 of 1,284</div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <div class="table-head">
+        <div class="table-title">All Shipments</div>
+        <div class="table-actions">
+          <button class="btn btn-secondary btn-sm" id="bulkActBtn" style="display:none" onclick="showBulkActions()">
+            <svg viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            Bulk Actions <span id="selCount">0</span> selected
+          </button>
+          <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24"><path d="M3.5 18.49l6-6.01 4 4L22 6.92l-1.41-1.41-7.09 7.97-4-4L2 16.99z"/></svg> Export</button>
+          <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h7"/></svg> Columns</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table id="shipmentsTable">
+          <thead>
+            <tr>
+              <th style="width:40px"><input type="checkbox" class="cb" onchange="toggleAllRows(this)"></th>
+              <th class="sorted">SHP ID <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 14l5-5 5 5z"/></svg></th>
+              <th>Merchant</th>
+              <th>Customer / Address</th>
+              <th>Status</th>
+              <th>Driver</th>
+              <th>Route</th>
+              <th>Created</th>
+              <th>COD</th>
+              <th>Weight</th>
+              <th style="width:100px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="page-info" id="pageInfo">Showing 1–20 of 1,284 shipments</div>
+        <div class="page-btns">
+          <div class="page-btn"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></div>
+          <div class="page-btn active">1</div>
+          <div class="page-btn">2</div>
+          <div class="page-btn">3</div>
+          <div class="page-btn">…</div>
+          <div class="page-btn">64</div>
+          <div class="page-btn"><svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PANEL OVERLAY ══ -->
+<div class="panel-overlay" id="panelOverlay" onclick="closePanel()"></div>
+
+<!-- ══ DETAIL PANEL ══ -->
+<div class="slide-panel" id="detailPanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title" id="detailTitle">Shipment Details</div>
+      <div class="panel-sub" id="detailSub">Full history & evidence</div>
+    </div>
+    <div class="panel-close" onclick="closePanel()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+  <div class="panel-body" id="detailBody"></div>
+  <div class="panel-footer">
+    <button class="btn btn-secondary btn-sm" onclick="openReassign()"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg> Reassign</button>
+    <button class="btn btn-secondary btn-sm" onclick="changeStatus()"><svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg> Change Status</button>
+    <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg> Invoice</button>
+    <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="cancelShipment()"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg> Cancel</button>
+  </div>
+</div>
+
+<!-- ══ CREATE PANEL ══ -->
+<div class="slide-panel" id="createPanel">
+  <div class="panel-header">
+    <div>
+      <div class="panel-title">Create New Shipment</div>
+      <div class="panel-sub">Fill all required fields to dispatch</div>
+    </div>
+    <div class="panel-close" onclick="closePanel()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></div>
+  </div>
+
+  <!-- Steps -->
+  <div class="form-steps">
+    <div class="form-step"><div class="step-dot active" id="cs1">1</div><span class="step-label">Merchant & Delivery</span></div>
+    <div class="form-step"><div class="step-dot pending" id="cs2">2</div><span class="step-label">Products & Weight</span></div>
+    <div class="form-step"><div class="step-dot pending" id="cs3">3</div><span class="step-label">Pricing & Schedule</span></div>
+  </div>
+
+  <div class="panel-body">
+
+    <!-- Step 1 -->
+    <div id="createStep1">
+      <div class="form-section">
+        <div class="form-section-title">
+          <div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></div>
+          Merchant Information
+        </div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label>Select Merchant *</label>
+            <select class="form-control">
+              <option value="">— Choose merchant —</option>
+              <option>SwiftMart</option><option>TechShop Cairo</option>
+              <option>HomeGoods</option><option>Pharmacy Plus</option><option>Fashion Hub</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Warehouse / Pickup Point *</label>
+            <select class="form-control">
+              <option>Main Warehouse – Downtown</option>
+              <option>Hub B – Westside</option>
+              <option>Hub C – East</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Shipment Type</label>
+            <select class="form-control">
+              <option>Standard Delivery</option>
+              <option>Express (Same Day)</option>
+              <option>Scheduled</option>
+              <option>Return</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">
+          <div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>
+          Customer & Delivery Address
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Customer Name *</label>
+            <input class="form-control" placeholder="Full name">
+          </div>
+          <div class="form-group">
+            <label>Customer Phone *</label>
+            <input class="form-control" placeholder="+20 (10) 000-0000">
+          </div>
+          <div class="form-group full">
+            <label>Delivery Address *</label>
+            <input class="form-control" placeholder="Street, Building No., Apartment" oninput="autoFillZone(this)">
+            <div class="form-hint">Start typing to search saved addresses</div>
+          </div>
+          <div class="form-group">
+            <label>Zone (Auto-filled)</label>
+            <input class="form-control form-auto" id="autoZone" placeholder="Select address first" readonly>
+          </div>
+          <div class="form-group">
+            <label>City</label>
+            <input class="form-control" placeholder="Cairo">
+          </div>
+          <div class="form-group full">
+            <label>Landmark / Notes</label>
+            <input class="form-control" placeholder="e.g. Near the blue mosque, 3rd floor">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">
+          <div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg></div>
+          Schedule & Instructions
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Preferred Delivery Date</label>
+            <input type="date" class="form-control" min="2026-03-19">
+          </div>
+          <div class="form-group">
+            <label>Preferred Time Window</label>
+            <select class="form-control">
+              <option>Any time</option>
+              <option>Morning (8am – 12pm)</option>
+              <option>Afternoon (12pm – 5pm)</option>
+              <option>Evening (5pm – 9pm)</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Special Delivery Instructions</label>
+            <textarea class="form-control" rows="2" placeholder="e.g. Call before arrival, leave at door, fragile item…" style="resize:vertical"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div id="createStep2" style="display:none">
+      <div class="form-section">
+        <div class="form-section-title">
+          <div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4v2l8 5 8-5V4zm0 4.236l-8 5-8-5V20h16V8.236z"/></svg></div>
+          Products & Items
+        </div>
+        <table class="products-table">
+          <thead><tr><th>Product Name</th><th>SKU</th><th>Qty</th><th>Unit Price</th><th></th></tr></thead>
+          <tbody id="productsBody">
+            <tr>
+              <td><input placeholder="Product name"></td>
+              <td><input placeholder="SKU-001" style="width:80px"></td>
+              <td><input type="number" value="1" min="1" style="width:50px" oninput="recalcFee()"></td>
+              <td><input type="number" placeholder="0.00" style="width:70px" oninput="recalcFee()"></td>
+              <td><button onclick="this.closest('tr').remove();recalcFee()" style="background:none;border:none;cursor:pointer;color:var(--error)">✕</button></td>
+            </tr>
+          </tbody>
+        </table>
+        <button class="btn-add-row" onclick="addProductRow()">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+          Add product row
+        </button>
+      </div>
+      <div class="form-section">
+        <div class="form-section-title">
+          <div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M20 4H4v2l8 5 8-5V4z"/></svg></div>
+          Package Details
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Total Weight (kg) *</label>
+            <input class="form-control" type="number" placeholder="0.00" step="0.1" oninput="recalcFee()">
+          </div>
+          <div class="form-group">
+            <label>Package Size</label>
+            <select class="form-control" onchange="recalcFee()">
+              <option>Small (fits in bag)</option>
+              <option>Medium (shoebox)</option>
+              <option>Large (moving box)</option>
+              <option>Oversized</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Fragile?</label>
+            <select class="form-control">
+              <option>No</option><option>Yes – handle with care</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Requires Signature?</label>
+            <select class="form-control">
+              <option>No</option><option>Yes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div id="createStep3" style="display:none">
+      <div class="form-section">
+        <div class="form-section-title">
+          <div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></div>
+          COD & Pricing
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>COD Amount</label>
+            <input class="form-control" type="number" id="codAmount" placeholder="0.00" oninput="recalcFee()">
+            <div class="form-hint">Leave blank if prepaid</div>
+          </div>
+          <div class="form-group">
+            <label>Payment Method</label>
+            <select class="form-control">
+              <option>Cash on Delivery (COD)</option>
+              <option>Prepaid Online</option>
+              <option>Business Credit</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Auto fee calc -->
+        <div class="fee-card" style="margin-top:16px">
+          <div class="fee-row"><label>Zone (Downtown)</label><span>Base Fee $5.00</span></div>
+          <div class="fee-row"><label>Weight Surcharge (2.5kg)</label><span>$1.50</span></div>
+          <div class="fee-row"><label>Size Surcharge</label><span>$0.00</span></div>
+          <div class="fee-row"><label>COD Collection Fee (2%)</label><span id="codFee">$0.00</span></div>
+          <div class="fee-row total"><label>Total Delivery Fee</label><span id="totalFee">$6.50</span></div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title">
+          <div class="form-section-icon"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+          Route Assignment
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Assign to Route</label>
+            <select class="form-control">
+              <option>Auto-assign (recommended)</option>
+              <option>RT-440 – Downtown Morning</option>
+              <option>RT-441 – Downtown Evening</option>
+              <option>RT-445 – Westside AM</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Assign Driver</label>
+            <select class="form-control">
+              <option>Auto-assign</option>
+              <option>Ahmed Kamel (Available)</option>
+              <option>Karim Youssef (Available)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="panel-footer" id="createFooter">
+    <button class="btn btn-secondary" id="prevStepBtn" onclick="createPrev()" style="display:none">← Back</button>
+    <span style="flex:1"></span>
+    <button class="btn btn-secondary" onclick="closePanel()">Cancel</button>
+    <button class="btn btn-primary" id="nextStepBtn" onclick="createNext()">Next Step →</button>
+  </div>
+</div>
+
+<script>
+// ── DATA ──
+const shipments = [
+  {id:'SHP-8821',merchant:'SwiftMart',customer:'Nile City Mall',addr:'26 July St, Downtown',status:'Delivered',driver:'Ahmed K.',route:'RT-440',date:'Mar 19, 09:14',cod:'$120.00',weight:'1.2kg'},
+  {id:'SHP-8820',merchant:'TechShop Cairo',customer:'Ahmed Hassan',addr:'15 Tahrir Sq, Downtown',status:'In Transit',driver:'Mohamed S.',route:'RT-440',date:'Mar 19, 09:02',cod:'—',weight:'0.8kg'},
+  {id:'SHP-8819',merchant:'Pharmacy Plus',customer:'Sara Medical Center',addr:'88 Nasr Rd, East Hub',status:'Delivered',driver:'Ahmed K.',route:'RT-442',date:'Mar 19, 08:55',cod:'$340.00',weight:'3.1kg'},
+  {id:'SHP-8818',merchant:'HomeGoods',customer:'TechShop Cairo',addr:'10 Salah Salem, North Ring',status:'Pending',driver:'—',route:'—',date:'Mar 19, 08:40',cod:'$85.00',weight:'5.4kg'},
+  {id:'SHP-8817',merchant:'Fashion Hub',customer:'Mona Tarek',addr:'3 Hassan St, Westside',status:'Assigned',driver:'Karim Y.',route:'RT-445',date:'Mar 19, 08:30',cod:'$210.00',weight:'0.6kg'},
+  {id:'SHP-8816',merchant:'SwiftMart',customer:'Ali Mahmoud',addr:'7 Sudan St, North Ring',status:'In Transit',driver:'Omar F.',route:'RT-447',date:'Mar 19, 08:15',cod:'$55.00',weight:'2.0kg'},
+  {id:'SHP-8815',merchant:'Pharmacy Plus',customer:'Eman Clinic',addr:'22 Airport Rd, Airport',status:'In Transit',driver:'Khaled A.',route:'RT-450',date:'Mar 19, 08:00',cod:'—',weight:'1.8kg'},
+  {id:'SHP-8814',merchant:'HomeGoods',customer:'Home Essentials',addr:'5 South Bay Rd',status:'Failed',driver:'Yasser H.',route:'RT-448',date:'Mar 18, 17:30',cod:'$85.00',weight:'4.2kg'},
+  {id:'SHP-8813',merchant:'TechShop Cairo',customer:'Laptop World',addr:'31 Heliopolis Ave, East Hub',status:'Returned',driver:'Ahmed K.',route:'RT-440',date:'Mar 18, 16:00',cod:'$1,200.00',weight:'2.5kg'},
+  {id:'SHP-8812',merchant:'SwiftMart',customer:'City Supermarket',addr:'12 Dokki St, Westside',status:'Delivered',driver:'Mohamed S.',route:'RT-445',date:'Mar 18, 15:45',cod:'$430.00',weight:'8.0kg'},
+  {id:'SHP-8811',merchant:'Fashion Hub',customer:'Heba Nour',addr:'4 Maadi Corniche, South Bay',status:'Delivered',driver:'Karim Y.',route:'RT-446',date:'Mar 18, 14:20',cod:'$75.00',weight:'0.4kg'},
+  {id:'SHP-8810',merchant:'HomeGoods',customer:'Ahmed Furniture',addr:'9 Industrial Zone, East Hub',status:'Cancelled',driver:'—',route:'—',date:'Mar 18, 12:00',cod:'—',weight:'12.0kg'},
+];
+
+const statusClass={Delivered:'s-delivered','In Transit':'s-transit',Pending:'s-pending',Assigned:'s-assigned',Failed:'s-failed',Returned:'s-returned',Cancelled:'s-cancelled'};
+
+let selectedRows = new Set();
+
+function initials(name){return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+
+function renderTable(data){
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = data.map(s=>`
+    <tr onclick="openDetail('${s.id}')" data-status="${s.status}">
+      <td onclick="event.stopPropagation()"><input type="checkbox" class="cb" onchange="toggleRow(this,'${s.id}')"></td>
+      <td class="id-cell">${s.id}</td>
+      <td class="merchant-cell">${s.merchant}</td>
+      <td><div style="font-weight:600;font-size:12px;color:var(--text-dark)">${s.customer}</div><div class="addr-cell" style="display:block;max-width:150px">${s.addr}</div></td>
+      <td><span class="status-badge ${statusClass[s.status]||'s-pending'}">${s.status}</span></td>
+      <td><div class="driver-cell"><div class="driver-chip">${s.driver==='—'?'?':initials(s.driver)}</div><span style="font-size:12px">${s.driver}</span></div></td>
+      <td><span style="font-size:12px;font-weight:600;color:var(--info)">${s.route}</span></td>
+      <td style="font-size:11px;color:var(--text-muted)">${s.date}</td>
+      <td class="cod-cell" style="color:${s.cod==='—'?'var(--text-light)':'var(--text-dark)'}">${s.cod}</td>
+      <td style="font-size:12px">${s.weight}</td>
+      <td onclick="event.stopPropagation()">
+        <div class="row-actions">
+          <div class="row-action-btn" data-tip="View" onclick="openDetail('${s.id}')"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="row-action-btn" data-tip="Reassign"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg></div>
+          <div class="row-action-btn danger" data-tip="Cancel"><svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg></div>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+renderTable(shipments);
+
+function filterTable(q){
+  const filtered = shipments.filter(s=>
+    s.id.toLowerCase().includes(q.toLowerCase())||
+    s.merchant.toLowerCase().includes(q.toLowerCase())||
+    s.customer.toLowerCase().includes(q.toLowerCase())||
+    s.addr.toLowerCase().includes(q.toLowerCase())
+  );
+  renderTable(filtered);
+  document.getElementById('filterCount').textContent=`Showing 1–${Math.min(20,filtered.length)} of ${filtered.length}`;
+}
+
+function filterByStatus(st){
+  const filtered = st ? shipments.filter(s=>s.status===st) : shipments;
+  renderTable(filtered);
+  document.getElementById('filterCount').textContent=`Showing 1–${Math.min(20,filtered.length)} of ${filtered.length}`;
+}
+
+function toggleRow(cb, id){
+  if(cb.checked) selectedRows.add(id); else selectedRows.delete(id);
+  const btn = document.getElementById('bulkActBtn');
+  btn.style.display = selectedRows.size>0?'flex':'none';
+  document.getElementById('selCount').textContent=selectedRows.size;
+}
+
+function toggleAllRows(masterCb){
+  document.querySelectorAll('#tableBody .cb').forEach(cb=>{
+    cb.checked=masterCb.checked;
+    const id=cb.closest('tr').querySelector('.id-cell').textContent;
+    if(masterCb.checked) selectedRows.add(id); else selectedRows.delete(id);
+  });
+  const btn=document.getElementById('bulkActBtn');
+  btn.style.display=selectedRows.size>0?'flex':'none';
+  document.getElementById('selCount').textContent=selectedRows.size;
+}
+
+// ── DETAIL PANEL ──
+function openDetail(id){
+  const s = shipments.find(x=>x.id===id);
+  if(!s) return;
+  document.getElementById('detailTitle').textContent = id;
+  document.getElementById('detailSub').textContent = `${s.merchant} · ${s.status}`;
+  document.getElementById('detailBody').innerHTML = buildDetailHTML(s);
+  openPanel('detailPanel');
+}
+
+function buildDetailHTML(s){
+  const sc = statusClass[s.status]||'s-pending';
+  return `
+  <div class="detail-hero">
+    <div class="detail-shp-id">${s.id}</div>
+    <div class="detail-merchant">${s.merchant}</div>
+    <div class="detail-badges">
+      <span class="status-badge ${sc}">${s.status}</span>
+      ${s.cod!=='—'?`<span class="detail-badge" style="background:rgba(0,201,167,.2);color:var(--primary)">COD ${s.cod}</span>`:''}
+      <span class="detail-badge" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)">${s.weight}</span>
+      <span class="detail-badge" style="background:rgba(59,130,246,.2);color:#93c5fd">${s.route}</span>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-title"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z"/></svg> Shipment Info</div>
+    <div class="detail-grid">
+      <div class="detail-field"><label>Customer</label><span>${s.customer}</span></div>
+      <div class="detail-field"><label>Driver</label><span>${s.driver}</span></div>
+      <div class="detail-field full"><label>Delivery Address</label><span>${s.addr}</span></div>
+      <div class="detail-field"><label>Zone</label><span>${s.addr.includes('Downtown')?'Downtown':s.addr.includes('East')?'East Hub':s.addr.includes('North')?'North Ring':s.addr.includes('West')?'Westside':'South Bay'}</span></div>
+      <div class="detail-field"><label>Created</label><span>${s.date}</span></div>
+      <div class="detail-field"><label>COD Amount</label><span style="color:${s.cod==='—'?'var(--text-muted)':'var(--success)'}">${s.cod}</span></div>
+      <div class="detail-field"><label>Weight</label><span>${s.weight}</span></div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-title"><svg viewBox="0 0 24 24"><path d="M13 3a9 9 0 10.001 18A9 9 0 0013 3zm0 16c-3.86 0-7-3.14-7-7s3.14-7 7-7 7 3.14 7 7-3.14 7-7 7zm.5-11H12v5l4.25 2.52.75-1.23-3.5-2.08V8z"/></svg> Status Timeline</div>
+    <div class="timeline">
+      ${buildTimeline(s.status)}
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-title"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg> Delivery Map</div>
+    <div class="map-placeholder">
+      <div class="map-grid-lines"></div>
+      <div class="map-pin-center">
+        <div class="map-pin-ring2"></div>
+        <div class="map-pin-ring"></div>
+        <div class="map-pin-dot"></div>
+      </div>
+      <div class="map-label">📍 ${s.addr}</div>
+    </div>
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-title"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Delivery Attempts</div>
+    ${buildAttempts(s.status)}
+  </div>
+
+  <div class="detail-section">
+    <div class="detail-section-title"><svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/></svg> Invoice Summary</div>
+    <div class="invoice-row"><label>Delivery Fee</label><span>$6.50</span></div>
+    <div class="invoice-row"><label>COD Amount</label><span>${s.cod}</span></div>
+    <div class="invoice-row"><label>COD Collection Fee (2%)</label><span>${s.cod!=='—'?'$'+((parseFloat(s.cod.replace('$','').replace(',',''))*0.02).toFixed(2)):'—'}</span></div>
+    <div class="invoice-row"><label>Insurance</label><span>$0.00</span></div>
+    <div class="invoice-row total"><label>Total</label><span style="color:var(--primary)">${s.cod!=='—'?'$'+(6.50+parseFloat(s.cod.replace('$','').replace(',',''))+(parseFloat(s.cod.replace('$','').replace(',',''))*0.02)).toFixed(2):'$6.50'}</span></div>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;background:var(--success-light);color:var(--success)">INV-3320 · Paid</span>
+      <button class="btn btn-secondary btn-sm"><svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Download PDF</button>
+    </div>
+  </div>`;
+}
+
+function buildTimeline(status){
+  const steps=[
+    {label:'Order Created',time:'Mar 19, 08:40',done:true,icon:'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z',color:'#10b981'},
+    {label:'Assigned to Route RT-440',time:'Mar 19, 09:00',done:status!=='Pending',icon:'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3z',color:'#3b82f6'},
+    {label:'Driver Picked Up',time:'Mar 19, 09:30',done:['In Transit','Delivered','Failed','Returned'].includes(status),icon:'M13 2L3 14h9l-1 8 10-12h-9l1-8z',color:'#f59e0b'},
+    {label:'Out for Delivery',time:'Mar 19, 10:15',done:['Delivered','Failed','Returned'].includes(status),icon:'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z',color:'#f97316'},
+    {label:status==='Failed'?'Delivery Failed':status==='Returned'?'Returned to Warehouse':status==='Delivered'?'Delivered Successfully':'Awaiting Completion',time:status==='Delivered'?'Mar 19, 11:02':status==='Failed'?'Mar 18, 18:00':'—',done:['Delivered','Failed','Returned'].includes(status),icon:status==='Delivered'?'M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z':status==='Failed'?'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z':'M12 5V1L7 6l5 4V6c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z',color:status==='Delivered'?'#10b981':status==='Failed'?'#ef4444':'#9ca3af'},
+  ];
+  return steps.map((step,i)=>`
+    <div class="tl-item">
+      <div class="tl-left">
+        <div class="tl-dot" style="background:${step.done?step.color:'#e5e7eb'};box-shadow:${step.done?`0 0 0 3px ${step.color}22`:'none'}">
+          <svg viewBox="0 0 24 24"><path d="${step.icon}"/></svg>
+        </div>
+        ${i<steps.length-1?'<div class="tl-line"></div>':''}
+      </div>
+      <div class="tl-content">
+        <div class="tl-title" style="color:${step.done?'var(--text-dark)':'var(--text-light)'}">${step.label}</div>
+        <div class="tl-time">${step.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function buildAttempts(status){
+  if(status==='Pending'||status==='Assigned') return '<div style="font-size:13px;color:var(--text-muted);padding:8px 0">No delivery attempts yet.</div>';
+  const attempts=[
+    {num:1,result:status==='Delivered'?'Success':status==='Failed'?'Failed':'Failed',driver:'Ahmed Kamel',time:'Mar 19, 10:45',otp:status==='Delivered'?'Verified':'Not matched',note:status==='Delivered'?'Delivered, customer signed':'Customer not at address',success:status==='Delivered'},
+    ...(status==='Failed'?[
+      {num:2,result:'Failed',driver:'Ahmed Kamel',time:'Mar 19, 14:00',otp:'Not answered',note:'Phone not reachable',success:false},
+      {num:3,result:'Failed',driver:'Yasser H.',time:'Mar 18, 17:30',otp:'Not matched',note:'Wrong building, address unclear',success:false}
+    ]:[])
+  ];
+  return attempts.map(a=>`
+    <div class="attempt-card">
+      <div class="attempt-header">
+        <div class="attempt-num">Attempt #${a.num}</div>
+        <div class="attempt-result" style="background:${a.success?'var(--success-light)':'var(--error-light)'};color:${a.success?'var(--success)':'var(--error)'}">${a.result}</div>
+      </div>
+      <div class="attempt-details">
+        <div class="attempt-field"><label>Driver</label><span>${a.driver}</span></div>
+        <div class="attempt-field"><label>Time</label><span>${a.time}</span></div>
+        <div class="attempt-field"><label>OTP / Verification</label><span style="color:${a.success?'var(--success)':'var(--error)'}">${a.otp}</span></div>
+        <div class="attempt-field"><label>Notes</label><span>${a.note}</span></div>
+      </div>
+      <div class="pod-thumbs">
+        <div class="pod-thumb"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>POD</span></div>
+        ${a.success?'<div class="pod-thumb"><svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg><span>SIG</span></div>':''}
+      </div>
+    </div>`).join('');
+}
+
+// ── CREATE PANEL ──
+let createStep = 1;
+
+function openCreate(){
+  createStep=1;
+  updateCreateSteps();
+  openPanel('createPanel');
+}
+
+function createNext(){
+  if(createStep<3){createStep++;updateCreateSteps();}
+  else{submitCreate();}
+}
+
+function createPrev(){
+  if(createStep>1){createStep--;updateCreateSteps();}
+}
+
+function updateCreateSteps(){
+  [1,2,3].forEach(i=>{
+    document.getElementById('createStep'+i).style.display=i===createStep?'block':'none';
+    const dot=document.getElementById('cs'+i);
+    if(i<createStep){dot.className='step-dot done';dot.textContent='✓';}
+    else if(i===createStep){dot.className='step-dot active';dot.textContent=i;}
+    else{dot.className='step-dot pending';dot.textContent=i;}
+  });
+  document.getElementById('prevStepBtn').style.display=createStep>1?'flex':'none';
+  document.getElementById('nextStepBtn').textContent=createStep===3?'Create Shipment ✓':'Next Step →';
+  document.getElementById('nextStepBtn').className=createStep===3?'btn btn-primary':'btn btn-primary';
+}
+
+function submitCreate(){
+  closePanel();
+  // Flash confirmation
+  const toast=document.createElement('div');
+  toast.style.cssText='position:fixed;bottom:24px;right:24px;background:#0a1628;color:white;border-left:4px solid var(--primary);border-radius:12px;padding:14px 20px;font-size:13px;font-weight:600;z-index:999;box-shadow:0 8px 30px rgba(0,0,0,.2);animation:fadeUp .3s ease';
+  toast.innerHTML='✓ Shipment SHP-8822 created and queued for dispatch';
+  document.body.appendChild(toast);
+  setTimeout(()=>toast.remove(),3500);
+}
+
+// ── PANEL OPEN/CLOSE ──
+function openPanel(id){
+  document.getElementById('panelOverlay').classList.add('show');
+  document.getElementById(id).classList.add('open');
+}
+
+function closePanel(){
+  document.getElementById('panelOverlay').classList.remove('show');
+  document.querySelectorAll('.slide-panel').forEach(p=>p.classList.remove('open'));
+}
+
+// ── HELPERS ──
+function autoFillZone(inp){
+  const zones={'downtown':'Downtown','tahrir':'Downtown','nasr':'East Hub','heliopolis':'East Hub','westside':'Westside','dokki':'Westside','maadi':'South Bay','airport':'Airport District','north':'North Ring','salah':'North Ring'};
+  const v=inp.value.toLowerCase();
+  const zone=Object.entries(zones).find(([k])=>v.includes(k));
+  const zoneEl=document.getElementById('autoZone');
+  if(zone){zoneEl.value=zone[1];zoneEl.style.color='var(--primary-dark)';recalcFee();}
+  else{zoneEl.value='';zoneEl.style.color='var(--text-light)';zoneEl.placeholder='Zone auto-fills from address';}
+}
+
+function addProductRow(){
+  const tr=document.createElement('tr');
+  tr.innerHTML=`<td><input placeholder="Product name"></td><td><input placeholder="SKU" style="width:80px"></td><td><input type="number" value="1" min="1" style="width:50px" oninput="recalcFee()"></td><td><input type="number" placeholder="0.00" style="width:70px" oninput="recalcFee()"></td><td><button onclick="this.closest('tr').remove();recalcFee()" style="background:none;border:none;cursor:pointer;color:var(--error)">✕</button></td>`;
+  document.getElementById('productsBody').appendChild(tr);
+}
+
+function recalcFee(){
+  const cod=parseFloat(document.getElementById('codAmount')?.value||0)||0;
+  const codFee=(cod*0.02).toFixed(2);
+  const total=(6.50+1.50+cod*0.02).toFixed(2);
+  if(document.getElementById('codFee')) document.getElementById('codFee').textContent='$'+codFee;
+  if(document.getElementById('totalFee')) document.getElementById('totalFee').textContent='$'+total;
+}
+
+function openReassign(){alert('Reassign driver / route dialog');}
+function changeStatus(){alert('Change status dialog');}
+function cancelShipment(){if(confirm('Cancel this shipment?')){closePanel();}}
+function showBulkActions(){alert('Bulk actions: Assign route, Export, Cancel '+selectedRows.size+' shipments');}
+</script>
+</body>
+</html>
