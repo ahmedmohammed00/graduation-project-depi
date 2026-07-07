@@ -156,6 +156,59 @@ namespace FastDrop.MVC.Services
             return (true, false);
         }
 
+        public async Task<(bool IsSuccess, string Message)> SubmitPodAsync(int shipmentId, int driverId, string otpCode, string? comments)
+        {
+            var shipment = await _context.Shipments.FindAsync(shipmentId);
+            if (shipment == null)
+            {
+                return (false, "Shipment not found.");
+            }
+
+            var isAssigned = await _context.DriverRoutes
+                .AnyAsync(dr => dr.DriverId == driverId && dr.RouteId == shipment.RouteId);
+            
+            if (!isAssigned)
+            {
+                return (false, "You are not assigned to this shipment's route.");
+            }
+
+            // Simulate OTP verification (any OTP is considered valid for simulation)
+            if (string.IsNullOrWhiteSpace(otpCode))
+            {
+                return (false, "OTP code is required.");
+            }
+
+            _context.ShipmentStatuses.Add(new ShipmentStatus
+            {
+                Shipment = shipment,
+                Status = "Delivered",
+                UpdatedAt = DateTime.UtcNow
+            });
+
+            var attempt = new ShipmentAttempt
+            {
+                Shipment = shipment,
+                DriverId = driverId,
+                AttemptNumber = 1,
+                Status = "Success",
+                OtpCode = otpCode,
+                AttemptTime = DateTime.UtcNow
+            };
+
+            _context.ShipmentAttempts.Add(attempt);
+
+            _context.PodEvidences.Add(new PodEvidence
+            {
+                ShipmentAttempt = attempt,
+                PhotoUrl = "/assets/simulated-pod.png", // Simulated POD
+                OtpVerified = true,
+                Notes = comments
+            });
+
+            await _context.SaveChangesAsync();
+            return (true, "Delivery successful and POD captured.");
+        }
+
         public async Task<IEnumerable<Address>> GetAddressesAsync()
         {
             return await _context.Addresses.ToListAsync();

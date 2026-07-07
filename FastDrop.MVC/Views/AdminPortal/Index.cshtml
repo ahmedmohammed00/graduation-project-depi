@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["Subtitle"] = "System Overview";
+    Layout = "_AdminLayout";
+}
+
+<div class="table-wrap" style="padding: 24px; background: white; border-radius: 16px; border: 1px solid var(--border-light); margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
+    
+    <div style="background: var(--bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light);">
+        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Total Employees</div>
+        <div style="font-size: 28px; font-weight: 800; color: var(--text-dark);">@ViewBag.EmployeeCount</div>
+    </div>
+    
+    <div style="background: var(--bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light);">
+        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Total Merchants</div>
+        <div style="font-size: 28px; font-weight: 800; color: var(--text-dark);">@ViewBag.MerchantCount</div>
+    </div>
+
+    <div style="background: var(--warning-light); padding: 20px; border-radius: 12px; border: 1px solid rgba(245,158,11,.2);">
+        <div style="font-size: 12px; font-weight: 700; color: var(--warning); text-transform: uppercase; margin-bottom: 8px;">Unpaid Invoices</div>
+        <div style="font-size: 28px; font-weight: 800; color: var(--warning);">@ViewBag.UnpaidInvoicesCount</div>
+    </div>
+
+    <div style="background: var(--info-light); padding: 20px; border-radius: 12px; border: 1px solid rgba(59,130,246,.2);">
+        <div style="font-size: 12px; font-weight: 700; color: var(--info); text-transform: uppercase; margin-bottom: 8px;">Pending Driver Payments</div>
+        <div style="font-size: 28px; font-weight: 800; color: var(--info);">@ViewBag.PendingPaymentsCount</div>
+    </div>
+
+</div>
+
+<div class="table-wrap" style="padding: 24px; background: white; border-radius: 16px; border: 1px solid var(--border-light);">
+    <h2 class="table-title" style="margin-bottom: 16px;">Quick Actions</h2>
+    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+        <a href="@Url.Action("Employees", "AdminPortal")" class="btn btn-secondary">Manage Users</a>
+        <a href="@Url.Action("Invoices", "AdminPortal")" class="btn btn-secondary">Generate Invoice</a>
+        <a href="@Url.Action("DriverPayments", "AdminPortal")" class="btn btn-secondary">Review Payments</a>
+    </div>
+</div>

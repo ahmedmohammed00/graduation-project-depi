@@ -12,6 +12,7 @@ namespace FastDrop.MVC.Models
 
         public decimal? TotalPayout { get; set; } = 0.00m;
         public decimal? DistanceKm { get; set; } = 0.00m;
+        public string PaymentStatus { get; set; } = "Pending";
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

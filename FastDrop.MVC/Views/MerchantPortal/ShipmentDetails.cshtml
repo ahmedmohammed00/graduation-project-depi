@@ -1,0 +1,73 @@
+@model FastDrop.MVC.Models.Shipment
+
+@{
+    Layout = "_MerchantLayout";
+    ViewData["Title"] = "Shipment Details";
+    ViewData["Subtitle"] = $"History & tracking for Shipment #{Model.ShipmentId}";
+}
+
+<div class="table-wrap" style="padding: 24px; margin-bottom: 24px;">
+    <h3 class="table-title" style="margin-bottom: 16px;">Overview</h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+        <div style="padding: 16px; background: var(--page-bg); border-radius: 8px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Destination Address</div>
+            <div style="margin-top: 4px; font-weight: 600; color: var(--text-dark);">
+                @(Model.Address?.Street ?? "N/A")<br/>
+                <span style="font-size: 12px; font-weight: normal;">@(Model.Address?.District ?? "N/A")</span>
+            </div>
+        </div>
+        <div style="padding: 16px; background: var(--page-bg); border-radius: 8px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">COD Amount</div>
+            <div style="font-size:24px; font-weight:800; color:var(--text-dark);">@Model.CodAmount.ToString("C")</div>
+        </div>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <div class="table-head">
+        <div class="table-title">Attempt History</div>
+    </div>
+    <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Attempt Time</th>
+                    <th>Driver Name</th>
+                    <th>Status</th>
+                    <th>Delivery Notes</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.ShipmentAttempts != null && Model.ShipmentAttempts.Any())
+                {
+                    foreach (var attempt in Model.ShipmentAttempts.OrderByDescending(a => a.AttemptTime))
+                    {
+                        var badgeClass = "sb-pending";
+                        if (attempt.Status.Equals("Delivered", StringComparison.OrdinalIgnoreCase)) badgeClass = "sb-delivered";
+                        else if (attempt.Status.Equals("Failed", StringComparison.OrdinalIgnoreCase)) badgeClass = "sb-failed";
+
+                        <tr>
+                            <td style="font-weight:600; color:var(--text-dark)">@attempt.AttemptTime.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td>@(attempt.Driver?.Name ?? "Unknown Driver")</td>
+                            <td><span class="s-badge @badgeClass">@attempt.Status</span></td>
+                            <td style="color:var(--text-muted); font-style:italic">@(string.IsNullOrEmpty(attempt.Reason) ? "-" : attempt.Reason)</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                            No delivery attempts have been recorded yet.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="margin-top: 24px;">
+    <a href="@Url.Action("Shipments", "MerchantPortal")" class="btn btn-secondary">Back to Shipments</a>
+</div>

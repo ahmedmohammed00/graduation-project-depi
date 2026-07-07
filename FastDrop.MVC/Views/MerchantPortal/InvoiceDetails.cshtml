@@ -1,0 +1,72 @@
+@model FastDrop.MVC.Models.Invoice
+
+@{
+    Layout = "_MerchantLayout";
+    ViewData["Title"] = "Invoice Details";
+    ViewData["Subtitle"] = $"Invoice #INV-{Model.InvoiceId}";
+    var shipments = ViewBag.Shipments as IEnumerable<FastDrop.MVC.Models.Shipment> ?? new List<FastDrop.MVC.Models.Shipment>();
+}
+
+<div class="table-wrap" style="padding: 24px; margin-bottom: 24px;">
+    <h3 class="table-title" style="margin-bottom: 16px;">Invoice Summary</h3>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+        <div style="padding: 16px; background: var(--page-bg); border-radius: 8px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Amount Due</div>
+            <div style="font-size:24px; font-weight:800; color:var(--text-dark);">@Model.AmountDue.ToString("C")</div>
+        </div>
+        <div style="padding: 16px; background: var(--page-bg); border-radius: 8px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Status</div>
+            <div style="margin-top: 4px;">
+                <span class="s-badge @(Model.PaymentStatus?.Equals("Paid", StringComparison.OrdinalIgnoreCase) == true ? "sb-paid" : "sb-unpaid")">
+                    @(Model.PaymentStatus ?? "Unpaid")
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <a href="@Url.Action("Invoices", "MerchantPortal")" class="btn btn-secondary btn-sm">
+        <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg> Back to Invoices
+    </a>
+</div>
+
+<div class="table-wrap">
+    <div class="table-head">
+        <div class="table-title">Included Shipments (@shipments.Count())</div>
+        <p style="font-size: 12px; color: var(--text-muted);">These are the shipments you are paying for in this invoice.</p>
+    </div>
+    <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Shipment ID</th>
+                    <th>Date</th>
+                    <th>Destination Zone</th>
+                    <th>Weight (kg)</th>
+                    <th>COD Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var shipment in shipments)
+                {
+                    <tr>
+                        <td style="font-weight:700; color:var(--primary)">#@shipment.ShipmentId</td>
+                        <td>@shipment.CreationDate.ToString("MMM dd, yyyy")</td>
+                        <td>@(shipment.Address?.Zone?.Name ?? "N/A")</td>
+                        <td>@(shipment.WeightKg?.ToString("0.##") ?? "-") kg</td>
+                        <td style="font-weight:600">@shipment.CodAmount.ToString("C")</td>
+                    </tr>
+                }
+                
+                @if (!shipments.Any())
+                {
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                            No shipments found for this invoice.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

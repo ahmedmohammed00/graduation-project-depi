@@ -52,17 +52,17 @@ namespace FastDrop.MVC.Controllers
         // POST: Invoices/Generate
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Generate(int merchantId, int shipmentCount)
+        public async Task<IActionResult> Generate(int merchantId, System.DateTime startDate, System.DateTime endDate)
         {
-            var invoice = await _invoiceService.GenerateInvoiceAsync(merchantId, shipmentCount);
+            var result = await _invoiceService.GenerateInvoiceAsync(merchantId, startDate, endDate);
             
-            if (invoice == null)
+            if (!result.IsSuccess)
             {
-                ModelState.AddModelError("", "No shipments found for this merchant.");
+                ModelState.AddModelError("", result.Message);
                 return RedirectToAction(nameof(Create));
             }
 
-            return RedirectToAction(nameof(Details), new { id = invoice.InvoiceId });
+            return RedirectToAction(nameof(Details), new { id = result.Invoice?.InvoiceId });
         }
 
         // POST: Invoices/Create

@@ -1,0 +1,49 @@
+@model IEnumerable<FastDrop.MVC.Models.Route>
+
+@{
+    Layout = "_DriverLayout";
+    ViewData["Title"] = "My Routes";
+    ViewData["Subtitle"] = "All routes assigned to you";
+}
+
+<div class="table-wrap">
+    <div class="table-head">
+        <div class="table-title">Assigned Routes</div>
+    </div>
+    <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Route ID</th>
+                    <th>Route Name</th>
+                    <th>Status</th>
+                    <th>Total Stops</th>
+                    <th>Total Shipments</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var route in Model)
+                {
+                    var statusClass = route.Status.Equals("active", StringComparison.OrdinalIgnoreCase) ? "sb-active" : "sb-pending";
+                    
+                    <tr>
+                        <td style="font-weight:700; color:var(--primary)">#RT-@route.RouteId</td>
+                        <td><div style="font-weight:600; color:var(--text-dark)">@route.RouteName</div></td>
+                        <td><span class="s-badge @statusClass">@route.Status</span></td>
+                        <td>@(route.RouteStops?.Count ?? 0)</td>
+                        <td>@(route.Shipments?.Count ?? 0)</td>
+                    </tr>
+                }
+                
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                            You have no routes assigned.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

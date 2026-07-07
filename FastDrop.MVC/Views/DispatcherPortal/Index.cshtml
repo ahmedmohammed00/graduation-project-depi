@@ -1,0 +1,150 @@
+@{
+    Layout = "_DispatcherLayout";
+    ViewData["Title"] = "Dispatcher Dashboard";
+    
+    var unassignedShipments = ViewBag.UnassignedShipments as IEnumerable<FastDrop.MVC.Models.Shipment>;
+    var availableDrivers = ViewBag.AvailableDrivers as IEnumerable<FastDrop.MVC.Models.Driver>;
+}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <h2 style="font-size: 20px; color: var(--text-dark);">Assignment Queue</h2>
+    
+    <form asp-action="SmartAssign" method="post" style="display:inline;">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-primary" title="Automatically assign shipments to drivers in matching zones">
+            <svg viewBox="0 0 24 24"><path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.48 2.54l2.6 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/></svg> 
+            Run Smart Assign
+        </button>
+    </form>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+
+    <!-- Left Column: Shipments to assign -->
+    <div class="table-wrap">
+        <div class="table-head">
+            <div class="table-title">Unassigned Shipments (@(unassignedShipments?.Count() ?? 0))</div>
+        </div>
+        <div style="overflow-x:auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Shipment ID</th>
+                        <th>Destination Zone</th>
+                        <th>Assign To Driver</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (unassignedShipments != null && unassignedShipments.Any())
+                    {
+                        foreach (var shipment in unassignedShipments)
+                        {
+                            <tr>
+                                <td style="font-weight:700; color:var(--text-dark)">#@shipment.ShipmentId</td>
+                                <td>
+                                    <span style="font-size:12px;font-weight:600;color:var(--info);background:var(--info-light);padding:3px 8px;border-radius:5px">
+                                        @(shipment.Address?.Zone?.Name ?? "Unzoned")
+                                    </span>
+                                </td>
+                                <td>
+                                    <form asp-action="ManualAssign" method="post" style="display: flex; gap: 8px;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="shipmentId" value="@shipment.ShipmentId" />
+                                        
+                                        <select name="driverId" class="form-control" style="width: 200px;" required>
+                                            <option value="">-- Select Driver --</option>
+                                            @if(availableDrivers != null)
+                                            {
+                                                foreach(var driver in availableDrivers)
+                                                {
+                                                    // Highlight driver if they match the zone
+                                                    var isZoneMatch = shipment.Address?.ZoneId == driver.ZoneId;
+                                                    var driverText = $"{driver.Name} (Zone: {driver.Zone?.Name ?? "None"}){(isZoneMatch ? " - MATCH" : "")}";
+                                                    
+                                                    <option value="@driver.DriverId">@driverText</option>
+                                                }
+                                            }
+                                        </select>
+                                        
+                                        <button type="submit" class="btn btn-secondary btn-sm">Assign</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="3" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                                All shipments are assigned. Great job!
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right Column: Active Drivers -->
+    <div class="table-wrap">
+        <div class="table-head">
+            <div class="table-title">Available Drivers (@(availableDrivers?.Count() ?? 0))</div>
+        </div>
+        <div style="overflow-x:auto">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Driver</th>
+                        <th>Assigned Zone</th>
+                        <th>Rank / Tier</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (availableDrivers != null && availableDrivers.Any())
+                    {
+                        foreach (var driver in availableDrivers)
+                        {
+                            var latestScore = driver.PerformanceScores?.OrderByDescending(ps => ps.RecordedAt).FirstOrDefault();
+                            var tier = latestScore?.Tier ?? "Unranked";
+                            var score = latestScore?.DailyScore ?? 0m;
+                            
+                            var tierColor = tier == "Gold" ? "var(--warning)" : tier == "Silver" ? "#9ca3af" : tier == "Bronze" ? "#d97706" : "var(--text-muted)";
+                            var tierBg = tier == "Gold" ? "var(--warning-light)" : tier == "Silver" ? "#f3f4f6" : tier == "Bronze" ? "#fef3c7" : "var(--border-light)";
+
+                            <tr>
+                                <td>
+                                    <div style="font-weight:600; color:var(--text-dark)">@driver.Name</div>
+                                </td>
+                                <td>
+                                    <span style="font-size:12px;font-weight:600;color:var(--info);background:var(--info-light);padding:3px 8px;border-radius:5px">
+                                        @(driver.Zone?.Name ?? "None")
+                                    </span>
+                                </td>
+                                <td>
+                                    <div style="display:flex; align-items:center; gap:6px;">
+                                        <span style="font-size:11px;font-weight:700;color:@tierColor;background:@tierBg;padding:3px 8px;border-radius:5px; border: 1px solid @tierColor;">
+                                            @tier
+                                        </span>
+                                        @if(score > 0)
+                                        {
+                                            <span style="font-size:11px; font-weight:600; color:var(--text-muted)">(@score)</span>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="2" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                                No available drivers.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

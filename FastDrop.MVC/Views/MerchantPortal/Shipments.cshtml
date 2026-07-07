@@ -1,0 +1,60 @@
+@model IEnumerable<FastDrop.MVC.Models.Shipment>
+
+@{
+    Layout = "_MerchantLayout";
+    ViewData["Title"] = "Shipments";
+}
+
+<div class="table-wrap">
+    <div class="table-head">
+        <div class="table-title">Your Shipments</div>
+    </div>
+    <div style="overflow-x:auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Shipment ID</th>
+                    <th>Date</th>
+                    <th>Destination Zone</th>
+                    <th>Weight (kg)</th>
+                    <th>COD Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var shipment in Model)
+                {
+                    // To easily display the latest status
+                    var latestStatus = shipment.ShipmentStatuses.OrderByDescending(s => s.UpdatedAt).FirstOrDefault();
+                    var statusName = latestStatus?.Status ?? "Pending";
+                    var badgeClass = "sb-pending";
+                    if (statusName.Equals("Delivered", StringComparison.OrdinalIgnoreCase)) badgeClass = "sb-delivered";
+                    else if (statusName.Equals("Cancelled", StringComparison.OrdinalIgnoreCase)) badgeClass = "sb-cancelled";
+                    else if (statusName.Equals("Failed", StringComparison.OrdinalIgnoreCase)) badgeClass = "sb-failed";
+                    else if (statusName.Equals("In Transit", StringComparison.OrdinalIgnoreCase) || statusName.Equals("Dispatched", StringComparison.OrdinalIgnoreCase)) badgeClass = "sb-active";
+
+                    <tr>
+                        <td style="font-weight:700; color:var(--primary)">#@shipment.ShipmentId</td>
+                        <td>@shipment.CreationDate.ToString("MMM dd, yyyy")</td>
+                        <td>@(shipment.Address?.Street ?? "-")</td>
+                        <td>@(shipment.WeightKg?.ToString("0.##") ?? "-") kg</td>
+                        <td style="font-weight:600">@shipment.CodAmount.ToString("C")</td>
+                        <td><span class="s-badge @badgeClass">@statusName</span></td>
+                        <td>
+                            <a href="@Url.Action("ShipmentDetails", "MerchantPortal", new { id = shipment.ShipmentId })" class="btn btn-secondary btn-sm">View Details</a>
+                        </td>
+                    </tr>
+                }
+                
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                            You don't have any shipments yet.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

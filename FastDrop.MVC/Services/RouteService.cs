@@ -59,5 +59,19 @@ namespace FastDrop.MVC.Services
         {
             return _context.Routes.Any(e => e.RouteId == id);
         }
+
+        public async Task<IEnumerable<Route>> GetRoutesByDriverIdAsync(int driverId)
+        {
+            var routeIds = await _context.DriverRoutes
+                .Where(dr => dr.DriverId == driverId)
+                .Select(dr => dr.RouteId)
+                .ToListAsync();
+
+            return await _context.Routes
+                .Include(r => r.RouteStops)
+                .Include(r => r.Shipments)
+                .Where(r => routeIds.Contains(r.RouteId))
+                .ToListAsync();
+        }
     }
 }

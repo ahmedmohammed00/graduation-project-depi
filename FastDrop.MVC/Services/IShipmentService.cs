@@ -15,6 +15,7 @@ namespace FastDrop.MVC.Services
         Task DeleteShipmentAsync(int id);
         bool ShipmentExists(int id);
         Task<(bool IsSuccess, bool IsForbidden)> UpdateStatusAsync(int id, string status, string? comments, string role, int? driverId);
+        Task<(bool IsSuccess, string Message)> SubmitPodAsync(int shipmentId, int driverId, string otpCode, string? comments);
 
         // Lookup methods for dropdowns
         Task<IEnumerable<Address>> GetAddressesAsync();

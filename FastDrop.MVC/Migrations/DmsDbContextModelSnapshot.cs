@@ -114,6 +114,10 @@ namespace FastDrop.MVC.Migrations
                     b.Property<int?>("DriverId")
                         .HasColumnType("int");
 
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<decimal?>("TotalPayout")
                         .HasColumnType("decimal(10,2)");
 

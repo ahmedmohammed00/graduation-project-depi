@@ -1,0 +1,62 @@
+@model FastDrop.MVC.Models.Shipment
+
+@{
+    Layout = "_DriverLayout";
+    ViewData["Title"] = "Update Status";
+    ViewData["Subtitle"] = $"Shipment #{Model.ShipmentId}";
+}
+
+<div class="table-wrap" style="padding: 24px; margin-bottom: 24px;">
+    <h3 class="table-title" style="margin-bottom: 16px;">Shipment Details</h3>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div style="padding: 16px; background: var(--page-bg); border-radius: 8px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Destination Address</div>
+            <div style="margin-top: 4px; font-weight: 600; color: var(--text-dark);">
+                @(Model.Address?.Street ?? "N/A")<br/>
+                <span style="font-size: 12px; font-weight: normal;">@(Model.Address?.District ?? "N/A")</span>
+            </div>
+        </div>
+        <div style="padding: 16px; background: var(--page-bg); border-radius: 8px;">
+            <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">COD Amount to Collect</div>
+            <div style="font-size:24px; font-weight:800; color:var(--success);">@Model.CodAmount.ToString("C")</div>
+        </div>
+    </div>
+</div>
+
+<div class="table-wrap" style="padding: 24px; max-width: 600px;">
+    <h3 class="table-title" style="margin-bottom: 16px;">Capture Proof of Delivery</h3>
+    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 20px;">
+        To mark this shipment as delivered, please verify the OTP with the customer. 
+        <br/><strong style="color:var(--info);">Simulation mode: Any OTP code will be accepted.</strong>
+    </p>
+
+    <form asp-action="SubmitPod" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="id" value="@Model.ShipmentId" />
+
+        <div class="form-group">
+            <label>Customer OTP Code *</label>
+            <input type="text" name="otpCode" class="form-control" placeholder="Enter 4 or 6 digit OTP" required style="font-size: 18px; letter-spacing: 2px;">
+        </div>
+
+        <div class="form-group">
+            <label>Delivery Notes (Optional)</label>
+            <textarea name="notes" class="form-control" rows="3" placeholder="Any comments..."></textarea>
+        </div>
+
+        <div class="form-group" style="background: var(--primary-light); padding: 12px; border-radius: 8px; border: 1px dashed var(--primary); margin-top: 10px;">
+            <div style="display: flex; align-items: center; gap: 10px; color: var(--primary-dark); font-size: 13px; font-weight: 600;">
+                <svg viewBox="0 0 24 24" style="width: 20px; fill: currentColor;"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                Simulation: A photo of the signature will be mocked automatically.
+            </div>
+        </div>
+
+        <div style="margin-top: 24px; display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center;">
+                <svg viewBox="0 0 24 24" style="fill:white;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Submit & Mark Delivered
+            </button>
+            <a href="@Url.Action("Shipments", "DriverPortal")" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
