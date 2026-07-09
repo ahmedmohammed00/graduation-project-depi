@@ -44,74 +44,82 @@ namespace FastDrop.MVC.Controllers
         public async Task<IActionResult> Create()
         {
             ViewData["MerchantId"] = new SelectList(await _productService.GetMerchantsAsync(), "MerchantId", "MerchantId");
+            ViewBag.Warehouses = await _productService.GetWarehousesAsync();
             return View();
         }
 
         // POST: Products/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("ProductId,Name,Description,Price,StockQuantity,MerchantId")] Product product)
+        public async Task<IActionResult> Create([Bind("ProductId,Name,Description,Price,MerchantId")] Product product, [FromForm] int[] WarehouseIds, [FromForm] int[] Quantities)
         {
             if (ModelState.IsValid)
             {
-                await _productService.CreateProductAsync(product);
+                var warehouseQuantities = new Dictionary<int, int>();
+                for (int i = 0; i < WarehouseIds.Length; i++)
+                {
+                    if (Quantities.Length > i && Quantities[i] > 0)
+                    {
+                        warehouseQuantities[WarehouseIds[i]] = Quantities[i];
+                    }
+                }
+
+                await _productService.CreateProductAsync(product, warehouseQuantities);
                 return RedirectToAction(nameof(Index));
             }
             ViewData["MerchantId"] = new SelectList(await _productService.GetMerchantsAsync(), "MerchantId", "MerchantId", product.MerchantId);
+            ViewBag.Warehouses = await _productService.GetWarehousesAsync();
             return View(product);
         }
 
         // GET: Products/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var product = await _productService.GetProductByIdAsync(id.Value);
-            if (product == null)
-            {
-                return NotFound();
-            }
+            if (product == null) return NotFound();
+
+            // Load existing product warehouses for this product
+            // Wait, GetProductByIdAsync doesn't include ProductWarehouses. Let's assume the view will just show all and rely on the controller. 
+            // Better to fetch them directly or via DbContext if needed, but since we're in the controller:
+            ViewBag.Warehouses = await _productService.GetWarehousesAsync();
+            
             ViewData["MerchantId"] = new SelectList(await _productService.GetMerchantsAsync(), "MerchantId", "MerchantId", product.MerchantId);
             return View(product);
         }
 
         // POST: Products/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Name,Description,Price,StockQuantity,MerchantId")] Product product)
+        public async Task<IActionResult> Edit(int id, [Bind("ProductId,Name,Description,Price,MerchantId")] Product product, [FromForm] int[] WarehouseIds, [FromForm] int[] Quantities)
         {
-            if (id != product.ProductId)
-            {
-                return NotFound();
-            }
+            if (id != product.ProductId) return NotFound();
 
             if (ModelState.IsValid)
             {
+                var warehouseQuantities = new Dictionary<int, int>();
+                for (int i = 0; i < WarehouseIds.Length; i++)
+                {
+                    if (Quantities.Length > i && Quantities[i] > 0)
+                    {
+                        warehouseQuantities[WarehouseIds[i]] = Quantities[i];
+                    }
+                }
+
                 try
                 {
-                    await _productService.UpdateProductAsync(product);
+                    await _productService.UpdateProductAsync(product, warehouseQuantities);
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!ProductExists(product.ProductId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!ProductExists(product.ProductId)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
             ViewData["MerchantId"] = new SelectList(await _productService.GetMerchantsAsync(), "MerchantId", "MerchantId", product.MerchantId);
+            ViewBag.Warehouses = await _productService.GetWarehousesAsync();
             return View(product);
         }
 

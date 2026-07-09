@@ -32,7 +32,8 @@ namespace FastDrop.MVC.Services
             var drivers = await _context.Drivers
                 .Include(d => d.Zone)
                 .Include(d => d.PerformanceScores)
-                .Where(d => d.CurrentStatus == "available")
+                .Include(d => d.DriverVehicles)
+                .Where(d => d.CurrentStatus == "available" && d.DriverVehicles.Any())
                 .ToListAsync();
 
             // Sort by most recent score descending

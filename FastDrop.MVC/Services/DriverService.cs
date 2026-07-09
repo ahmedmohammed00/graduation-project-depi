@@ -83,5 +83,33 @@ namespace FastDrop.MVC.Services
         {
             return await _context.Zones.ToListAsync();
         }
+        public async Task<IEnumerable<Vehicle>> GetVehiclesAsync()
+        {
+            return await _context.Vehicles.ToListAsync();
+        }
+
+        public async Task AssignVehicleToDriverAsync(int driverId, int vehicleId)
+        {
+            var existingLink = await _context.DriverVehicles.FirstOrDefaultAsync(dv => dv.DriverId == driverId);
+            if (existingLink != null)
+            {
+                if (existingLink.VehicleId != vehicleId)
+                {
+                    existingLink.VehicleId = vehicleId;
+                    _context.Update(existingLink);
+                }
+            }
+            else
+            {
+                _context.DriverVehicles.Add(new DriverVehicle { DriverId = driverId, VehicleId = vehicleId });
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<int?> GetDriverVehicleIdAsync(int driverId)
+        {
+            var dv = await _context.DriverVehicles.FirstOrDefaultAsync(dv => dv.DriverId == driverId);
+            return dv?.VehicleId;
+        }
     }
 }

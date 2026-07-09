@@ -148,11 +148,17 @@ namespace FastDrop.MVC.Controllers
             return RedirectToAction(nameof(DriverPayments));
         }
 
-        // --- 5. System: Warehouses & Zones ---
+        // --- 5. System: Warehouses, Inventory & Zones ---
         public async Task<IActionResult> Warehouses()
         {
             var warehouses = await _warehouseService.GetWarehousesAsync();
             return View(warehouses);
+        }
+
+        public async Task<IActionResult> Inventory()
+        {
+            var inventoryItems = await _productService.GetAllProductWarehousesAsync();
+            return View(inventoryItems);
         }
 
         public async Task<IActionResult> Zones()

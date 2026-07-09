@@ -17,5 +17,8 @@ namespace FastDrop.MVC.Services
         Task<IEnumerable<Address>> GetAddressesAsync();
         Task<IEnumerable<Employee>> GetEmployeesAsync();
         Task<IEnumerable<Zone>> GetZonesAsync();
+        Task<IEnumerable<Vehicle>> GetVehiclesAsync();
+        Task AssignVehicleToDriverAsync(int driverId, int vehicleId);
+        Task<int?> GetDriverVehicleIdAsync(int driverId);
     }
 }

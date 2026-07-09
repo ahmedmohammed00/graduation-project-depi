@@ -241,33 +241,5 @@ namespace FastDrop.MVC.Controllers
             return View(invoice);
         }
 
-        // GET: MerchantPortal/Products
-        public async Task<IActionResult> Products()
-        {
-            int merchantId = GetMerchantId();
-            var products = await _productService.GetProductsByMerchantIdAsync(merchantId);
-            return View(products);
-        }
-
-        // GET: MerchantPortal/AddProduct
-        public IActionResult AddProduct()
-        {
-            return View(new Product());
-        }
-
-        // POST: MerchantPortal/AddProduct
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddProduct(Product product)
-        {
-            int merchantId = GetMerchantId();
-            if (ModelState.IsValid)
-            {
-                product.MerchantId = merchantId;
-                await _productService.CreateProductAsync(product);
-                return RedirectToAction(nameof(Products));
-            }
-            return View(product);
-        }
     }
 }

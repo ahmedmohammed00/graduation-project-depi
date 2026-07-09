@@ -111,12 +111,15 @@ td{padding:13px 14px;font-size:13px;color:var(--text-mid);white-space:nowrap}
     <span class="logo-text">Fast Drop</span><span class="logo-badge" style="background:var(--purple)">MERCHANT</span>
   </a>
   <div class="sidebar-section">
-    <div class="sidebar-label">Overview</div>
+    <div class="sidebar-label">Operations</div>
     <a class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")" href="@Url.Action("Index", "MerchantPortal")">
       <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg></span>Dashboard
     </a>
     <a class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Shipments" || ViewContext.RouteData.Values["action"]?.ToString() == "AddShipment" ? "active" : "")" href="@Url.Action("Shipments", "MerchantPortal")">
       <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></span>Shipments
+    </a>
+    <a class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Products" ? "active" : "")" href="@Url.Action("Index", "Products")">
+      <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/></svg></span>Products
     </a>
   </div>
   <div class="sidebar-section">

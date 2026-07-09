@@ -24,6 +24,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IRouteService, RouteService>();
 builder.Services.AddScoped<IWarehouseService, WarehouseService>();
 builder.Services.AddScoped<IZoneService, ZoneService>();
+builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IDispatcherService, DispatcherService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

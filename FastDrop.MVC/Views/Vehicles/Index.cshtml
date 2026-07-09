@@ -1,0 +1,46 @@
+@model IEnumerable<FastDrop.MVC.Models.Vehicle>
+@{
+    ViewData["Title"] = "Vehicles";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="table-wrap">
+    <div class="table-head">
+        <h3 class="table-title">Fleet & Vehicles</h3>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Vehicle
+        </a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>License Plate</th>
+                <th>Model</th>
+                <th>Type</th>
+                <th>Capacity (Kg)</th>
+                <th>License Expiry</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model) {
+                <tr>
+                    <td style="font-weight: 600; color: var(--text-dark);">@item.LicensePlate</td>
+                    <td>@(item.Model ?? "-")</td>
+                    <td><span class="s-badge sb-success">@(item.VehicleType ?? "Standard")</span></td>
+                    <td>@(item.MaxCapacityKg?.ToString("N0") ?? "-") Kg</td>
+                    <td>@(item.LicenseExpiryDate?.ToString("MMM dd, yyyy") ?? "-")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.VehicleId" class="btn btn-secondary btn-sm" style="padding: 4px 8px;">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.VehicleId" class="btn btn-secondary btn-sm" style="padding: 4px 8px; color: var(--error);">Delete</a>
+                    </td>
+                </tr>
+            }
+            @if(!Model.Any()) {
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 24px;">No vehicles found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -407,6 +407,9 @@ namespace FastDrop.MVC.Migrations
                     b.Property<int>("WarehouseId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
                     b.HasKey("ProductId", "WarehouseId");
 
                     b.HasIndex("WarehouseId");

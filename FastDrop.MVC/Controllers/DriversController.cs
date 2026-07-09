@@ -70,56 +70,50 @@ namespace FastDrop.MVC.Controllers
         // GET: Drivers/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var driver = await _driverService.GetDriverByIdAsync(id.Value);
-            if (driver == null)
-            {
-                return NotFound();
-            }
+            if (driver == null) return NotFound();
+            
             ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "AddressId", driver.AddressId);
             ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "EmployeeId", driver.EmployeeId);
             ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "ZoneId", driver.ZoneId);
+            
+            var vehicles = await _driverService.GetVehiclesAsync();
+            var currentVehicleId = await _driverService.GetDriverVehicleIdAsync(driver.DriverId);
+            ViewData["VehicleId"] = new SelectList(vehicles, "VehicleId", "LicensePlate", currentVehicleId);
+
             return View(driver);
         }
 
         // POST: Drivers/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("DriverId,Name,PhoneNumber,LicenseNumber,LicenseExpiryDate,CurrentStatus,ZoneId,AddressId,EmployeeId")] Driver driver)
+        public async Task<IActionResult> Edit(int id, [Bind("DriverId,Name,PhoneNumber,LicenseNumber,LicenseExpiryDate,CurrentStatus,ZoneId,AddressId,EmployeeId")] Driver driver, int? VehicleId)
         {
-            if (id != driver.DriverId)
-            {
-                return NotFound();
-            }
+            if (id != driver.DriverId) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
                     await _driverService.UpdateDriverAsync(driver);
+                    if (VehicleId.HasValue)
+                    {
+                        await _driverService.AssignVehicleToDriverAsync(driver.DriverId, VehicleId.Value);
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!DriverExists(driver.DriverId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!DriverExists(driver.DriverId)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
             ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "AddressId", driver.AddressId);
             ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "EmployeeId", driver.EmployeeId);
             ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "ZoneId", driver.ZoneId);
+            ViewData["VehicleId"] = new SelectList(await _driverService.GetVehiclesAsync(), "VehicleId", "LicensePlate", VehicleId);
             return View(driver);
         }
 
