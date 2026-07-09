@@ -1,0 +1,42 @@
+@model IEnumerable<FastDrop.MVC.Models.Warehouse>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Warehouses";
+}
+
+<div class="table-wrap" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 class="table-title" style="margin: 0;">Warehouses</h3>
+    </div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Warehouse Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(Model != null && Model.Any())
+            {
+                foreach(var warehouse in Model)
+                {
+                    <tr>
+                        <td>@warehouse.WarehouseName</td>
+                        <td>
+                            <a asp-action="WarehouseDetails" asp-route-id="@warehouse.WarehouseId" class="btn btn-primary">View Stock</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-center" style="padding: 40px; color: var(--text-light);">
+                        No warehouses found.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -107,6 +107,12 @@ namespace FastDrop.MVC.Controllers
                     return Redirect(returnUrl);
                 }
 
+                var roleClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleClaim == "SuperAdmin" || roleClaim == "Employee") return RedirectToAction("Index", "AdminPortal");
+                if (roleClaim == "Merchant") return RedirectToAction("Index", "MerchantPortal");
+                if (roleClaim == "Driver") return RedirectToAction("Index", "DriverPortal");
+                if (roleClaim == "Dispatcher") return RedirectToAction("Index", "DispatcherPortal");
+
                 return RedirectToAction("Index", "Home");
             }
 

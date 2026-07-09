@@ -29,8 +29,8 @@
                         <td>
                             <div style="font-weight:600; color:var(--text-dark)">@item.Driver?.Name</div>
                         </td>
-                        <td>@item.CreatedAt?.ToString("MMM dd, yyyy")</td>
-                        <td><div style="font-weight:700; color:var(--text-dark)">@item.Amount.ToString("C")</div></td>
+                        <td>@item.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        <td><div style="font-weight:700; color:var(--text-dark)">@((item.TotalPayout ?? 0).ToString("C"))</div></td>
                         <td>
                             @if (item.PaymentStatus == "Paid")
                             {

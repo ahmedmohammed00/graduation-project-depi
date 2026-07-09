@@ -18,6 +18,7 @@ namespace FastDrop.MVC.Controllers
         private readonly IMerchantService _merchantService;
         private readonly IWarehouseService _warehouseService;
         private readonly IZoneService _zoneService;
+        private readonly IProductService _productService;
 
         public AdminPortalController(
             IEmployeeService employeeService,
@@ -25,7 +26,8 @@ namespace FastDrop.MVC.Controllers
             IInvoiceService invoiceService,
             IMerchantService merchantService,
             IWarehouseService warehouseService,
-            IZoneService zoneService)
+            IZoneService zoneService,
+            IProductService productService)
         {
             _employeeService = employeeService;
             _driverPaymentService = driverPaymentService;
@@ -33,6 +35,7 @@ namespace FastDrop.MVC.Controllers
             _merchantService = merchantService;
             _warehouseService = warehouseService;
             _zoneService = zoneService;
+            _productService = productService;
         }
 
         public async Task<IActionResult> Index()
@@ -127,6 +130,98 @@ namespace FastDrop.MVC.Controllers
         {
             var zones = await _zoneService.GetZonesAsync();
             return View(zones);
+        }
+
+        [HttpGet]
+        public IActionResult CreateZone()
+        {
+            return View(new Zone { ActiveStatus = true });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CreateZone(Zone zone)
+        {
+            if (ModelState.IsValid)
+            {
+                await _zoneService.CreateZoneAsync(zone);
+                TempData["SuccessMessage"] = "Zone created successfully.";
+                return RedirectToAction(nameof(Zones));
+            }
+            return View(zone);
+        }
+
+        public async Task<IActionResult> EditZone(int id)
+        {
+            var zone = await _zoneService.GetZoneByIdAsync(id);
+            if (zone == null) return NotFound();
+            return View(zone);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditZone(int id, Zone zone)
+        {
+            if (id != zone.ZoneId) return NotFound();
+            if (ModelState.IsValid)
+            {
+                await _zoneService.UpdateZoneAsync(zone);
+                TempData["SuccessMessage"] = "Zone updated successfully.";
+                return RedirectToAction(nameof(Zones));
+            }
+            return View(zone);
+        }
+
+        public async Task<IActionResult> DeleteZone(int id)
+        {
+            var zone = await _zoneService.GetZoneByIdAsync(id);
+            if (zone == null) return NotFound();
+            return View(zone);
+        }
+
+        [HttpPost, ActionName("DeleteZone")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteZoneConfirmed(int id)
+        {
+            await _zoneService.DeleteZoneAsync(id);
+            TempData["SuccessMessage"] = "Zone deleted successfully.";
+            return RedirectToAction(nameof(Zones));
+        }
+
+        public async Task<IActionResult> WarehouseDetails(int id)
+        {
+            var warehouse = await _warehouseService.GetWarehouseByIdAsync(id);
+            if (warehouse == null) return NotFound();
+
+            var assignedProducts = await _warehouseService.GetProductsForWarehouseAsync(id);
+            ViewBag.AssignedProducts = assignedProducts;
+
+            return View(warehouse);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AssignProducts(int id)
+        {
+            var warehouse = await _warehouseService.GetWarehouseByIdAsync(id);
+            if (warehouse == null) return NotFound();
+
+            var allProducts = await _productService.GetProductsAsync();
+            var assignedProducts = await _warehouseService.GetProductsForWarehouseAsync(id);
+            
+            ViewBag.WarehouseName = warehouse.WarehouseName;
+            ViewBag.AllProducts = allProducts;
+            ViewBag.AssignedProductIds = assignedProducts.Select(p => p.ProductId).ToList();
+
+            return View(new { WarehouseId = id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignProducts(int warehouseId, List<int> productIds)
+        {
+            await _warehouseService.AssignProductsToWarehouseAsync(warehouseId, productIds);
+            TempData["SuccessMessage"] = "Products successfully assigned to the warehouse.";
+            return RedirectToAction(nameof(WarehouseDetails), new { id = warehouseId });
         }
     }
 }

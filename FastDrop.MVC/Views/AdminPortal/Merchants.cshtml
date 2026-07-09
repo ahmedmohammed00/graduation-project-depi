@@ -1,0 +1,44 @@
+@model IEnumerable<FastDrop.MVC.Models.Merchant>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Merchants";
+}
+
+<div class="table-wrap" style="padding: 24px;">
+    <h3 class="table-title">Merchants</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Merchant Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(Model != null && Model.Any())
+            {
+                foreach(var merchant in Model)
+                {
+                    <tr>
+                        <td>@merchant.ShopName</td>
+                        <td>@merchant.Email</td>
+                        <td>@merchant.Phone</td>
+                        <td>
+                            <a href="#" class="btn btn-secondary">View</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-center" style="padding: 40px; color: var(--text-light);">
+                        No merchants found.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

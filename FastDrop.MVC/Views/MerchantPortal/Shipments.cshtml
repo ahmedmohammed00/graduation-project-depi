@@ -41,7 +41,9 @@
                         <td style="font-weight:600">@shipment.CodAmount.ToString("C")</td>
                         <td><span class="s-badge @badgeClass">@statusName</span></td>
                         <td>
-                            <a href="@Url.Action("ShipmentDetails", "MerchantPortal", new { id = shipment.ShipmentId })" class="btn btn-secondary btn-sm">View Details</a>
+                            <a asp-action="ShipmentDetails" asp-route-id="@shipment.ShipmentId" class="btn btn-primary">Details</a>
+                            <a asp-action="EditShipment" asp-route-id="@shipment.ShipmentId" class="btn btn-secondary">Edit</a>
+                            <a asp-action="DeleteShipment" asp-route-id="@shipment.ShipmentId" class="btn btn-secondary" style="color: var(--error);">Delete</a>
                         </td>
                     </tr>
                 }

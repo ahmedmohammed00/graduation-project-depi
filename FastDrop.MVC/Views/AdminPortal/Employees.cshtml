@@ -1,0 +1,44 @@
+@model IEnumerable<FastDrop.MVC.Models.Employee>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Employees & Roles";
+}
+
+<div class="table-wrap" style="padding: 24px;">
+    <h3 class="table-title">Employees & Roles</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(Model != null && Model.Any())
+            {
+                foreach(var emp in Model)
+                {
+                    <tr>
+                        <td>@emp.Name</td>
+                        <td>@emp.Email</td>
+                        <td>@emp.Role</td>
+                        <td>
+                            <a href="#" class="btn btn-secondary">Edit</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-center" style="padding: 40px; color: var(--text-light);">
+                        No employees found.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -672,6 +672,9 @@ namespace FastDrop.MVC.Migrations
                     b.Property<string>("City")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("CodAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal?>("DeliveryFee")
                         .HasColumnType("decimal(10,2)");
 

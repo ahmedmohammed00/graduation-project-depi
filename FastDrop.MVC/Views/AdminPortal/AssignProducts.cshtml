@@ -1,0 +1,56 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Assign Products";
+    var allProducts = ViewBag.AllProducts as IEnumerable<FastDrop.MVC.Models.Product>;
+    var assignedProductIds = ViewBag.AssignedProductIds as List<int> ?? new List<int>();
+}
+
+<div class="table-wrap" style="padding: 24px; max-width: 800px; margin: 0 auto;">
+    <h3 class="table-title" style="margin-bottom: 20px;">Assign Products to @ViewBag.WarehouseName</h3>
+    
+    <form asp-action="AssignProducts" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="warehouseId" value="@Model.WarehouseId" />
+
+        <div style="background: #f8f9fa; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px; max-height: 400px; overflow-y: auto;">
+            @if (allProducts != null && allProducts.Any())
+            {
+                <table class="table" style="margin: 0; background: transparent; box-shadow: none;">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px; text-align: center;"></th>
+                            <th>Product</th>
+                            <th>Merchant</th>
+                            <th>Stock</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach(var product in allProducts)
+                        {
+                            bool isChecked = assignedProductIds.Contains(product.ProductId);
+                            <tr>
+                                <td style="text-align: center;">
+                                    <input type="checkbox" name="productIds" value="@product.ProductId" @(isChecked ? "checked" : "") style="width: 18px; height: 18px; cursor: pointer;" />
+                                </td>
+                                <td>@product.Name</td>
+                                <td>@(product.Merchant?.ShopName ?? "Unknown")</td>
+                                <td>@product.StockQuantity</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div style="text-align: center; color: var(--text-light); padding: 20px;">
+                    No products exist in the system yet.
+                </div>
+            }
+        </div>
+
+        <div class="form-group mt-4" style="margin-top: 24px;">
+            <button type="submit" class="btn btn-primary">Save Assignments</button>
+            <a asp-action="WarehouseDetails" asp-route-id="@Model.WarehouseId" class="btn btn-secondary" style="margin-left: 10px;">Cancel</a>
+        </div>
+    </form>
+</div>

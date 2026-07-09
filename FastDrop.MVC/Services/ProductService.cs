@@ -20,6 +20,11 @@ namespace FastDrop.MVC.Services
             return await _context.Products.Include(p => p.Merchant).ToListAsync();
         }
 
+        public async Task<IEnumerable<Product>> GetProductsByMerchantIdAsync(int merchantId)
+        {
+            return await _context.Products.Where(p => p.MerchantId == merchantId).ToListAsync();
+        }
+
         public async Task<Product?> GetProductByIdAsync(int id)
         {
             return await _context.Products

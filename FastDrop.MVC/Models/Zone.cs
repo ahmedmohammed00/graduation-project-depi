@@ -10,6 +10,7 @@ namespace FastDrop.MVC.Models
         public string? City { get; set; }
         public string? GeojsonBoundary { get; set; }
         public decimal? DeliveryFee { get; set; } = 0.00m;
+        public decimal CodAmount { get; set; } = 0.00m;
         public bool ActiveStatus { get; set; } = true;
 
         public ICollection<Address> Addresses { get; set; } = new List<Address>();

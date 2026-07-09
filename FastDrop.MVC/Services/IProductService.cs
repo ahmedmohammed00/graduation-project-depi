@@ -7,6 +7,7 @@ namespace FastDrop.MVC.Services
     public interface IProductService
     {
         Task<IEnumerable<Product>> GetProductsAsync();
+        Task<IEnumerable<Product>> GetProductsByMerchantIdAsync(int merchantId);
         Task<Product?> GetProductByIdAsync(int id);
         Task<Product?> GetProductForDeleteAsync(int id);
         Task CreateProductAsync(Product product);

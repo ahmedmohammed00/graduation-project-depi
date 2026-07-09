@@ -4,34 +4,120 @@
     
     var unassignedShipments = ViewBag.UnassignedShipments as IEnumerable<FastDrop.MVC.Models.Shipment>;
     var availableDrivers = ViewBag.AvailableDrivers as IEnumerable<FastDrop.MVC.Models.Driver>;
+    
+    var shipmentCount = unassignedShipments?.Count() ?? 0;
+    var driverCount = availableDrivers?.Count() ?? 0;
 }
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2 style="font-size: 20px; color: var(--text-dark);">Assignment Queue</h2>
-    
-    <form asp-action="SmartAssign" method="post" style="display:inline;">
-        @Html.AntiForgeryToken()
-        <button type="submit" class="btn btn-primary" title="Automatically assign shipments to drivers in matching zones">
-            <svg viewBox="0 0 24 24"><path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.48 2.54l2.6 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/></svg> 
-            Run Smart Assign
-        </button>
-    </form>
+<style>
+.dispatch-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: white; border-radius: 14px; border: 1px solid var(--border-light); padding: 20px 24px; display: flex; align-items: center; gap: 16px; animation: fadeUp .35s ease both; }
+.stat-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.stat-icon svg { width: 24px; height: 24px; fill: white; }
+.stat-icon.pending { background: linear-gradient(135deg, var(--warning), #d97706); }
+.stat-icon.drivers { background: linear-gradient(135deg, var(--success), #059669); }
+.stat-icon.smart { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+.stat-num { font-size: 28px; font-weight: 800; color: var(--text-dark); line-height: 1; }
+.stat-label { font-size: 12px; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+
+.dispatch-grid { display: grid; grid-template-columns: 5fr 3fr; gap: 20px; }
+
+.section-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 22px 14px; border-bottom: 1px solid var(--border-light); }
+.section-title { font-size: 14px; font-weight: 700; color: var(--text-dark); display: flex; align-items: center; gap: 8px; }
+.section-title .count { font-size: 11px; background: var(--border-light); color: var(--text-muted); padding: 2px 8px; border-radius: 10px; font-weight: 700; }
+
+.assign-form { display: flex; align-items: center; gap: 8px; }
+.assign-select { border: 1.5px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 12px; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-dark); outline: none; min-width: 180px; background: white; }
+.assign-select:focus { border-color: var(--primary); }
+.assign-select option.match { font-weight: 700; }
+
+.zone-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 6px; }
+.zone-tag.blue { background: var(--info-light); color: var(--info); }
+.zone-tag.green { background: var(--success-light); color: var(--success); }
+
+.driver-row { display: flex; align-items: center; gap: 12px; padding: 12px 22px; border-bottom: 1px solid var(--border-light); transition: background .15s; }
+.driver-row:last-child { border-bottom: none; }
+.driver-row:hover { background: #f9fafb; }
+.driver-avatar { width: 36px; height: 36px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 13px; flex-shrink: 0; }
+.driver-info { flex: 1; }
+.driver-name { font-size: 13px; font-weight: 700; color: var(--text-dark); }
+.driver-zone { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+.tier-badge { font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; border: 1px solid; }
+.tier-gold { background: var(--warning-light); color: var(--warning); border-color: var(--warning); }
+.tier-silver { background: #f3f4f6; color: #6b7280; border-color: #9ca3af; }
+.tier-bronze { background: #fef3c7; color: #d97706; border-color: #d97706; }
+.tier-unranked { background: var(--border-light); color: var(--text-muted); border-color: var(--border); }
+
+.empty-state { padding: 40px; text-align: center; color: var(--text-muted); }
+.empty-state svg { width: 48px; height: 48px; fill: var(--border); margin-bottom: 8px; }
+.empty-state p { font-size: 13px; margin-top: 4px; }
+
+.smart-btn { padding: 10px 22px; font-size: 13px; }
+</style>
+
+<!-- Stats Cards -->
+<div class="dispatch-stats">
+    <div class="stat-card">
+        <div class="stat-icon pending">
+            <svg viewBox="0 0 24 24"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>
+        </div>
+        <div>
+            <div class="stat-num">@shipmentCount</div>
+            <div class="stat-label">Unassigned Shipments</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon drivers">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        </div>
+        <div>
+            <div class="stat-num">@driverCount</div>
+            <div class="stat-label">Available Drivers</div>
+        </div>
+    </div>
+    <div class="stat-card" style="cursor: pointer;" onclick="document.getElementById('smartForm').submit();">
+        <div class="stat-icon smart">
+            <svg viewBox="0 0 24 24"><path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.48 2.54l2.6 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/></svg>
+        </div>
+        <div>
+            <div class="stat-num" style="font-size: 16px; color: var(--primary);">Smart Assign</div>
+            <div class="stat-label">Auto-match by zone & score</div>
+        </div>
+    </div>
 </div>
 
-<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px;">
+<form asp-action="SmartAssign" method="post" id="smartForm" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
 
-    <!-- Left Column: Shipments to assign -->
+<!-- Main Grid -->
+<div class="dispatch-grid">
+
+    <!-- Left: Unassigned Shipments -->
     <div class="table-wrap">
-        <div class="table-head">
-            <div class="table-title">Unassigned Shipments (@(unassignedShipments?.Count() ?? 0))</div>
+        <div class="section-head">
+            <div class="section-title">
+                Pending Assignment
+                <span class="count">@shipmentCount</span>
+            </div>
+            <form asp-action="SmartAssign" method="post" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-primary btn-sm smart-btn" title="Auto-assign all shipments by matching zones">
+                    <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:white;"><path d="M13 2.05v3.03c3.39.49 6 3.39 6 6.92 0 .9-.18 1.75-.48 2.54l2.6 1.53c.56-1.24.88-2.62.88-4.07 0-5.18-3.95-9.45-9-9.95zM12 19c-3.87 0-7-3.13-7-7 0-3.53 2.61-6.43 6-6.92V2.05c-5.06.5-9 4.76-9 9.95 0 5.52 4.47 10 9.99 10 3.31 0 6.24-1.61 8.06-4.09l-2.6-1.53C16.17 17.98 14.21 19 12 19z"/></svg>
+                    Run Smart Assign
+                </button>
+            </form>
         </div>
-        <div style="overflow-x:auto">
+        <div style="overflow-x:auto;">
             <table>
                 <thead>
                     <tr>
-                        <th>Shipment ID</th>
-                        <th>Destination Zone</th>
-                        <th>Assign To Driver</th>
+                        <th>Shipment</th>
+                        <th>Merchant</th>
+                        <th>Destination</th>
+                        <th>COD</th>
+                        <th>Assign To</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,32 +126,29 @@
                         foreach (var shipment in unassignedShipments)
                         {
                             <tr>
-                                <td style="font-weight:700; color:var(--text-dark)">#@shipment.ShipmentId</td>
+                                <td style="font-weight:700; color:var(--text-dark);">#@shipment.ShipmentId</td>
+                                <td>@(shipment.Merchant?.ShopName ?? shipment.Merchant?.ContactName ?? "—")</td>
                                 <td>
-                                    <span style="font-size:12px;font-weight:600;color:var(--info);background:var(--info-light);padding:3px 8px;border-radius:5px">
-                                        @(shipment.Address?.Zone?.Name ?? "Unzoned")
-                                    </span>
+                                    <div style="font-size:12px; color:var(--text-dark); font-weight:600;">@(shipment.Address?.Street ?? "—")</div>
+                                    <span class="zone-tag blue">@(shipment.Address?.Zone?.Name ?? "Unzoned")</span>
                                 </td>
+                                <td style="font-weight:700;">@shipment.CodAmount.ToString("C")</td>
                                 <td>
-                                    <form asp-action="ManualAssign" method="post" style="display: flex; gap: 8px;">
+                                    <form asp-action="ManualAssign" method="post" class="assign-form">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="shipmentId" value="@shipment.ShipmentId" />
-                                        
-                                        <select name="driverId" class="form-control" style="width: 200px;" required>
-                                            <option value="">-- Select Driver --</option>
+                                        <select name="driverId" class="assign-select" required>
+                                            <option value="">— Driver —</option>
                                             @if(availableDrivers != null)
                                             {
                                                 foreach(var driver in availableDrivers)
                                                 {
-                                                    // Highlight driver if they match the zone
-                                                    var isZoneMatch = shipment.Address?.ZoneId == driver.ZoneId;
-                                                    var driverText = $"{driver.Name} (Zone: {driver.Zone?.Name ?? "None"}){(isZoneMatch ? " - MATCH" : "")}";
-                                                    
-                                                    <option value="@driver.DriverId">@driverText</option>
+                                                    var isMatch = shipment.Address?.ZoneId == driver.ZoneId;
+                                                    var label = $"{driver.Name} ({driver.Zone?.Name ?? "None"}){(isMatch ? " ★" : "")}";
+                                                    <option value="@driver.DriverId" class="@(isMatch ? "match" : "")">@label</option>
                                                 }
                                             }
                                         </select>
-                                        
                                         <button type="submit" class="btn btn-secondary btn-sm">Assign</button>
                                     </form>
                                 </td>
@@ -75,8 +158,11 @@
                     else
                     {
                         <tr>
-                            <td colspan="3" style="text-align: center; padding: 24px; color: var(--text-muted);">
-                                All shipments are assigned. Great job!
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                                    <p>All shipments are assigned. Great job!</p>
+                                </div>
                             </td>
                         </tr>
                     }
@@ -85,66 +171,49 @@
         </div>
     </div>
 
-    <!-- Right Column: Active Drivers -->
+    <!-- Right: Available Drivers -->
     <div class="table-wrap">
-        <div class="table-head">
-            <div class="table-title">Available Drivers (@(availableDrivers?.Count() ?? 0))</div>
+        <div class="section-head">
+            <div class="section-title">
+                Available Drivers
+                <span class="count">@driverCount</span>
+            </div>
         </div>
-        <div style="overflow-x:auto">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Driver</th>
-                        <th>Assigned Zone</th>
-                        <th>Rank / Tier</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (availableDrivers != null && availableDrivers.Any())
-                    {
-                        foreach (var driver in availableDrivers)
-                        {
-                            var latestScore = driver.PerformanceScores?.OrderByDescending(ps => ps.RecordedAt).FirstOrDefault();
-                            var tier = latestScore?.Tier ?? "Unranked";
-                            var score = latestScore?.DailyScore ?? 0m;
-                            
-                            var tierColor = tier == "Gold" ? "var(--warning)" : tier == "Silver" ? "#9ca3af" : tier == "Bronze" ? "#d97706" : "var(--text-muted)";
-                            var tierBg = tier == "Gold" ? "var(--warning-light)" : tier == "Silver" ? "#f3f4f6" : tier == "Bronze" ? "#fef3c7" : "var(--border-light)";
+        @if (availableDrivers != null && availableDrivers.Any())
+        {
+            foreach (var driver in availableDrivers)
+            {
+                var latestScore = driver.PerformanceScores?.OrderByDescending(ps => ps.RecordedAt).FirstOrDefault();
+                var tier = latestScore?.Tier ?? "Unranked";
+                var score = latestScore?.DailyScore ?? 0m;
+                var tierClass = tier == "Gold" ? "tier-gold" : tier == "Silver" ? "tier-silver" : tier == "Bronze" ? "tier-bronze" : "tier-unranked";
+                var initials = string.Concat(driver.Name?.Split(' ').Select(w => w[0]) ?? new[] { '?' });
 
-                            <tr>
-                                <td>
-                                    <div style="font-weight:600; color:var(--text-dark)">@driver.Name</div>
-                                </td>
-                                <td>
-                                    <span style="font-size:12px;font-weight:600;color:var(--info);background:var(--info-light);padding:3px 8px;border-radius:5px">
-                                        @(driver.Zone?.Name ?? "None")
-                                    </span>
-                                </td>
-                                <td>
-                                    <div style="display:flex; align-items:center; gap:6px;">
-                                        <span style="font-size:11px;font-weight:700;color:@tierColor;background:@tierBg;padding:3px 8px;border-radius:5px; border: 1px solid @tierColor;">
-                                            @tier
-                                        </span>
-                                        @if(score > 0)
-                                        {
-                                            <span style="font-size:11px; font-weight:600; color:var(--text-muted)">(@score)</span>
-                                        }
-                                    </div>
-                                </td>
-                            </tr>
+                <div class="driver-row">
+                    <div class="driver-avatar">@initials</div>
+                    <div class="driver-info">
+                        <div class="driver-name">@driver.Name</div>
+                        <div class="driver-zone">
+                            <span class="zone-tag green" style="font-size:10px;">@(driver.Zone?.Name ?? "No Zone")</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="tier-badge @tierClass">@tier</span>
+                        @if(score > 0)
+                        {
+                            <div style="font-size:10px; color:var(--text-muted); text-align:center; margin-top:3px;">@score pts</div>
                         }
-                    }
-                    else
-                    {
-                        <tr>
-                            <td colspan="2" style="text-align: center; padding: 24px; color: var(--text-muted);">
-                                No available drivers.
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3z"/></svg>
+                <p>No available drivers right now.</p>
+            </div>
+        }
     </div>
 
 </div>
