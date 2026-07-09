@@ -11,5 +11,6 @@ namespace FastDrop.MVC.Services
         Task CreateEmployeeAsync(Employee employee);
         Task UpdateEmployeeAsync(Employee employee);
         Task DeleteEmployeeAsync(int id);
+        Task<IEnumerable<Role>> GetRolesAsync();
     }
 }

@@ -13,12 +13,14 @@ namespace FastDrop.MVC.Controllers
         private readonly IShipmentService _shipmentService;
         private readonly IRouteService _routeService;
         private readonly IPerformanceCalculationService _performanceService;
+        private readonly IDriverPaymentService _driverPaymentService;
 
-        public DriverPortalController(IShipmentService shipmentService, IRouteService routeService, IPerformanceCalculationService performanceService)
+        public DriverPortalController(IShipmentService shipmentService, IRouteService routeService, IPerformanceCalculationService performanceService, IDriverPaymentService driverPaymentService)
         {
             _shipmentService = shipmentService;
             _routeService = routeService;
             _performanceService = performanceService;
+            _driverPaymentService = driverPaymentService;
         }
 
         private int GetDriverId()
@@ -65,6 +67,19 @@ namespace FastDrop.MVC.Controllers
             int driverId = GetDriverId();
             var shipments = await _shipmentService.GetShipmentsAsync("Driver", null, driverId);
             return View(shipments);
+        }
+
+        public async Task<IActionResult> Payments()
+        {
+            int driverId = GetDriverId();
+            var payments = await _driverPaymentService.GetDriverPaymentsAsync();
+            var myPayments = payments.Where(p => p.DriverId == driverId).OrderByDescending(p => p.CreatedAt).ToList();
+            
+            ViewBag.TotalEarnings = myPayments.Sum(p => p.TotalPayout ?? 0);
+            ViewBag.PendingEarnings = myPayments.Where(p => p.PaymentStatus == "Pending").Sum(p => p.TotalPayout ?? 0);
+            ViewBag.PaidEarnings = myPayments.Where(p => p.PaymentStatus == "Paid").Sum(p => p.TotalPayout ?? 0);
+            
+            return View(myPayments);
         }
 
         [HttpGet]

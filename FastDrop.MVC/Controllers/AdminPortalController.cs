@@ -8,8 +8,7 @@ using FastDrop.MVC.Models;
 
 namespace FastDrop.MVC.Controllers
 {
-    // Normally [Authorize(Roles = "SuperAdmin")] but for testing we might just allow Employee
-    [Authorize(Roles = "Employee")]
+    [Authorize(Roles = "SuperAdmin")]
     public class AdminPortalController : Controller
     {
         private readonly IEmployeeService _employeeService;
@@ -58,6 +57,36 @@ namespace FastDrop.MVC.Controllers
         {
             var employees = await _employeeService.GetEmployeesAsync();
             return View(employees);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> EditEmployee(int id)
+        {
+            var employee = await _employeeService.GetEmployeeByIdAsync(id);
+            if (employee == null) return NotFound();
+
+            ViewBag.Roles = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(await _employeeService.GetRolesAsync(), "RoleId", "RoleName", employee.RoleId);
+            return View(employee);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditEmployee(int id, [Bind("EmployeeId,Name,Email,Password,RoleId,SupervisorId,AccountStatus")] Employee employee)
+        {
+            if (id != employee.EmployeeId) return NotFound();
+
+            // Ignore validation for Employee.Role navigation property
+            ModelState.Remove("Role");
+
+            if (ModelState.IsValid)
+            {
+                await _employeeService.UpdateEmployeeAsync(employee);
+                TempData["SuccessMessage"] = "Employee role updated successfully.";
+                return RedirectToAction(nameof(Employees));
+            }
+            
+            ViewBag.Roles = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(await _employeeService.GetRolesAsync(), "RoleId", "RoleName", employee.RoleId);
+            return View(employee);
         }
 
         // --- 2. Merchants ---

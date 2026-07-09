@@ -17,13 +17,19 @@ namespace FastDrop.MVC.Services
 
         public async Task<IEnumerable<DriverPayment>> GetDriverPaymentsAsync()
         {
-            return await _context.DriverPayments.Include(d => d.Driver).ToListAsync();
+            return await _context.DriverPayments
+                .Include(d => d.Driver)
+                .Include(d => d.Shipment)
+                    .ThenInclude(s => s.Address)
+                .ToListAsync();
         }
 
         public async Task<DriverPayment?> GetDriverPaymentByIdAsync(int id)
         {
             return await _context.DriverPayments
                 .Include(d => d.Driver)
+                .Include(d => d.Shipment)
+                    .ThenInclude(s => s.Address)
                 .FirstOrDefaultAsync(m => m.PaymentId == id);
         }
 

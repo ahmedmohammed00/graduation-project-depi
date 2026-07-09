@@ -78,16 +78,17 @@ namespace FastDrop.MVC.Services
 
             // 1. Check Employee Table
             var employee = await _context.Employees
+                .Include(e => e.Role)
                 .FirstOrDefaultAsync(e => e.Email == model.Email && e.Password == model.Password);
 
             if (employee != null)
             {
-                role = "Employee";
+                role = employee.Role?.RoleName ?? "Employee";
                 userId = employee.EmployeeId;
                 claims.Add(new Claim(ClaimTypes.NameIdentifier, employee.EmployeeId.ToString()));
                 claims.Add(new Claim(ClaimTypes.Name, employee.Name));
                 claims.Add(new Claim(ClaimTypes.Email, employee.Email));
-                claims.Add(new Claim(ClaimTypes.Role, "Employee"));
+                claims.Add(new Claim(ClaimTypes.Role, role));
 
                 // Check if this employee is ALSO a driver
                 var driver = await _context.Drivers

@@ -70,7 +70,13 @@ tbody td{padding:14px;font-size:14px;color:var(--text-mid);vertical-align:middle
 .sb-warning{background:var(--warning-light);color:var(--warning)}
 .sb-error{background:var(--error-light);color:var(--error)}
 
-@@media(max-width:900px){:root{--sidebar-w:0px}.sidebar{transform:translateX(-240px)}.main{margin-left:0}}
+/* ── FORMS ── */
+.form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:15px;}
+.form-group label{font-size:12px;font-weight:600;color:var(--text-mid)}
+.form-control{width:100%;border:1.5px solid var(--border);border-radius:9px;padding:10px 12px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text-dark);outline:none;transition:border-color .2s;background:white}
+.form-control:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,201,167,.1)}
+
+@media(max-width:900px){:root{--sidebar-w:0px}.sidebar{transform:translateX(-240px)}.main{margin-left:0}}
 @RenderSection("Styles", required: false)
 </style>
 </head>

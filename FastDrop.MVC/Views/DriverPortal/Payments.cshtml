@@ -1,0 +1,90 @@
+@model IEnumerable<FastDrop.MVC.Models.DriverPayment>
+@{
+    ViewData["Title"] = "My Payments";
+    ViewData["Subtitle"] = "Review your earnings and payment history";
+    Layout = "_DriverLayout";
+}
+
+<div class="summary-strip">
+    <div class="strip-card">
+        <div class="strip-icon" style="background:var(--success-light);color:var(--success)">
+            <svg viewBox="0 0 24 24" style="width:20px;fill:currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.67v-1.93c-1.71-.36-3.16-1.46-3.27-3.4h1.96c.1 1.05.82 1.87 2.65 1.87 1.96 0 2.4-.98 2.4-1.59 0-.83-.44-1.61-2.67-2.14-2.48-.6-4.18-1.62-4.18-3.67 0-1.72 1.39-2.84 3.11-3.21V4h2.67v1.95c1.86.45 2.79 1.86 2.85 3.39H14.3c-.05-1.11-.64-1.87-2.22-1.87-1.5 0-2.4.68-2.4 1.64 0 .84.65 1.39 2.67 1.91s4.18 1.39 4.18 3.91c-.01 1.83-1.38 2.83-3.12 3.16z"/></svg>
+        </div>
+        <div>
+            <div class="strip-val">@(((decimal)ViewBag.TotalEarnings).ToString("C"))</div>
+            <div class="strip-lbl">Total Earnings</div>
+        </div>
+    </div>
+    <div class="strip-card">
+        <div class="strip-icon" style="background:var(--warning-light);color:var(--warning)">
+            <svg viewBox="0 0 24 24" style="width:20px;fill:currentColor"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+        </div>
+        <div>
+            <div class="strip-val">@(((decimal)ViewBag.PendingEarnings).ToString("C"))</div>
+            <div class="strip-lbl">Pending Payments</div>
+        </div>
+    </div>
+    <div class="strip-card">
+        <div class="strip-icon" style="background:var(--info-light);color:var(--info)">
+            <svg viewBox="0 0 24 24" style="width:20px;fill:currentColor"><path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+        </div>
+        <div>
+            <div class="strip-val">@(((decimal)ViewBag.PaidEarnings).ToString("C"))</div>
+            <div class="strip-lbl">Paid Out</div>
+        </div>
+    </div>
+</div>
+
+<div class="table-wrap">
+    <div class="table-head" style="padding: 16px 20px; border-bottom: 1px solid var(--border-light);">
+        <div class="table-title" style="font-weight: 800; font-size: 15px;">Payment History</div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Shipment Destination</th>
+                    <th>Earned Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <div style="font-weight:600; color:var(--text-dark)">@item.CreatedAt.ToString("MMM dd, yyyy")</div>
+                            <div style="font-size:11px; color:var(--text-muted)">@item.CreatedAt.ToString("hh:mm tt")</div>
+                        </td>
+                        <td>
+                            @if(item.Shipment != null && item.Shipment.Address != null)
+                            {
+                                <div>@item.Shipment.Address.District, @item.Shipment.Address.Street</div>
+                                <div style="font-size:11px; color:var(--text-muted)">Shipment #@item.ShipmentId</div>
+                            }
+                            else
+                            {
+                                <div>Other Payout</div>
+                            }
+                        </td>
+                        <td><div style="font-weight:700; color:var(--text-dark)">@((item.TotalPayout ?? 0).ToString("C"))</div></td>
+                        <td>
+                            @if (item.PaymentStatus == "Paid")
+                            {
+                                <span class="s-badge sb-success">Paid</span>
+                            }
+                            else
+                            {
+                                <span class="s-badge sb-warning">Pending</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if(!Model.Any()){
+                    <tr><td colspan="4" style="text-align:center; padding: 30px;">No payments found. Finish a shipment to earn!</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

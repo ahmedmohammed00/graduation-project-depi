@@ -108,10 +108,11 @@ namespace FastDrop.MVC.Controllers
                 }
 
                 var roleClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-                if (roleClaim == "SuperAdmin" || roleClaim == "Employee") return RedirectToAction("Index", "AdminPortal");
+                if (roleClaim == "SuperAdmin") return RedirectToAction("Index", "AdminPortal");
+                if (roleClaim == "Dispatcher") return RedirectToAction("Index", "DispatcherPortal");
+                if (roleClaim == "Employee") return RedirectToAction("Index", "Home"); // General employees who don't have a specific portal
                 if (roleClaim == "Merchant") return RedirectToAction("Index", "MerchantPortal");
                 if (roleClaim == "Driver") return RedirectToAction("Index", "DriverPortal");
-                if (roleClaim == "Dispatcher") return RedirectToAction("Index", "DispatcherPortal");
 
                 return RedirectToAction("Index", "Home");
             }

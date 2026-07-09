@@ -118,12 +118,17 @@ namespace FastDrop.MVC.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ShipmentId")
+                        .HasColumnType("int");
+
                     b.Property<decimal?>("TotalPayout")
                         .HasColumnType("decimal(10,2)");
 
                     b.HasKey("PaymentId");
 
                     b.HasIndex("DriverId");
+
+                    b.HasIndex("ShipmentId");
 
                     b.ToTable("Driver_Payment", (string)null);
                 });
@@ -427,6 +432,26 @@ namespace FastDrop.MVC.Migrations
                     b.HasKey("RoleId");
 
                     b.ToTable("Role", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionsDescription = "Full access",
+                            RoleName = "SuperAdmin"
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionsDescription = "Manage shipments and drivers",
+                            RoleName = "Dispatcher"
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionsDescription = "General employee",
+                            RoleName = "Employee"
+                        });
                 });
 
             modelBuilder.Entity("FastDrop.MVC.Models.Route", b =>
@@ -726,7 +751,13 @@ namespace FastDrop.MVC.Migrations
                         .WithMany("Payments")
                         .HasForeignKey("DriverId");
 
+                    b.HasOne("FastDrop.MVC.Models.Shipment", "Shipment")
+                        .WithMany()
+                        .HasForeignKey("ShipmentId");
+
                     b.Navigation("Driver");
+
+                    b.Navigation("Shipment");
                 });
 
             modelBuilder.Entity("FastDrop.MVC.Models.DriverRoute", b =>

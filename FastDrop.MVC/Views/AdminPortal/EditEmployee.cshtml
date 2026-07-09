@@ -1,0 +1,44 @@
+@model FastDrop.MVC.Models.Employee
+
+@{
+    ViewData["Title"] = "Edit Employee Role";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="table-wrap" style="max-width: 600px; margin: 40px auto; padding: 30px;">
+    <h3 class="table-title" style="margin-bottom: 24px;">Edit Employee Role</h3>
+    
+    <form asp-action="EditEmployee" method="post">
+        <input type="hidden" asp-for="EmployeeId" />
+        <input type="hidden" asp-for="Password" />
+        <input type="hidden" asp-for="SupervisorId" />
+        <input type="hidden" asp-for="AccountStatus" />
+
+        <div class="form-group">
+            <label asp-for="Name">Full Name</label>
+            <input asp-for="Name" class="form-control" readonly style="background: var(--page-bg); border-color: var(--border-light);" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Email">Email Address</label>
+            <input asp-for="Email" class="form-control" readonly style="background: var(--page-bg); border-color: var(--border-light);" />
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RoleId">Assigned Role</label>
+            <select asp-for="RoleId" class="form-control" asp-items="ViewBag.Roles">
+                <option value="">-- Select a Role --</option>
+            </select>
+            <span asp-validation-for="RoleId" class="text-danger" style="font-size: 12px; color: var(--error); margin-top: 4px;"></span>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">
+            <a asp-action="Employees" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

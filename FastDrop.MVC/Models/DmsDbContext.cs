@@ -116,6 +116,13 @@ namespace FastDrop.MVC.Models
                 .WithMany(d => d.Feedbacks)
                 .HasForeignKey(f => f.DriverId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // Seed Roles
+            modelBuilder.Entity<Role>().HasData(
+                new Role { RoleId = 1, RoleName = "SuperAdmin", PermissionsDescription = "Full access" },
+                new Role { RoleId = 2, RoleName = "Dispatcher", PermissionsDescription = "Manage shipments and drivers" },
+                new Role { RoleId = 3, RoleName = "Employee", PermissionsDescription = "General employee" }
+            );
         }
     }
 }

@@ -205,6 +205,31 @@ namespace FastDrop.MVC.Services
                 Notes = comments
             });
 
+            // Calculate payout and insert DriverPayment
+            await _context.Entry(shipment).Reference(s => s.Address).LoadAsync();
+            decimal deliveryFee = 0;
+            if (shipment.Address != null)
+            {
+                await _context.Entry(shipment.Address).Reference(a => a.Zone).LoadAsync();
+                if (shipment.Address.Zone != null)
+                {
+                    deliveryFee = shipment.Address.Zone.DeliveryFee ?? 0;
+                }
+            }
+
+            // Driver gets 50% of the delivery fee, or minimum 15 EGP
+            decimal payout = deliveryFee > 0 ? deliveryFee * 0.5m : 15m;
+
+            _context.DriverPayments.Add(new DriverPayment
+            {
+                DriverId = driverId,
+                ShipmentId = shipmentId,
+                TotalPayout = payout,
+                DistanceKm = 0, // Distance API integration pending
+                PaymentStatus = "Pending",
+                CreatedAt = DateTime.UtcNow
+            });
+
             await _context.SaveChangesAsync();
             return (true, "Delivery successful and POD captured.");
         }

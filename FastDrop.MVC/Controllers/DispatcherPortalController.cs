@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FastDrop.MVC.Controllers
 {
-    [Authorize(Roles = "Employee")]
+    [Authorize(Roles = "Dispatcher,SuperAdmin")]
     public class DispatcherPortalController : Controller
     {
         private readonly IDispatcherService _dispatcherService;

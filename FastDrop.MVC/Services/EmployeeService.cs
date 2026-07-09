@@ -45,5 +45,9 @@ namespace FastDrop.MVC.Services
                 await _context.SaveChangesAsync();
             }
         }
+        public async Task<IEnumerable<Role>> GetRolesAsync()
+        {
+            return await _context.Roles.ToListAsync();
+        }
     }
 }
