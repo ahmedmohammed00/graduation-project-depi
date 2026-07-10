@@ -18,10 +18,13 @@
         </div>
 
         <div class="form-group">
-            <label asp-for="AddressId">Address</label>
-            <select asp-for="AddressId" class="form-control" asp-items="ViewBag.AddressId">
-                <option value="">-- Select Address --</option>
-            </select>
+            <label>Street</label>
+            <input name="street" class="form-control" placeholder="e.g. 123 Main St" value="@Model.Address?.Street" required />
+        </div>
+
+        <div class="form-group">
+            <label>District</label>
+            <input name="district" class="form-control" placeholder="e.g. Downtown" value="@Model.Address?.District" required />
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px;">

@@ -23,6 +23,7 @@ namespace FastDrop.MVC.Models
 
         public ICollection<DriverVehicle> DriverVehicles { get; set; } = new List<DriverVehicle>();
         public ICollection<DriverRoute> DriverRoutes { get; set; } = new List<DriverRoute>();
+        public ICollection<Shipment> DirectShipments { get; set; } = new List<Shipment>();
         public ICollection<ShipmentAttempt> ShipmentAttempts { get; set; } = new List<ShipmentAttempt>();
         public ICollection<Feedback> Feedbacks { get; set; } = new List<Feedback>();
         public ICollection<DriverPayment> Payments { get; set; } = new List<DriverPayment>();

@@ -241,5 +241,85 @@ namespace FastDrop.MVC.Controllers
             return View(invoice);
         }
 
+        // GET: MerchantPortal/Products
+        public async Task<IActionResult> Products()
+        {
+            int merchantId = GetMerchantId();
+            var products = await _productService.GetProductsByMerchantIdAsync(merchantId);
+            return View(products);
+        }
+
+        // GET: MerchantPortal/AddProduct
+        public IActionResult AddProduct()
+        {
+            return View();
+        }
+
+        // POST: MerchantPortal/AddProduct
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddProduct([Bind("Name,Description,Price,StockQuantity")] Product product)
+        {
+            if (ModelState.IsValid)
+            {
+                product.MerchantId = GetMerchantId();
+                await _productService.CreateMerchantProductAsync(product);
+                return RedirectToAction(nameof(Products));
+            }
+            return View(product);
+        }
+
+        // GET: MerchantPortal/EditProduct/5
+        public async Task<IActionResult> EditProduct(int id)
+        {
+            var product = await _productService.GetProductByIdAsync(id);
+            if (product == null || product.MerchantId != GetMerchantId())
+            {
+                return NotFound();
+            }
+            return View(product);
+        }
+
+        // POST: MerchantPortal/EditProduct/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProduct(int id, [Bind("ProductId,Name,Description,Price,StockQuantity,MerchantId")] Product product)
+        {
+            if (id != product.ProductId || product.MerchantId != GetMerchantId())
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                await _productService.UpdateMerchantProductAsync(product);
+                return RedirectToAction(nameof(Products));
+            }
+            return View(product);
+        }
+
+        // GET: MerchantPortal/DeleteProduct/5
+        public async Task<IActionResult> DeleteProduct(int id)
+        {
+            var product = await _productService.GetProductForDeleteAsync(id);
+            if (product == null || product.MerchantId != GetMerchantId())
+            {
+                return NotFound();
+            }
+            return View(product);
+        }
+
+        // POST: MerchantPortal/DeleteProduct/5
+        [HttpPost, ActionName("DeleteProduct")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteProductConfirmed(int id)
+        {
+            var product = await _productService.GetProductByIdAsync(id);
+            if (product != null && product.MerchantId == GetMerchantId())
+            {
+                await _productService.DeleteProductAsync(id);
+            }
+            return RedirectToAction(nameof(Products));
+        }
     }
 }

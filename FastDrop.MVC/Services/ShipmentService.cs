@@ -24,6 +24,7 @@ namespace FastDrop.MVC.Services
                 .Include(s => s.Merchant)
                 .Include(s => s.Route)
                 .Include(s => s.Warehouse)
+                .AsNoTracking()
                 .AsQueryable();
 
             if (role == "Merchant" && merchantId.HasValue)
@@ -37,7 +38,10 @@ namespace FastDrop.MVC.Services
                     .Select(dr => dr.RouteId)
                     .ToListAsync();
                 
-                query = query.Where(s => s.RouteId.HasValue && assignedRoutes.Contains(s.RouteId.Value));
+                query = query.Where(s => 
+                    (s.RouteId.HasValue && assignedRoutes.Contains(s.RouteId.Value)) || 
+                    (s.DriverId == driverId.Value)
+                );
             }
 
             return await query.ToListAsync();
@@ -115,8 +119,16 @@ namespace FastDrop.MVC.Services
 
             if (role == "Driver" && driverId.HasValue)
             {
-                var isAssigned = await _context.DriverRoutes
-                    .AnyAsync(dr => dr.DriverId == driverId.Value && dr.RouteId == shipment.RouteId);
+                bool isAssigned = false;
+                if (shipment.RouteId.HasValue)
+                {
+                    isAssigned = await _context.DriverRoutes
+                        .AnyAsync(dr => dr.DriverId == driverId.Value && dr.RouteId == shipment.RouteId);
+                }
+                else if (shipment.DriverId.HasValue)
+                {
+                    isAssigned = shipment.DriverId == driverId.Value;
+                }
                 
                 if (!isAssigned)
                 {
@@ -164,12 +176,20 @@ namespace FastDrop.MVC.Services
                 return (false, "Shipment not found.");
             }
 
-            var isAssigned = await _context.DriverRoutes
-                .AnyAsync(dr => dr.DriverId == driverId && dr.RouteId == shipment.RouteId);
+            bool isAssigned = false;
+            if (shipment.RouteId.HasValue)
+            {
+                isAssigned = await _context.DriverRoutes
+                    .AnyAsync(dr => dr.DriverId == driverId && dr.RouteId == shipment.RouteId);
+            }
+            else if (shipment.DriverId.HasValue)
+            {
+                isAssigned = shipment.DriverId == driverId;
+            }
             
             if (!isAssigned)
             {
-                return (false, "You are not assigned to this shipment's route.");
+                return (false, "You are not assigned to this shipment.");
             }
 
             // Simulate OTP verification (any OTP is considered valid for simulation)
@@ -236,22 +256,22 @@ namespace FastDrop.MVC.Services
 
         public async Task<IEnumerable<Address>> GetAddressesAsync()
         {
-            return await _context.Addresses.ToListAsync();
+            return await _context.Addresses.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<Merchant>> GetMerchantsAsync()
         {
-            return await _context.Merchants.ToListAsync();
+            return await _context.Merchants.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<Route>> GetRoutesAsync()
         {
-            return await _context.Routes.ToListAsync();
+            return await _context.Routes.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<Warehouse>> GetWarehousesAsync()
         {
-            return await _context.Warehouses.ToListAsync();
+            return await _context.Warehouses.AsNoTracking().ToListAsync();
         }
     }
 }

@@ -17,12 +17,17 @@ namespace FastDrop.MVC.Services
 
         public async Task<IEnumerable<Product>> GetProductsAsync()
         {
-            return await _context.Products.Include(p => p.Merchant).ToListAsync();
+            return await _context.Products.Include(p => p.Merchant).AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<Product>> GetProductsByMerchantIdAsync(int merchantId)
         {
-            return await _context.Products.Where(p => p.MerchantId == merchantId).ToListAsync();
+            return await _context.Products
+                .Include(p => p.ProductWarehouses)
+                    .ThenInclude(pw => pw.Warehouse)
+                .Where(p => p.MerchantId == merchantId)
+                .AsNoTracking()
+                .ToListAsync();
         }
 
         public async Task<Product?> GetProductByIdAsync(int id)
@@ -63,19 +68,52 @@ namespace FastDrop.MVC.Services
             await _context.SaveChangesAsync();
         }
 
+        public async Task CreateMerchantProductAsync(Product product)
+        {
+            _context.Add(product);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateMerchantProductAsync(Product product)
+        {
+            // Only update basic properties to avoid wiping out warehouses if they exist
+            var existing = await _context.Products.FindAsync(product.ProductId);
+            if (existing != null)
+            {
+                existing.Name = product.Name;
+                existing.Description = product.Description;
+                existing.Price = product.Price;
+                existing.StockQuantity = product.StockQuantity;
+                _context.Update(existing);
+                await _context.SaveChangesAsync();
+            }
+        }
+
         public async Task UpdateProductAsync(Product product, Dictionary<int, int> warehouseQuantities)
         {
             product.StockQuantity = warehouseQuantities.Values.Sum();
             _context.Update(product);
 
-            // Remove old warehouses mapping
-            var oldMappings = _context.ProductWarehouses.Where(pw => pw.ProductId == product.ProductId);
-            _context.ProductWarehouses.RemoveRange(oldMappings);
+            var existingMappings = await _context.ProductWarehouses
+                .Where(pw => pw.ProductId == product.ProductId)
+                .ToListAsync();
 
-            // Add new mapping
-            foreach (var wq in warehouseQuantities)
+            // Remove mappings that are no longer in the dictionary or have <= 0 quantity
+            var mappingsToRemove = existingMappings
+                .Where(em => !warehouseQuantities.ContainsKey(em.WarehouseId) || warehouseQuantities[em.WarehouseId] <= 0)
+                .ToList();
+            _context.ProductWarehouses.RemoveRange(mappingsToRemove);
+
+            // Update existing or add new
+            foreach (var wq in warehouseQuantities.Where(wq => wq.Value > 0))
             {
-                if (wq.Value > 0)
+                var existing = existingMappings.FirstOrDefault(em => em.WarehouseId == wq.Key);
+                if (existing != null)
+                {
+                    existing.Quantity = wq.Value;
+                    _context.ProductWarehouses.Update(existing);
+                }
+                else
                 {
                     _context.ProductWarehouses.Add(new ProductWarehouse
                     {
@@ -85,6 +123,7 @@ namespace FastDrop.MVC.Services
                     });
                 }
             }
+
             await _context.SaveChangesAsync();
         }
 
@@ -105,12 +144,12 @@ namespace FastDrop.MVC.Services
 
         public async Task<IEnumerable<Merchant>> GetMerchantsAsync()
         {
-            return await _context.Merchants.ToListAsync();
+            return await _context.Merchants.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<Warehouse>> GetWarehousesAsync()
         {
-            return await _context.Warehouses.ToListAsync();
+            return await _context.Warehouses.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<ProductWarehouse>> GetAllProductWarehousesAsync()
@@ -119,6 +158,7 @@ namespace FastDrop.MVC.Services
                 .Include(pw => pw.Product)
                     .ThenInclude(p => p.Merchant)
                 .Include(pw => pw.Warehouse)
+                .AsNoTracking()
                 .ToListAsync();
         }
     }

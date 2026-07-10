@@ -19,6 +19,9 @@ namespace FastDrop.MVC.Models
         public int? RouteId { get; set; }
         public Route? Route { get; set; }
 
+        public int? DriverId { get; set; }
+        public Driver? Driver { get; set; }
+
         public int? AddressId { get; set; }
         public Address? Address { get; set; }
 

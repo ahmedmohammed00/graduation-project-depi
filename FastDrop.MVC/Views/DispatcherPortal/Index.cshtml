@@ -134,11 +134,11 @@
                                 </td>
                                 <td style="font-weight:700;">@shipment.CodAmount.ToString("C")</td>
                                 <td>
-                                    <form asp-action="ManualAssign" method="post" class="assign-form">
+                                    <form asp-action="AssignToDriver" method="post" class="assign-form" style="margin-bottom: 6px;">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="shipmentId" value="@shipment.ShipmentId" />
                                         <select name="driverId" class="assign-select" required>
-                                            <option value="">— Driver —</option>
+                                            <option value="">— Direct to Driver —</option>
                                             @if(availableDrivers != null)
                                             {
                                                 foreach(var driver in availableDrivers)
@@ -150,6 +150,22 @@
                                             }
                                         </select>
                                         <button type="submit" class="btn btn-secondary btn-sm">Assign</button>
+                                    </form>
+
+                                    <form asp-action="AssignToRoute" method="post" class="assign-form">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="shipmentId" value="@shipment.ShipmentId" />
+                                        <select name="routeId" class="assign-select" required style="border-color: var(--primary);">
+                                            <option value="">— Assign to Route —</option>
+                                            @if(ViewBag.ActiveRoutes != null)
+                                            {
+                                                foreach(var route in ViewBag.ActiveRoutes)
+                                                {
+                                                    <option value="@route.RouteId">@route.RouteName</option>
+                                                }
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm">Assign</button>
                                     </form>
                                 </td>
                             </tr>

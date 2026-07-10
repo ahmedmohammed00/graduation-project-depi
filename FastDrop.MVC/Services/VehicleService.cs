@@ -17,7 +17,7 @@ namespace FastDrop.MVC.Services
 
         public async Task<IEnumerable<Vehicle>> GetVehiclesAsync()
         {
-            return await _context.Vehicles.ToListAsync();
+            return await _context.Vehicles.AsNoTracking().ToListAsync();
         }
 
         public async Task<Vehicle?> GetVehicleByIdAsync(int id)

@@ -17,7 +17,7 @@ namespace FastDrop.MVC.Services
 
         public async Task<IEnumerable<Warehouse>> GetWarehousesAsync()
         {
-            return await _context.Warehouses.Include(w => w.Address).ToListAsync();
+            return await _context.Warehouses.Include(w => w.Address).AsNoTracking().ToListAsync();
         }
 
         public async Task<Warehouse?> GetWarehouseByIdAsync(int id)

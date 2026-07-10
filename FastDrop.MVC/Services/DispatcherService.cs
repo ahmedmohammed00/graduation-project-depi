@@ -23,7 +23,14 @@ namespace FastDrop.MVC.Services
                 .Include(s => s.Address)
                     .ThenInclude(a => a.Zone)
                 .Include(s => s.Merchant)
-                .Where(s => s.RouteId == null)
+                .Where(s => s.RouteId == null && s.DriverId == null)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Route>> GetActiveRoutesAsync()
+        {
+            return await _context.Routes
+                .Where(r => r.Status == "active")
                 .ToListAsync();
         }
 
@@ -41,7 +48,7 @@ namespace FastDrop.MVC.Services
                 d.PerformanceScores.OrderByDescending(ps => ps.RecordedAt).FirstOrDefault()?.DailyScore ?? 0);
         }
 
-        public async Task<(bool IsSuccess, string Message)> AssignShipmentToDriverAsync(int shipmentId, int driverId)
+        public async Task<(bool IsSuccess, string Message)> AssignShipmentToDriverDirectlyAsync(int shipmentId, int driverId)
         {
             var shipment = await _context.Shipments.FindAsync(shipmentId);
             if (shipment == null) return (false, "Shipment not found.");
@@ -49,34 +56,9 @@ namespace FastDrop.MVC.Services
             var driver = await _context.Drivers.FindAsync(driverId);
             if (driver == null) return (false, "Driver not found.");
 
-            // Find an active route for this driver
-            var activeRouteId = await _context.DriverRoutes
-                .Where(dr => dr.DriverId == driverId && dr.Route.Status == "active")
-                .Select(dr => (int?)dr.RouteId)
-                .FirstOrDefaultAsync();
-
-            if (!activeRouteId.HasValue)
-            {
-                // Create new route
-                var newRoute = new Route
-                {
-                    RouteName = $"Route for {driver.Name} - {DateTime.UtcNow:MMM dd}",
-                    Status = "active"
-                };
-                _context.Routes.Add(newRoute);
-                await _context.SaveChangesAsync(); // save to get RouteId
-
-                _context.DriverRoutes.Add(new DriverRoute
-                {
-                    DriverId = driverId,
-                    RouteId = newRoute.RouteId,
-                    RoutePay = 0
-                });
-                
-                activeRouteId = newRoute.RouteId;
-            }
-
-            shipment.RouteId = activeRouteId.Value;
+            // Directly assign without route
+            shipment.DriverId = driverId;
+            shipment.RouteId = null; // Ensure it's not in a route
 
             // Update status
             _context.ShipmentStatuses.Add(new ShipmentStatus
@@ -87,7 +69,30 @@ namespace FastDrop.MVC.Services
             });
 
             await _context.SaveChangesAsync();
-            return (true, "Shipment successfully assigned.");
+            return (true, "Shipment successfully assigned directly to driver.");
+        }
+
+        public async Task<(bool IsSuccess, string Message)> AssignShipmentToRouteAsync(int shipmentId, int routeId)
+        {
+            var shipment = await _context.Shipments.FindAsync(shipmentId);
+            if (shipment == null) return (false, "Shipment not found.");
+
+            var route = await _context.Routes.FindAsync(routeId);
+            if (route == null) return (false, "Route not found.");
+
+            shipment.RouteId = routeId;
+            shipment.DriverId = null; // Ensure it's not directly assigned if in a route
+
+            // Update status
+            _context.ShipmentStatuses.Add(new ShipmentStatus
+            {
+                ShipmentId = shipment.ShipmentId,
+                Status = "Dispatched",
+                UpdatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            return (true, "Shipment successfully assigned to route.");
         }
 
         public async Task<int> SmartAssignShipmentsAsync()
@@ -107,7 +112,7 @@ namespace FastDrop.MVC.Services
 
                 if (matchingDriver != null)
                 {
-                    var result = await AssignShipmentToDriverAsync(shipment.ShipmentId, matchingDriver.DriverId);
+                    var result = await AssignShipmentToDriverDirectlyAsync(shipment.ShipmentId, matchingDriver.DriverId);
                     if (result.IsSuccess)
                     {
                         assignedCount++;

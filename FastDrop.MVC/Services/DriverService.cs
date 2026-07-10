@@ -21,6 +21,7 @@ namespace FastDrop.MVC.Services
                 .Include(d => d.Address)
                 .Include(d => d.Employee)
                 .Include(d => d.Zone)
+                .AsNoTracking()
                 .ToListAsync();
         }
 

@@ -113,7 +113,7 @@ tbody td{padding:14px;font-size:14px;color:var(--text-mid);vertical-align:middle
   
   <div class="sidebar-section">
     <div class="sidebar-label">System</div>
-    <a class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Warehouses" ? "active" : "")" href="@Url.Action("Warehouses", "AdminPortal")">
+    <a class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Warehouses" ? "active" : "")" href="@Url.Action("Index", "Warehouses")">
       <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm2-4h12v2H6zm14 8H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2z"/></svg></span>Warehouses
     </a>
     <a class="nav-item @(ViewContext.RouteData.Values["action"]?.ToString() == "Inventory" ? "active" : "")" href="@Url.Action("Inventory", "AdminPortal")">
