@@ -1,66 +1,110 @@
 @model FastDrop.MVC.Models.Driver
 
 @{
-    ViewData["Title"] = "Details";
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Driver Profile";
+    ViewData["Subtitle"] = "Detailed information for the selected driver";
 }
 
-<h1>Details</h1>
+<div class="row">
+    <!-- Driver Info Card -->
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body p-4 text-center">
+                <div class="mb-3">
+                    <div style="width: 80px; height: 80px; border-radius: 50%; background-color: var(--primary); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 600;">
+                        @(string.IsNullOrEmpty(Model.Name) ? "?" : Model.Name.Substring(0, 1).ToUpper())
+                    </div>
+                </div>
+                <h4 style="color: var(--text-dark); font-weight: 700;">@Model.Name</h4>
+                <p class="text-muted mb-3">ID: @Model.DriverId</p>
+                
+                <div class="mb-4">
+                    @if (Model.CurrentStatus?.ToLower() == "available")
+                    {
+                        <span class="s-badge sb-success px-3 py-2" style="font-size: 14px;">@Model.CurrentStatus</span>
+                    }
+                    else if (Model.CurrentStatus?.ToLower() == "on-route")
+                    {
+                        <span class="s-badge sb-warning px-3 py-2" style="font-size: 14px;">@Model.CurrentStatus</span>
+                    }
+                    else if (Model.CurrentStatus?.ToLower() == "inactive")
+                    {
+                        <span class="s-badge sb-danger px-3 py-2" style="font-size: 14px;">@Model.CurrentStatus</span>
+                    }
+                    else
+                    {
+                        <span class="s-badge sb-info px-3 py-2" style="font-size: 14px;">@(Model.CurrentStatus ?? "Unknown")</span>
+                    }
+                </div>
 
-<div>
-    <h4>Driver</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PhoneNumber)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PhoneNumber)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.LicenseNumber)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.LicenseNumber)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.LicenseExpiryDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.LicenseExpiryDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CurrentStatus)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CurrentStatus)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Zone)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Zone.ZoneId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Address)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Address.AddressId)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Employee)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Employee.EmployeeId)
-        </dd>
-    </dl>
+                <div class="d-flex justify-content-center gap-2 mt-4">
+                    <a asp-action="Edit" asp-route-id="@Model?.DriverId" class="btn btn-primary px-4">
+                        <i class="fas fa-edit mr-2"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Details Card -->
+    <div class="col-md-7 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h5 class="mb-0" style="color: var(--primary); font-weight: 600;">Full Details</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Phone Number</div>
+                    <div class="col-sm-8 font-weight-bold">@Model.PhoneNumber</div>
+                </div>
+                
+                <hr class="my-3" />
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">License Number</div>
+                    <div class="col-sm-8 font-weight-bold">@Model.LicenseNumber</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">License Expiry</div>
+                    <div class="col-sm-8">
+                        @Model.LicenseExpiryDate?.ToString("MMM dd, yyyy")
+                        @if (Model.LicenseExpiryDate < DateTime.Now)
+                        {
+                            <span class="text-danger ml-2"><i class="fas fa-exclamation-triangle"></i> Expired</span>
+                        }
+                    </div>
+                </div>
+
+                <hr class="my-3" />
+
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Assigned Zone</div>
+                    <div class="col-sm-8">
+                        @(Model.ZoneId.HasValue ? $"Zone #{Model.ZoneId.Value}" : "Not Assigned")
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Home Base Address</div>
+                    <div class="col-sm-8">
+                        @(Model.AddressId.HasValue ? $"Address #{Model.AddressId.Value}" : "Not Assigned")
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Linked Employee ID</div>
+                    <div class="col-sm-8">
+                        @(Model.EmployeeId.HasValue ? Model.EmployeeId.Value.ToString() : "Not Linked")
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.DriverId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<div class="mt-2">
+    <a asp-action="Index" class="btn btn-secondary px-4 py-2">
+        <i class="fas fa-arrow-left mr-2"></i> Back to Drivers
+    </a>
 </div>

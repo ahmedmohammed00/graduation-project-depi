@@ -26,7 +26,7 @@
                         <td>@merchant.Email</td>
                         <td>@merchant.Phone</td>
                         <td>
-                            <a href="#" class="btn btn-secondary">View</a>
+                            <a href="@Url.Action("MerchantDetails", "AdminPortal", new { id = merchant.MerchantId })" class="btn btn-secondary">View</a>
                         </td>
                     </tr>
                 }

@@ -53,8 +53,12 @@ namespace FastDrop.MVC.Services
                 .Include(s => s.Address)
                 .Include(s => s.Merchant)
                 .Include(s => s.Route)
+                .Include(s => s.Driver)
                 .Include(s => s.Warehouse)
                 .Include(s => s.ShipmentStatuses)
+                .Include(s => s.ShipmentAttempts)
+                .Include(s => s.ShipmentProducts)
+                    .ThenInclude(sp => sp.Product)
                 .FirstOrDefaultAsync(m => m.ShipmentId == id);
         }
 

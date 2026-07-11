@@ -18,6 +18,7 @@ namespace FastDrop.MVC.Controllers
         private readonly IWarehouseService _warehouseService;
         private readonly IZoneService _zoneService;
         private readonly IProductService _productService;
+        private readonly IShipmentService _shipmentService;
 
         public AdminPortalController(
             IEmployeeService employeeService,
@@ -26,7 +27,8 @@ namespace FastDrop.MVC.Controllers
             IMerchantService merchantService,
             IWarehouseService warehouseService,
             IZoneService zoneService,
-            IProductService productService)
+            IProductService productService,
+            IShipmentService shipmentService)
         {
             _employeeService = employeeService;
             _driverPaymentService = driverPaymentService;
@@ -35,6 +37,7 @@ namespace FastDrop.MVC.Controllers
             _warehouseService = warehouseService;
             _zoneService = zoneService;
             _productService = productService;
+            _shipmentService = shipmentService;
         }
 
         public async Task<IActionResult> Index()
@@ -94,6 +97,26 @@ namespace FastDrop.MVC.Controllers
         {
             var merchants = await _merchantService.GetMerchantsAsync();
             return View(merchants);
+        }
+
+        public async Task<IActionResult> MerchantDetails(int id)
+        {
+            var merchant = await _merchantService.GetMerchantByIdAsync(id);
+            if (merchant == null)
+            {
+                return NotFound();
+            }
+            return View(merchant);
+        }
+
+        public async Task<IActionResult> ShipmentDetails(int id)
+        {
+            var shipment = await _shipmentService.GetShipmentByIdAsync(id);
+            if (shipment == null)
+            {
+                return NotFound();
+            }
+            return View(shipment);
         }
 
         // --- 3. Invoices ---

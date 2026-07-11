@@ -43,9 +43,9 @@ namespace FastDrop.MVC.Controllers
         // GET: Drivers/Create
         public async Task<IActionResult> Create()
         {
-            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "AddressId");
-            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "EmployeeId");
-            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "ZoneId");
+            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "Street");
+            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "Name");
+            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "Name");
             return View();
         }
 
@@ -61,9 +61,9 @@ namespace FastDrop.MVC.Controllers
                 await _driverService.CreateDriverAsync(driver);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "AddressId", driver.AddressId);
-            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "EmployeeId", driver.EmployeeId);
-            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "ZoneId", driver.ZoneId);
+            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "Street", driver.AddressId);
+            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "Name", driver.EmployeeId);
+            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "Name", driver.ZoneId);
             return View(driver);
         }
 
@@ -75,9 +75,9 @@ namespace FastDrop.MVC.Controllers
             var driver = await _driverService.GetDriverByIdAsync(id.Value);
             if (driver == null) return NotFound();
             
-            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "AddressId", driver.AddressId);
-            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "EmployeeId", driver.EmployeeId);
-            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "ZoneId", driver.ZoneId);
+            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "Street", driver.AddressId);
+            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "Name", driver.EmployeeId);
+            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "Name", driver.ZoneId);
             
             var vehicles = await _driverService.GetVehiclesAsync();
             var currentVehicleId = await _driverService.GetDriverVehicleIdAsync(driver.DriverId);
@@ -110,9 +110,9 @@ namespace FastDrop.MVC.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "AddressId", driver.AddressId);
-            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "EmployeeId", driver.EmployeeId);
-            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "ZoneId", driver.ZoneId);
+            ViewData["AddressId"] = new SelectList(await _driverService.GetAddressesAsync(), "AddressId", "Street", driver.AddressId);
+            ViewData["EmployeeId"] = new SelectList(await _driverService.GetEmployeesAsync(), "EmployeeId", "Name", driver.EmployeeId);
+            ViewData["ZoneId"] = new SelectList(await _driverService.GetZonesAsync(), "ZoneId", "Name", driver.ZoneId);
             ViewData["VehicleId"] = new SelectList(await _driverService.GetVehiclesAsync(), "VehicleId", "LicensePlate", VehicleId);
             return View(driver);
         }

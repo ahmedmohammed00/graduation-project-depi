@@ -24,6 +24,8 @@ namespace FastDrop.MVC.Services
         {
             return await _context.Merchants
                 .Include(m => m.Address)
+                .Include(m => m.Shipments)
+                    .ThenInclude(s => s.Address)
                 .FirstOrDefaultAsync(m => m.MerchantId == id);
         }
 
