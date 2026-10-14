@@ -121,8 +121,7 @@ namespace FastDrop.MVC.Controllers
             return View(model);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpGet]
         public IActionResult Logout()
         {
             Response.Cookies.Delete("jwt");

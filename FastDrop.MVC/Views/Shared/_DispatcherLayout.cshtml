@@ -91,13 +91,10 @@ td{padding:13px 14px;font-size:13px;color:var(--text-mid);white-space:nowrap}
     </a>
   </div>
   <div class="sidebar-footer">
-    <form method="post" action="@Url.Action("Logout", "Account")" id="logoutForm">
-        @Html.AntiForgeryToken()
-        <a href="javascript:document.getElementById('logoutForm').submit()" class="user-card">
+        <a href="@Url.Action("Logout", "Account")" class="user-card">
           <div class="u-avatar" style="background:linear-gradient(135deg,var(--error),var(--error-light))"><svg viewBox="0 0 24 24" style="width:14px;fill:white"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg></div>
           <div style="flex:1"><div class="u-name">@User.Identity.Name</div><div class="u-role">Sign out</div></div>
         </a>
-    </form>
   </div>
 </aside>
 
