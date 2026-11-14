@@ -1,0 +1,61 @@
+@model FastDrop.MVC.Models.Warehouse
+@using FastDrop.MVC.Models
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Warehouse Stock";
+    var assignedProducts = ViewBag.AssignedProducts as IEnumerable<ProductWarehouse>;
+}
+
+<div class="table-wrap" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 class="table-title" style="margin: 0;">Stock for: @Model.WarehouseName</h3>
+        <a asp-action="AssignProducts" asp-route-id="@Model.WarehouseId" class="btn btn-primary">Assign/Manage Products</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Merchant Owner</th>
+                <th>Price</th>
+                <th>Current Stock Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(assignedProducts != null && assignedProducts.Any())
+            {
+                foreach(var pw in assignedProducts)
+                {
+                    <tr>
+                        <td>@pw.Product.Name</td>
+                        <td>@(pw.Product.Merchant?.ShopName ?? "Unknown")</td>
+                        <td>@pw.Product.Price.ToString("C")</td>
+                        <td>
+                            <span style="padding: 4px 8px; border-radius: 4px; background: var(--primary-light); color: var(--primary-dark); font-weight: 600;">
+                                @pw.Product.StockQuantity
+                            </span>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-center" style="padding: 40px; color: var(--text-light);">
+                        No products assigned to this warehouse yet.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    <div style="margin-top: 20px;">
+        <a asp-action="Warehouses" class="btn btn-secondary">Back to Warehouses</a>
+    </div>
+</div>

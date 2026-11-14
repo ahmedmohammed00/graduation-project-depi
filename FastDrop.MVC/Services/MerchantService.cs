@@ -17,13 +17,15 @@ namespace FastDrop.MVC.Services
 
         public async Task<IEnumerable<Merchant>> GetMerchantsAsync()
         {
-            return await _context.Merchants.Include(m => m.Address).ToListAsync();
+            return await _context.Merchants.Include(m => m.Address).AsNoTracking().ToListAsync();
         }
 
         public async Task<Merchant?> GetMerchantByIdAsync(int id)
         {
             return await _context.Merchants
                 .Include(m => m.Address)
+                .Include(m => m.Shipments)
+                    .ThenInclude(s => s.Address)
                 .FirstOrDefaultAsync(m => m.MerchantId == id);
         }
 

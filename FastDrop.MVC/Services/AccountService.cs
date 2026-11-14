@@ -26,13 +26,15 @@ namespace FastDrop.MVC.Services
 
         public async Task CreateUserAsync(SignupViewModel model)
         {
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(model.Password);
+
             if (model.Role == "dispatcher" || model.Role == "driver")
             {
                 var employee = new Employee
                 {
                     Name = model.FullName,
                     Email = model.Email,
-                    Password = model.Password,
+                    Password = hashedPassword,
                     AccountStatus = "active"
                 };
 
@@ -60,7 +62,7 @@ namespace FastDrop.MVC.Services
                     ShopName = model.ShopName,
                     ContactName = model.FullName,
                     Email = model.Email,
-                    Password = model.Password,
+                    Password = hashedPassword,
                     Phone = model.Phone,
                     Status = "active"
                 };
@@ -74,47 +76,86 @@ namespace FastDrop.MVC.Services
         {
             var claims = new List<Claim>();
             string? role = null;
-            int? userId = null;
 
             // 1. Check Employee Table
             var employee = await _context.Employees
-                .FirstOrDefaultAsync(e => e.Email == model.Email && e.Password == model.Password);
+                .Include(e => e.Role)
+                .FirstOrDefaultAsync(e => e.Email == model.Email);
 
             if (employee != null)
             {
-                role = "Employee";
-                userId = employee.EmployeeId;
-                claims.Add(new Claim(ClaimTypes.NameIdentifier, employee.EmployeeId.ToString()));
-                claims.Add(new Claim(ClaimTypes.Name, employee.Name));
-                claims.Add(new Claim(ClaimTypes.Email, employee.Email));
-                claims.Add(new Claim(ClaimTypes.Role, "Employee"));
-
-                // Check if this employee is ALSO a driver
-                var driver = await _context.Drivers
-                    .FirstOrDefaultAsync(d => d.EmployeeId == employee.EmployeeId);
-                
-                if (driver != null)
+                bool isValid = false;
+                try
                 {
-                    claims.Add(new Claim(ClaimTypes.Role, "Driver"));
-                    // Store DriverId in a custom claim so we can easily look it up
-                    claims.Add(new Claim("DriverId", driver.DriverId.ToString()));
+                    isValid = BCrypt.Net.BCrypt.Verify(model.Password, employee.Password);
+                }
+                catch (BCrypt.Net.SaltParseException)
+                {
+                    // Fallback to plain text check for legacy passwords
+                    if (employee.Password == model.Password)
+                    {
+                        isValid = true;
+                        // Seamless upgrade: Hash and save the password immediately
+                        employee.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
+                if (isValid)
+                {
+                    role = employee.Role?.RoleName ?? "Employee";
+                    claims.Add(new Claim(ClaimTypes.NameIdentifier, employee.EmployeeId.ToString()));
+                    claims.Add(new Claim(ClaimTypes.Name, employee.Name));
+                    claims.Add(new Claim(ClaimTypes.Email, employee.Email));
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+
+                    // Check if this employee is ALSO a driver
+                    var driver = await _context.Drivers
+                        .FirstOrDefaultAsync(d => d.EmployeeId == employee.EmployeeId);
+                    
+                    if (driver != null)
+                    {
+                        claims.Add(new Claim(ClaimTypes.Role, "Driver"));
+                        // Store DriverId in a custom claim so we can easily look it up
+                        claims.Add(new Claim("DriverId", driver.DriverId.ToString()));
+                    }
                 }
             }
-            else
+
+            if (role == null)
             {
                 // 2. Check Merchant Table
                 var merchant = await _context.Merchants
-                    .FirstOrDefaultAsync(m => m.Email == model.Email && m.Password == model.Password);
+                    .FirstOrDefaultAsync(m => m.Email == model.Email);
 
                 if (merchant != null)
                 {
-                    role = "Merchant";
-                    userId = merchant.MerchantId;
-                    claims.Add(new Claim(ClaimTypes.NameIdentifier, merchant.MerchantId.ToString()));
-                    claims.Add(new Claim(ClaimTypes.Name, merchant.ShopName));
-                    claims.Add(new Claim(ClaimTypes.Email, merchant.Email));
-                    claims.Add(new Claim(ClaimTypes.Role, "Merchant"));
-                    claims.Add(new Claim("MerchantId", merchant.MerchantId.ToString()));
+                    bool isValid = false;
+                    try
+                    {
+                        isValid = BCrypt.Net.BCrypt.Verify(model.Password, merchant.Password);
+                    }
+                    catch (BCrypt.Net.SaltParseException)
+                    {
+                        // Fallback to plain text check for legacy passwords
+                        if (merchant.Password == model.Password)
+                        {
+                            isValid = true;
+                            // Seamless upgrade: Hash and save the password immediately
+                            merchant.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
+                            await _context.SaveChangesAsync();
+                        }
+                    }
+
+                    if (isValid)
+                    {
+                        role = "Merchant";
+                        claims.Add(new Claim(ClaimTypes.NameIdentifier, merchant.MerchantId.ToString()));
+                        claims.Add(new Claim(ClaimTypes.Name, merchant.ShopName));
+                        claims.Add(new Claim(ClaimTypes.Email, merchant.Email));
+                        claims.Add(new Claim(ClaimTypes.Role, "Merchant"));
+                        claims.Add(new Claim("MerchantId", merchant.MerchantId.ToString()));
+                    }
                 }
             }
 

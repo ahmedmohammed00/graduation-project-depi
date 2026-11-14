@@ -107,6 +107,13 @@ namespace FastDrop.MVC.Controllers
                     return Redirect(returnUrl);
                 }
 
+                var roleClaim = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
+                if (roleClaim == "SuperAdmin") return RedirectToAction("Index", "AdminPortal");
+                if (roleClaim == "Dispatcher") return RedirectToAction("Index", "DispatcherPortal");
+                if (roleClaim == "Employee") return RedirectToAction("Index", "Home"); // General employees who don't have a specific portal
+                if (roleClaim == "Merchant") return RedirectToAction("Index", "MerchantPortal");
+                if (roleClaim == "Driver") return RedirectToAction("Index", "DriverPortal");
+
                 return RedirectToAction("Index", "Home");
             }
 
@@ -114,8 +121,7 @@ namespace FastDrop.MVC.Controllers
             return View(model);
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [HttpGet]
         public IActionResult Logout()
         {
             Response.Cookies.Delete("jwt");

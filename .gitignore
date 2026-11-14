@@ -480,3 +480,22 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# ===== Project-specific =====
+
+# Publish output (deployment builds)
+publish_*/
+**/publish_*/
+
+# Binary archives – don't track large compressed files
+*.rar
+*.zip
+
+# Office documents (keep markdown docs only)
+*.docx
+
+# Deployment guide zip
+FastDrop_Deploy.zip
+
+# Solution file generated outside the project folder
+FastDrop.slnx

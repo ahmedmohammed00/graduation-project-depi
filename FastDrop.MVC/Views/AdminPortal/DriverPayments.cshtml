@@ -1,0 +1,78 @@
+@model IEnumerable<FastDrop.MVC.Models.DriverPayment>
+@{
+    ViewData["Title"] = "Driver Payments";
+    ViewData["Subtitle"] = "Review & update driver payments";
+    Layout = "_AdminLayout";
+}
+
+<div class="table-wrap">
+    <div class="table-head">
+        <div class="table-title">Recent Payments</div>
+    </div>
+    <div style="overflow-x:auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Payment ID</th>
+                    <th>Driver</th>
+                    <th>Shipment</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td><div style="font-weight:700; color:var(--text-dark)">#PAY-@item.PaymentId</div></td>
+                        <td>
+                            <div style="font-weight:600; color:var(--text-dark)">@item.Driver?.Name</div>
+                        </td>
+                        <td>
+                            @if(item.Shipment != null && item.Shipment.Address != null)
+                            {
+                                <div>@item.Shipment.Address.District, @item.Shipment.Address.Street</div>
+                                <div style="font-size:11px; color:var(--text-muted)">Shipment #@item.ShipmentId</div>
+                            }
+                            else
+                            {
+                                <div><span style="color:var(--text-muted)">-</span></div>
+                            }
+                        </td>
+                        <td>@item.CreatedAt.ToString("MMM dd, yyyy")</td>
+                        <td><div style="font-weight:700; color:var(--text-dark)">@((item.TotalPayout ?? 0).ToString("C"))</div></td>
+                        <td>
+                            @if (item.PaymentStatus == "Paid")
+                            {
+                                <span class="s-badge sb-success">Paid</span>
+                            }
+                            else
+                            {
+                                <span class="s-badge sb-warning">Pending</span>
+                            }
+                        </td>
+                        <td>
+                            @if (item.PaymentStatus != "Paid")
+                            {
+                                <form method="post" action="@Url.Action("MarkPaymentPaid", "AdminPortal")" style="margin:0;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@item.PaymentId" />
+                                    <button type="submit" class="btn btn-sm btn-primary">Mark Paid</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span style="font-size:12px; color:var(--text-muted);">-</span>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if(!Model.Any()){
+                    <tr><td colspan="7" style="text-align:center; padding: 30px;">No payments found.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

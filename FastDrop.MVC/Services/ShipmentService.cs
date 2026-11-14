@@ -24,6 +24,7 @@ namespace FastDrop.MVC.Services
                 .Include(s => s.Merchant)
                 .Include(s => s.Route)
                 .Include(s => s.Warehouse)
+                .AsNoTracking()
                 .AsQueryable();
 
             if (role == "Merchant" && merchantId.HasValue)
@@ -37,7 +38,10 @@ namespace FastDrop.MVC.Services
                     .Select(dr => dr.RouteId)
                     .ToListAsync();
                 
-                query = query.Where(s => s.RouteId.HasValue && assignedRoutes.Contains(s.RouteId.Value));
+                query = query.Where(s => 
+                    (s.RouteId.HasValue && assignedRoutes.Contains(s.RouteId.Value)) || 
+                    (s.DriverId == driverId.Value)
+                );
             }
 
             return await query.ToListAsync();
@@ -49,8 +53,12 @@ namespace FastDrop.MVC.Services
                 .Include(s => s.Address)
                 .Include(s => s.Merchant)
                 .Include(s => s.Route)
+                .Include(s => s.Driver)
                 .Include(s => s.Warehouse)
                 .Include(s => s.ShipmentStatuses)
+                .Include(s => s.ShipmentAttempts)
+                .Include(s => s.ShipmentProducts)
+                    .ThenInclude(sp => sp.Product)
                 .FirstOrDefaultAsync(m => m.ShipmentId == id);
         }
 
@@ -115,8 +123,16 @@ namespace FastDrop.MVC.Services
 
             if (role == "Driver" && driverId.HasValue)
             {
-                var isAssigned = await _context.DriverRoutes
-                    .AnyAsync(dr => dr.DriverId == driverId.Value && dr.RouteId == shipment.RouteId);
+                bool isAssigned = false;
+                if (shipment.RouteId.HasValue)
+                {
+                    isAssigned = await _context.DriverRoutes
+                        .AnyAsync(dr => dr.DriverId == driverId.Value && dr.RouteId == shipment.RouteId);
+                }
+                else if (shipment.DriverId.HasValue)
+                {
+                    isAssigned = shipment.DriverId == driverId.Value;
+                }
                 
                 if (!isAssigned)
                 {
@@ -156,24 +172,110 @@ namespace FastDrop.MVC.Services
             return (true, false);
         }
 
+        public async Task<(bool IsSuccess, string Message)> SubmitPodAsync(int shipmentId, int driverId, string otpCode, string? comments)
+        {
+            var shipment = await _context.Shipments.FindAsync(shipmentId);
+            if (shipment == null)
+            {
+                return (false, "Shipment not found.");
+            }
+
+            bool isAssigned = false;
+            if (shipment.RouteId.HasValue)
+            {
+                isAssigned = await _context.DriverRoutes
+                    .AnyAsync(dr => dr.DriverId == driverId && dr.RouteId == shipment.RouteId);
+            }
+            else if (shipment.DriverId.HasValue)
+            {
+                isAssigned = shipment.DriverId == driverId;
+            }
+            
+            if (!isAssigned)
+            {
+                return (false, "You are not assigned to this shipment.");
+            }
+
+            // Simulate OTP verification (any OTP is considered valid for simulation)
+            if (string.IsNullOrWhiteSpace(otpCode))
+            {
+                return (false, "OTP code is required.");
+            }
+
+            _context.ShipmentStatuses.Add(new ShipmentStatus
+            {
+                Shipment = shipment,
+                Status = "Delivered",
+                UpdatedAt = DateTime.UtcNow
+            });
+
+            var attempt = new ShipmentAttempt
+            {
+                Shipment = shipment,
+                DriverId = driverId,
+                AttemptNumber = 1,
+                Status = "Success",
+                OtpCode = otpCode,
+                AttemptTime = DateTime.UtcNow
+            };
+
+            _context.ShipmentAttempts.Add(attempt);
+
+            _context.PodEvidences.Add(new PodEvidence
+            {
+                ShipmentAttempt = attempt,
+                PhotoUrl = "/assets/simulated-pod.png", // Simulated POD
+                OtpVerified = true,
+                Notes = comments
+            });
+
+            // Calculate payout and insert DriverPayment
+            await _context.Entry(shipment).Reference(s => s.Address).LoadAsync();
+            decimal deliveryFee = 0;
+            if (shipment.Address != null)
+            {
+                await _context.Entry(shipment.Address).Reference(a => a.Zone).LoadAsync();
+                if (shipment.Address.Zone != null)
+                {
+                    deliveryFee = shipment.Address.Zone.DeliveryFee ?? 0;
+                }
+            }
+
+            // Driver gets 50% of the delivery fee, or minimum 15 EGP
+            decimal payout = deliveryFee > 0 ? deliveryFee * 0.5m : 15m;
+
+            _context.DriverPayments.Add(new DriverPayment
+            {
+                DriverId = driverId,
+                ShipmentId = shipmentId,
+                TotalPayout = payout,
+                DistanceKm = 0, // Distance API integration pending
+                PaymentStatus = "Pending",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            return (true, "Delivery successful and POD captured.");
+        }
+
         public async Task<IEnumerable<Address>> GetAddressesAsync()
         {
-            return await _context.Addresses.ToListAsync();
+            return await _context.Addresses.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<Merchant>> GetMerchantsAsync()
         {
-            return await _context.Merchants.ToListAsync();
+            return await _context.Merchants.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<Route>> GetRoutesAsync()
         {
-            return await _context.Routes.ToListAsync();
+            return await _context.Routes.AsNoTracking().ToListAsync();
         }
 
         public async Task<IEnumerable<Warehouse>> GetWarehousesAsync()
         {
-            return await _context.Warehouses.ToListAsync();
+            return await _context.Warehouses.AsNoTracking().ToListAsync();
         }
     }
 }

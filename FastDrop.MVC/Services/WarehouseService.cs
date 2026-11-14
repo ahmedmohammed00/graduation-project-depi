@@ -17,7 +17,7 @@ namespace FastDrop.MVC.Services
 
         public async Task<IEnumerable<Warehouse>> GetWarehousesAsync()
         {
-            return await _context.Warehouses.Include(w => w.Address).ToListAsync();
+            return await _context.Warehouses.Include(w => w.Address).AsNoTracking().ToListAsync();
         }
 
         public async Task<Warehouse?> GetWarehouseByIdAsync(int id)
@@ -63,7 +63,65 @@ namespace FastDrop.MVC.Services
 
         public async Task<IEnumerable<Address>> GetAddressesAsync()
         {
-            return await _context.Addresses.ToListAsync();
+            return await _context.Addresses.Include(a => a.Zone).ToListAsync();
+        }
+
+        public async Task<Address?> GetAddressByIdAsync(int id)
+        {
+            return await _context.Addresses.Include(a => a.Zone).FirstOrDefaultAsync(a => a.AddressId == id);
+        }
+
+        public async Task CreateAddressAsync(Address address)
+        {
+            _context.Addresses.Add(address);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAddressAsync(Address address)
+        {
+            _context.Addresses.Update(address);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAddressAsync(int id)
+        {
+            var address = await _context.Addresses.FindAsync(id);
+            if (address != null)
+            {
+                _context.Addresses.Remove(address);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<IEnumerable<ProductWarehouse>> GetProductsForWarehouseAsync(int warehouseId)
+        {
+            return await _context.ProductWarehouses
+                .Include(pw => pw.Product)
+                .ThenInclude(p => p.Merchant)
+                .Where(pw => pw.WarehouseId == warehouseId)
+                .ToListAsync();
+        }
+
+        public async Task AssignProductsToWarehouseAsync(int warehouseId, IEnumerable<int> productIds)
+        {
+            // Remove existing associations not in the new list (or just remove all and add new)
+            var existing = await _context.ProductWarehouses.Where(pw => pw.WarehouseId == warehouseId).ToListAsync();
+            _context.ProductWarehouses.RemoveRange(existing);
+
+            // Add new associations
+            if (productIds != null && productIds.Any())
+            {
+                foreach (var pid in productIds)
+                {
+                    _context.ProductWarehouses.Add(new ProductWarehouse
+                    {
+                        WarehouseId = warehouseId,
+                        ProductId = pid
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

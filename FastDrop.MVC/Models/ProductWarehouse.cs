@@ -10,5 +10,7 @@ namespace FastDrop.MVC.Models
 
         public int WarehouseId { get; set; }
         public Warehouse Warehouse { get; set; } = null!;
+
+        public int Quantity { get; set; } = 0;
     }
 }

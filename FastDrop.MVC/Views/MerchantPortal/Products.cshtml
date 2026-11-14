@@ -1,0 +1,65 @@
+@model IEnumerable<FastDrop.MVC.Models.Product>
+
+@{
+    Layout = "_MerchantLayout";
+    ViewData["Title"] = "My Products";
+}
+
+<div class="table-wrap" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 class="table-title" style="margin: 0;">My Products</h3>
+        <a asp-action="AddProduct" class="btn btn-primary">+ Add New Product</a>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Price (EGP)</th>
+                <th>Stock Quantity</th>
+                <th>Locations</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(Model != null && Model.Any())
+            {
+                foreach(var product in Model)
+                {
+                    <tr>
+                        <td>@product.Name</td>
+                        <td>@product.Price.ToString("C")</td>
+                        <td>@product.StockQuantity</td>
+                        <td>
+                            @if (product.ProductWarehouses != null && product.ProductWarehouses.Any())
+                            {
+                                <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 13px;">
+                                @foreach(var pw in product.ProductWarehouses)
+                                {
+                                    <li>@pw.Warehouse.WarehouseName: <strong>@pw.Quantity</strong></li>
+                                }
+                                </ul>
+                            }
+                            else
+                            {
+                                <span style="display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; background-color: var(--warning); color: var(--background);">Pending Admin Assignment</span>
+                            }
+                        </td>
+                        <td>
+                            <a asp-action="EditProduct" asp-route-id="@product.ProductId" class="btn btn-secondary">Edit</a>
+                            <a asp-action="DeleteProduct" asp-route-id="@product.ProductId" class="btn btn-danger" style="margin-left: 4px; background-color: var(--error);">Delete</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="5" class="text-center" style="padding: 40px; color: var(--text-light);">
+                        No products found. Start by adding a new product.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
 using FastDrop.MVC.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FastDrop.MVC.Controllers
 {
+    [Authorize(Roles = "SuperAdmin")]
     public class WarehousesController : Controller
     {
         private readonly IWarehouseService _warehouseService;
@@ -52,14 +54,14 @@ namespace FastDrop.MVC.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("WarehouseId,WarehouseName,AddressId")] Warehouse warehouse)
+        public async Task<IActionResult> Create([Bind("WarehouseId,WarehouseName")] Warehouse warehouse, string district, string street)
         {
             if (ModelState.IsValid)
             {
+                warehouse.Address = new Address { District = district, Street = street };
                 await _warehouseService.CreateWarehouseAsync(warehouse);
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(await _warehouseService.GetAddressesAsync(), "AddressId", "AddressId", warehouse.AddressId);
             return View(warehouse);
         }
 
@@ -85,7 +87,7 @@ namespace FastDrop.MVC.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("WarehouseId,WarehouseName,AddressId")] Warehouse warehouse)
+        public async Task<IActionResult> Edit(int id, [Bind("WarehouseId,WarehouseName,AddressId")] Warehouse warehouse, string district, string street)
         {
             if (id != warehouse.WarehouseId)
             {
@@ -96,6 +98,14 @@ namespace FastDrop.MVC.Controllers
             {
                 try
                 {
+                    if (warehouse.AddressId.HasValue)
+                    {
+                        warehouse.Address = new Address { AddressId = warehouse.AddressId.Value, District = district, Street = street };
+                    }
+                    else
+                    {
+                        warehouse.Address = new Address { District = district, Street = street };
+                    }
                     await _warehouseService.UpdateWarehouseAsync(warehouse);
                 }
                 catch (DbUpdateConcurrencyException)
@@ -111,7 +121,6 @@ namespace FastDrop.MVC.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AddressId"] = new SelectList(await _warehouseService.GetAddressesAsync(), "AddressId", "AddressId", warehouse.AddressId);
             return View(warehouse);
         }
 

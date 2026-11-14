@@ -1,0 +1,20 @@
+@model FastDrop.MVC.Models.Product
+
+@{
+    Layout = "_MerchantLayout";
+    ViewData["Title"] = "Delete Product";
+}
+
+<div class="table-wrap" style="padding: 24px; max-width: 600px; margin: 0 auto; text-align: center;">
+    <h3 class="table-title" style="color: var(--error);">Delete Product</h3>
+    <p>Are you sure you want to delete <strong>@Model.Name</strong>?</p>
+    <p style="color: var(--text-light); font-size: 14px;">This action cannot be undone.</p>
+    
+    <form asp-action="DeleteProduct" method="post" style="margin-top: 24px;">
+        <input type="hidden" asp-for="ProductId" />
+        @Html.AntiForgeryToken()
+        
+        <button type="submit" class="btn btn-danger" style="background-color: var(--error);">Yes, Delete</button>
+        <a asp-action="Products" class="btn btn-secondary" style="margin-left: 10px;">Cancel</a>
+    </form>
+</div>

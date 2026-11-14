@@ -1,0 +1,175 @@
+@model FastDrop.MVC.Models.Shipment
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Shipment Details";
+    ViewData["Subtitle"] = $"Details for Shipment #SHP-{Model.ShipmentId}";
+    
+    var currentStatus = Model.ShipmentStatuses?.OrderByDescending(s => s.UpdatedAt).FirstOrDefault()?.Status ?? "Pending";
+}
+
+<div class="row">
+    <!-- Main Shipment Details -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0" style="color: var(--primary); font-weight: 600;">Shipment #SHP-@Model.ShipmentId</h5>
+                <span class="s-badge @(currentStatus == "Delivered" ? "sb-success" : currentStatus == "Pending" ? "sb-warning" : "sb-info")">
+                    @currentStatus
+                </span>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Created At</div>
+                    <div class="col-sm-8 font-weight-bold">@Model.CreationDate.ToString("MMM dd, yyyy HH:mm")</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">Weight</div>
+                    <div class="col-sm-8">@Model.WeightKg kg</div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-sm-4 text-muted">COD Amount</div>
+                    <div class="col-sm-8" style="font-weight: 700; color: var(--text-dark);">@Model.CodAmount.ToString("C")</div>
+                </div>
+                
+                <hr />
+                
+                <h6 class="mb-3">Destination Address</h6>
+                @if (Model.Address != null)
+                {
+                    <p class="mb-1"><strong>District:</strong> @Model.Address.District</p>
+                    <p class="mb-1"><strong>Street:</strong> @Model.Address.Street</p>
+                    @if(Model.Address.Latitude != null && Model.Address.Longitude != null)
+                    {
+                        <p class="mb-1 text-muted"><small>Coordinates: @Model.Address.Latitude, @Model.Address.Longitude</small></p>
+                    }
+                }
+                else
+                {
+                    <p class="text-muted">No destination address provided.</p>
+                }
+                
+                <hr />
+                
+                <h6 class="mb-3">Assigned Entities</h6>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <strong>Merchant:</strong>
+                        @if (Model.Merchant != null)
+                        {
+                            <a href="@Url.Action("MerchantDetails", "AdminPortal", new { id = Model.MerchantId })" style="color: var(--primary);">@Model.Merchant.ShopName</a>
+                        }
+                        else
+                        {
+                            <span class="text-muted">None</span>
+                        }
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Driver:</strong>
+                        @if (Model.Driver != null)
+                        {
+                            <span>@Model.Driver.Name</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">Unassigned</span>
+                        }
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <strong>Warehouse:</strong>
+                        @if (Model.Warehouse != null)
+                        {
+                            <span>@Model.Warehouse.WarehouseName</span>
+                        }
+                        else
+                        {
+                            <span class="text-muted">None</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products inside the shipment -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white border-0 pt-4 pb-0">
+                <h6 class="mb-0">Included Products</h6>
+            </div>
+            <div class="card-body">
+                @if (Model.ShipmentProducts != null && Model.ShipmentProducts.Any())
+                {
+                    <ul class="list-group list-group-flush">
+                        @foreach (var sp in Model.ShipmentProducts)
+                        {
+                            <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <h6 class="my-0">@(sp.Product?.Name ?? "Unknown Product")</h6>
+                                </div>
+                                <span class="badge badge-primary badge-pill" style="background-color: var(--primary);">Qty: @sp.Quantity</span>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted text-center mt-4">No products are associated with this shipment.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delivery Attempts -->
+<div class="row mt-2">
+    <div class="col-12">
+        <div class="table-wrap">
+            <div class="table-head">
+                <div class="table-title">Delivery Attempts</div>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>Attempt #</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.ShipmentAttempts != null && Model.ShipmentAttempts.Any())
+                        {
+                            foreach (var attempt in Model.ShipmentAttempts.OrderBy(a => a.AttemptNumber))
+                            {
+                                <tr>
+                                    <td>@attempt.AttemptNumber</td>
+                                    <td>@attempt.AttemptTime.ToString("MMM dd, HH:mm")</td>
+                                    <td>
+                                        <span class="s-badge @(attempt.Status == "Success" ? "sb-success" : attempt.Status == "Failed" ? "sb-danger" : "sb-warning")">
+                                            @attempt.Status
+                                        </span>
+                                    </td>
+                                    <td>@(string.IsNullOrEmpty(attempt.Reason) ? "-" : attempt.Reason)</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-muted" style="padding: 20px;">
+                                    No delivery attempts logged yet.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="javascript:history.back()" class="btn btn-secondary px-4 py-2">Back</a>
+</div>

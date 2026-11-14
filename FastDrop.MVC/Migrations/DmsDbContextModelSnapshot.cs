@@ -114,12 +114,21 @@ namespace FastDrop.MVC.Migrations
                     b.Property<int?>("DriverId")
                         .HasColumnType("int");
 
+                    b.Property<string>("PaymentStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ShipmentId")
+                        .HasColumnType("int");
+
                     b.Property<decimal?>("TotalPayout")
                         .HasColumnType("decimal(10,2)");
 
                     b.HasKey("PaymentId");
 
                     b.HasIndex("DriverId");
+
+                    b.HasIndex("ShipmentId");
 
                     b.ToTable("Driver_Payment", (string)null);
                 });
@@ -398,6 +407,9 @@ namespace FastDrop.MVC.Migrations
                     b.Property<int>("WarehouseId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
                     b.HasKey("ProductId", "WarehouseId");
 
                     b.HasIndex("WarehouseId");
@@ -423,6 +435,26 @@ namespace FastDrop.MVC.Migrations
                     b.HasKey("RoleId");
 
                     b.ToTable("Role", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            RoleId = 1,
+                            PermissionsDescription = "Full access",
+                            RoleName = "SuperAdmin"
+                        },
+                        new
+                        {
+                            RoleId = 2,
+                            PermissionsDescription = "Manage shipments and drivers",
+                            RoleName = "Dispatcher"
+                        },
+                        new
+                        {
+                            RoleId = 3,
+                            PermissionsDescription = "General employee",
+                            RoleName = "Employee"
+                        });
                 });
 
             modelBuilder.Entity("FastDrop.MVC.Models.Route", b =>
@@ -491,6 +523,9 @@ namespace FastDrop.MVC.Migrations
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("DriverId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("MerchantId")
                         .HasColumnType("int");
 
@@ -506,6 +541,8 @@ namespace FastDrop.MVC.Migrations
                     b.HasKey("ShipmentId");
 
                     b.HasIndex("AddressId");
+
+                    b.HasIndex("DriverId");
 
                     b.HasIndex("MerchantId");
 
@@ -668,6 +705,9 @@ namespace FastDrop.MVC.Migrations
                     b.Property<string>("City")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("CodAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal?>("DeliveryFee")
                         .HasColumnType("decimal(10,2)");
 
@@ -719,7 +759,13 @@ namespace FastDrop.MVC.Migrations
                         .WithMany("Payments")
                         .HasForeignKey("DriverId");
 
+                    b.HasOne("FastDrop.MVC.Models.Shipment", "Shipment")
+                        .WithMany()
+                        .HasForeignKey("ShipmentId");
+
                     b.Navigation("Driver");
+
+                    b.Navigation("Shipment");
                 });
 
             modelBuilder.Entity("FastDrop.MVC.Models.DriverRoute", b =>
@@ -889,6 +935,10 @@ namespace FastDrop.MVC.Migrations
                         .WithMany("Shipments")
                         .HasForeignKey("AddressId");
 
+                    b.HasOne("FastDrop.MVC.Models.Driver", "Driver")
+                        .WithMany("DirectShipments")
+                        .HasForeignKey("DriverId");
+
                     b.HasOne("FastDrop.MVC.Models.Merchant", "Merchant")
                         .WithMany("Shipments")
                         .HasForeignKey("MerchantId");
@@ -902,6 +952,8 @@ namespace FastDrop.MVC.Migrations
                         .HasForeignKey("WarehouseId");
 
                     b.Navigation("Address");
+
+                    b.Navigation("Driver");
 
                     b.Navigation("Merchant");
 
@@ -982,6 +1034,8 @@ namespace FastDrop.MVC.Migrations
 
             modelBuilder.Entity("FastDrop.MVC.Models.Driver", b =>
                 {
+                    b.Navigation("DirectShipments");
+
                     b.Navigation("DriverRoutes");
 
                     b.Navigation("DriverVehicles");

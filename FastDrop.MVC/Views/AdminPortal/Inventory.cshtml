@@ -1,0 +1,65 @@
+@model IEnumerable<FastDrop.MVC.Models.ProductWarehouse>
+@{
+    ViewData["Title"] = "Global Inventory";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="table-wrap">
+    <div class="table-head">
+        <h3 class="table-title">Global Inventory</h3>
+    </div>
+    
+    <div style="background: var(--bg-color); padding: 16px; border-bottom: 1px solid var(--border); display: flex; gap: 16px;">
+        <div style="flex: 1;">
+            <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Total Distinct Products across Warehouses</p>
+            <h4 style="margin: 4px 0 0 0; color: var(--primary);">@Model.Select(pw => pw.ProductId).Distinct().Count()</h4>
+        </div>
+        <div style="flex: 1;">
+            <p style="margin: 0; font-size: 13px; color: var(--text-muted);">Total Items in Stock</p>
+            <h4 style="margin: 4px 0 0 0; color: var(--primary);">@Model.Sum(pw => pw.Quantity)</h4>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Merchant (Shop)</th>
+                <th>Warehouse Location</th>
+                <th>Stock Quantity</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.OrderBy(pw => pw.Product.Merchant.ShopName).ThenBy(pw => pw.Product.Name)) {
+                <tr>
+                    <td style="font-weight: 600; color: var(--text-dark);">@item.Product.Name</td>
+                    <td>@item.Product.Merchant?.ShopName</td>
+                    <td>
+                        <span style="display: inline-flex; align-items: center; gap: 4px;">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="color: var(--text-muted);"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                            @item.Warehouse.WarehouseName
+                        </span>
+                    </td>
+                    <td>@item.Quantity</td>
+                    <td>
+                        @if (item.Quantity > 50) {
+                            <span class="s-badge sb-success">High Stock</span>
+                        } else if (item.Quantity > 10) {
+                            <span class="s-badge sb-warning" style="background: rgba(245,158,11,0.1); color: #d97706; border-color: rgba(245,158,11,0.2);">Medium</span>
+                        } else if (item.Quantity > 0) {
+                            <span class="s-badge sb-error">Low Stock</span>
+                        } else {
+                            <span class="s-badge" style="background: var(--bg-hover); color: var(--text-muted); border: 1px solid var(--border);">Empty</span>
+                        }
+                    </td>
+                </tr>
+            }
+            @if(!Model.Any()) {
+                <tr>
+                    <td colspan="5" style="text-align: center; padding: 24px;">No inventory data available.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

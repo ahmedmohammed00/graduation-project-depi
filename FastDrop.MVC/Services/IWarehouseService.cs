@@ -15,5 +15,12 @@ namespace FastDrop.MVC.Services
         bool WarehouseExists(int id);
 
         Task<IEnumerable<Address>> GetAddressesAsync();
+        Task<Address?> GetAddressByIdAsync(int id);
+        Task CreateAddressAsync(Address address);
+        Task UpdateAddressAsync(Address address);
+        Task DeleteAddressAsync(int id);
+        
+        Task<IEnumerable<ProductWarehouse>> GetProductsForWarehouseAsync(int warehouseId);
+        Task AssignProductsToWarehouseAsync(int warehouseId, IEnumerable<int> productIds);
     }
 }

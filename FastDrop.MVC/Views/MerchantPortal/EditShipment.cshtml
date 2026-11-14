@@ -1,0 +1,80 @@
+@model FastDrop.MVC.Models.Shipment
+
+@{
+    Layout = "_MerchantLayout";
+    ViewData["Title"] = "Edit Shipment";
+}
+
+<style>
+.ship-form { max-width: 680px; margin: 0 auto; }
+.step { background: white; border-radius: 16px; border: 1px solid var(--border); padding: 28px; margin-bottom: 20px; animation: fadeUp .35s ease both; }
+.step-header { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; padding-bottom: 16px; border-bottom: 1px solid var(--border-light); }
+.step-icon { width: 36px; height: 36px; background: linear-gradient(135deg, var(--info), #2563eb); color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.step-icon svg { width: 18px; height: 18px; fill: white; }
+.step-info h4 { font-size: 15px; font-weight: 700; color: var(--text-dark); }
+.step-info p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.form-row.full { grid-template-columns: 1fr; }
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.field label { font-size: 12px; font-weight: 700; color: var(--text-mid); text-transform: uppercase; letter-spacing: .04em; }
+.field input, .field select { width: 100%; border: 1.5px solid var(--border); border-radius: 10px; padding: 11px 14px; font-size: 14px; font-family: 'Plus Jakarta Sans', sans-serif; color: var(--text-dark); outline: none; transition: all .2s; background: white; }
+.field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,201,167,.1); }
+.form-actions { display: flex; align-items: center; gap: 12px; padding-top: 8px; }
+</style>
+
+<form asp-action="EditShipment" method="post">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="ShipmentId" />
+    <input type="hidden" asp-for="MerchantId" />
+    <input type="hidden" asp-for="CreationDate" />
+
+    <div class="ship-form">
+        <div class="step">
+            <div class="step-header">
+                <div class="step-icon">
+                    <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </div>
+                <div class="step-info">
+                    <h4>Edit Shipment #@Model.ShipmentId</h4>
+                    <p>Update the delivery destination and details</p>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>Street Address</label>
+                    <input asp-for="Address.Street" required />
+                </div>
+                <div class="field">
+                    <label>District</label>
+                    <input asp-for="Address.District" required />
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="field">
+                    <label>Delivery Zone</label>
+                    <select asp-for="Address.ZoneId" required>
+                        <option value="">— Select zone —</option>
+                        @if(ViewBag.Zones != null)
+                        {
+                            foreach(var zone in ViewBag.Zones)
+                            {
+                                <option value="@zone.ZoneId">@zone.Name</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label>Weight (kg)</label>
+                    <input asp-for="WeightKg" type="number" step="0.01" placeholder="e.g. 2.5" />
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" style="padding: 12px 28px;">
+                    <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:white;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    Save Changes
+                </button>
+                <a asp-action="Shipments" class="btn btn-secondary">Cancel</a>
+            </div>
+        </div>
+    </div>
+</form>

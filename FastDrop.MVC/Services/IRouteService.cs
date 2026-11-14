@@ -14,5 +14,6 @@ namespace FastDrop.MVC.Services
         Task UpdateRouteAsync(Route route);
         Task DeleteRouteAsync(int id);
         bool RouteExists(int id);
+        Task<IEnumerable<Route>> GetRoutesByDriverIdAsync(int driverId);
     }
 }

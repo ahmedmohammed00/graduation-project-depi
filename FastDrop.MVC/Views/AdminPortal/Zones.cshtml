@@ -1,0 +1,56 @@
+@model IEnumerable<FastDrop.MVC.Models.Zone>
+
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Zones";
+}
+
+<div class="table-wrap" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 class="table-title" style="margin: 0;">Zones</h3>
+        <a asp-action="CreateZone" class="btn btn-primary">+ Add New Zone</a>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Zone Name</th>
+                <th>Delivery Fee</th>
+                <th>Base COD</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if(Model != null && Model.Any())
+            {
+                foreach(var zone in Model)
+                {
+                    <tr>
+                        <td>@zone.Name</td>
+                        <td>@zone.DeliveryFee</td>
+                        <td>@zone.CodAmount.ToString("C")</td>
+                        <td>Active</td>
+                        <td>
+                            <a asp-action="EditZone" asp-route-id="@zone.ZoneId" class="btn btn-secondary">Edit</a>
+                            <a asp-action="DeleteZone" asp-route-id="@zone.ZoneId" class="btn btn-secondary" style="color: var(--error);">Delete</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <td colspan="4" class="text-center" style="padding: 40px; color: var(--text-light);">
+                        No zones found.
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

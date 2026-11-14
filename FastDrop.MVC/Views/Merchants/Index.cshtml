@@ -1,71 +1,55 @@
 @model IEnumerable<FastDrop.MVC.Models.Merchant>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Merchants";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.ShopName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Email)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Password)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ContactName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Phone)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Address)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.ShopName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Email)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Password)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ContactName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Phone)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Address.AddressId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.MerchantId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.MerchantId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.MerchantId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="table-wrap">
+    <div class="table-head">
+        <h3 class="table-title">Merchants</h3>
+        <a asp-action="Create" class="btn btn-primary btn-sm">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Add Merchant
+        </a>
+    </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Shop Name</th>
+                <th>Contact Name</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model) {
+                <tr>
+                    <td style="font-weight: 600; color: var(--text-dark);">@item.ShopName</td>
+                    <td>@item.ContactName</td>
+                    <td>@item.Phone</td>
+                    <td>@item.Email</td>
+                    <td>
+                        @if (item.Status == "active") {
+                            <span class="s-badge sb-success">Active</span>
+                        } else if (item.Status == "inactive") {
+                            <span class="s-badge sb-error">Inactive</span>
+                        } else {
+                            <span class="s-badge sb-warning">@item.Status</span>
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@item.MerchantId" class="btn btn-secondary btn-sm" style="padding: 4px 8px;">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@item.MerchantId" class="btn btn-secondary btn-sm" style="padding: 4px 8px; color: var(--error);">Delete</a>
+                    </td>
+                </tr>
+            }
+            @if(!Model.Any()) {
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 24px;">No merchants found.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

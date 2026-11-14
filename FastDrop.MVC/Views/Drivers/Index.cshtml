@@ -1,77 +1,97 @@
 @model IEnumerable<FastDrop.MVC.Models.Driver>
 
 @{
-    ViewData["Title"] = "Index";
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Drivers Management";
+    ViewData["Subtitle"] = "Manage delivery drivers and their assignments";
 }
 
-<h1>Index</h1>
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <a asp-action="Create" class="btn btn-primary">
+        <i class="fas fa-plus mr-2"></i> Add New Driver
+    </a>
+</div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.PhoneNumber)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.LicenseNumber)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.LicenseExpiryDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CurrentStatus)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Zone)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Address)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Employee)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PhoneNumber)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LicenseNumber)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LicenseExpiryDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CurrentStatus)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Zone.ZoneId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Address.AddressId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Employee.EmployeeId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.DriverId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.DriverId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.DriverId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+<div class="table-wrap h-100">
+    <div class="table-head">
+        <div class="table-title">All Drivers</div>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Driver Info</th>
+                    <th>License Info</th>
+                    <th>Zone & Assignment</th>
+                    <th>Status</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model != null && Model.Any())
+                {
+                    foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600; color: var(--text-dark);">@item.Name</div>
+                                <div class="text-muted"><small>@item.PhoneNumber</small></div>
+                            </td>
+                            <td>
+                                <div>@item.LicenseNumber</div>
+                                @{
+                                    var expiryClass = item.LicenseExpiryDate < DateTime.Now ? "text-danger" : "text-muted";
+                                }
+                                <div class="@expiryClass"><small>Expires: @item.LicenseExpiryDate?.ToString("MMM dd, yyyy")</small></div>
+                            </td>
+                            <td>
+                                <div><small class="text-muted">Zone ID:</small> @(item.ZoneId.HasValue ? item.ZoneId.Value.ToString() : "N/A")</div>
+                                @if(item.Employee != null)
+                                {
+                                    <div class="text-muted"><small>Emp ID: @item.EmployeeId</small></div>
+                                }
+                            </td>
+                            <td>
+                                @if (item.CurrentStatus?.ToLower() == "available")
+                                {
+                                    <span class="s-badge sb-success">@item.CurrentStatus</span>
+                                }
+                                else if (item.CurrentStatus?.ToLower() == "on-route")
+                                {
+                                    <span class="s-badge sb-warning">@item.CurrentStatus</span>
+                                }
+                                else if (item.CurrentStatus?.ToLower() == "inactive")
+                                {
+                                    <span class="s-badge sb-danger">@item.CurrentStatus</span>
+                                }
+                                else
+                                {
+                                    <span class="s-badge sb-info">@(item.CurrentStatus ?? "Unknown")</span>
+                                }
+                            </td>
+                            <td class="text-right">
+                                <a asp-action="Details" asp-route-id="@item.DriverId" class="btn btn-sm btn-info" title="View Details">
+                                    View
+                                </a>
+                                <a asp-action="Edit" asp-route-id="@item.DriverId" class="btn btn-sm btn-primary" title="Edit Driver">
+                                    Edit
+                                </a>
+                                <a asp-action="Delete" asp-route-id="@item.DriverId" class="btn btn-sm btn-danger" title="Delete Driver">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center text-muted" style="padding: 40px;">
+                            No drivers found. Click 'Add New Driver' to create one.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
