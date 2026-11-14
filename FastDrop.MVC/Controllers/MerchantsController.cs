@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
 using FastDrop.MVC.Services;
+using FastDrop.MVC.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 
 namespace FastDrop.MVC.Controllers
@@ -46,7 +47,7 @@ namespace FastDrop.MVC.Controllers
         public async Task<IActionResult> Create()
         {
             ViewData["AddressId"] = new SelectList(await _merchantService.GetAddressesAsync(), "AddressId", "AddressId");
-            return View();
+            return View(new MerchantCreateViewModel());
         }
 
         // POST: Merchants/Create
@@ -54,7 +55,7 @@ namespace FastDrop.MVC.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MerchantId,ShopName,Email,Password,ContactName,Phone,Status,AddressId")] Merchant merchant)
+        public async Task<IActionResult> Create(MerchantCreateViewModel merchant)
         {
             if (ModelState.IsValid)
             {
@@ -79,7 +80,7 @@ namespace FastDrop.MVC.Controllers
                 return NotFound();
             }
             ViewData["AddressId"] = new SelectList(await _merchantService.GetAddressesAsync(), "AddressId", "AddressId", merchant.AddressId);
-            return View(merchant);
+            return View(MerchantEditViewModel.FromMerchant(merchant));
         }
 
         // POST: Merchants/Edit/5
@@ -87,7 +88,7 @@ namespace FastDrop.MVC.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("MerchantId,ShopName,Email,Password,ContactName,Phone,Status,AddressId")] Merchant merchant)
+        public async Task<IActionResult> Edit(int id, MerchantEditViewModel merchant)
         {
             if (id != merchant.MerchantId)
             {
@@ -96,21 +97,7 @@ namespace FastDrop.MVC.Controllers
 
             if (ModelState.IsValid)
             {
-                try
-                {
-                    await _merchantService.UpdateMerchantAsync(merchant);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!MerchantExists(merchant.MerchantId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                if (!await _merchantService.UpdateMerchantAsync(merchant)) return NotFound();
                 return RedirectToAction(nameof(Index));
             }
             ViewData["AddressId"] = new SelectList(await _merchantService.GetAddressesAsync(), "AddressId", "AddressId", merchant.AddressId);

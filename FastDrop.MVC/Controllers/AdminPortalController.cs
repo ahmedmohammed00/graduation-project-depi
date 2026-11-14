@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using FastDrop.MVC.Services;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.ViewModels;
 
 namespace FastDrop.MVC.Controllers
 {
@@ -69,25 +70,30 @@ namespace FastDrop.MVC.Controllers
             if (employee == null) return NotFound();
 
             ViewBag.Roles = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(await _employeeService.GetRolesAsync(), "RoleId", "RoleName", employee.RoleId);
-            return View(employee);
+            return View(new EmployeeRoleEditViewModel
+            {
+                EmployeeId = employee.EmployeeId, Name = employee.Name,
+                Email = employee.Email, RoleId = employee.RoleId
+            });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditEmployee(int id, [Bind("EmployeeId,Name,Email,Password,RoleId,SupervisorId,AccountStatus")] Employee employee)
+        public async Task<IActionResult> EditEmployee(int id, EmployeeRoleEditViewModel employee)
         {
             if (id != employee.EmployeeId) return NotFound();
 
-            // Ignore validation for Employee.Role navigation property
-            ModelState.Remove("Role");
-
             if (ModelState.IsValid)
             {
-                await _employeeService.UpdateEmployeeAsync(employee);
+                if (!await _employeeService.UpdateEmployeeAsync(employee)) return NotFound();
                 TempData["SuccessMessage"] = "Employee role updated successfully.";
                 return RedirectToAction(nameof(Employees));
             }
             
+            var existing = await _employeeService.GetEmployeeByIdAsync(id);
+            if (existing == null) return NotFound();
+            employee.Name = existing.Name;
+            employee.Email = existing.Email;
             ViewBag.Roles = new Microsoft.AspNetCore.Mvc.Rendering.SelectList(await _employeeService.GetRolesAsync(), "RoleId", "RoleName", employee.RoleId);
             return View(employee);
         }

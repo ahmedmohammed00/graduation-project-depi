@@ -74,7 +74,8 @@ public class SignupSecurityTests : IClassFixture<ManagementApplicationFactory>
         await service.CreateUserAsync(model);
 
         var merchant = Assert.Single(db.Merchants);
-        Assert.True(BCrypt.Net.BCrypt.Verify(Password, merchant.Password));
+        Assert.StartsWith(PasswordHashing.EnhancedPrefix, merchant.Password);
+        Assert.True(BCrypt.Net.BCrypt.EnhancedVerify(Password, merchant.Password[PasswordHashing.EnhancedPrefix.Length..]));
         Assert.NotEqual(Password, merchant.Password);
         Assert.Empty(db.Employees);
         Assert.Empty(db.Drivers);

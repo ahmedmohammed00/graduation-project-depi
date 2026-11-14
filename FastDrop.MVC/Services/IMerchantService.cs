@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.ViewModels;
 
 namespace FastDrop.MVC.Services
 {
@@ -9,8 +10,8 @@ namespace FastDrop.MVC.Services
         Task<IEnumerable<Merchant>> GetMerchantsAsync();
         Task<Merchant?> GetMerchantByIdAsync(int id);
         Task<Merchant?> GetMerchantForDeleteAsync(int id);
-        Task CreateMerchantAsync(Merchant merchant);
-        Task UpdateMerchantAsync(Merchant merchant);
+        Task CreateMerchantAsync(MerchantCreateViewModel model);
+        Task<bool> UpdateMerchantAsync(MerchantEditViewModel model);
         Task DeleteMerchantAsync(int id);
         bool MerchantExists(int id);
 

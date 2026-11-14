@@ -5,7 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using FastDrop.MVC.Security;
 using FastDrop.MVC.Services;
-var builder = WebApplication.CreateBuilder(args);
+var migrateLegacyPasswords = args.Contains("--migrate-legacy-passwords", StringComparer.Ordinal);
+var builder = WebApplication.CreateBuilder(args.Where(arg => arg != "--migrate-legacy-passwords").ToArray());
 var jwtSettings = JwtSettings.FromConfiguration(builder.Configuration);
 builder.Services.AddSingleton(jwtSettings);
 
@@ -24,6 +25,7 @@ builder.Services.AddDbContext<DmsDbContext>(options =>
 builder.Services.AddScoped<IPerformanceCalculationService, PerformanceCalculationService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<CredentialMigrationService>();
 builder.Services.AddScoped<IShipmentService, ShipmentService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 builder.Services.AddScoped<IDriverService, DriverService>();
@@ -75,6 +77,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 var app = builder.Build();
+
+if (migrateLegacyPasswords)
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var result = await scope.ServiceProvider.GetRequiredService<CredentialMigrationService>()
+        .MigrateLegacyPasswordsAsync();
+    app.Logger.LogInformation(
+        "Credential migration completed: {Employees} employees and {Merchants} merchants migrated; {RequiresReset} credentials require a verified password reset.",
+        result.Employees, result.Merchants, result.RequiresReset);
+    Environment.ExitCode = result.RequiresReset == 0 ? 0 : 2;
+    return;
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

@@ -1,4 +1,4 @@
-@model FastDrop.MVC.Models.Merchant
+@model FastDrop.MVC.ViewModels.MerchantEditViewModel
 
 @{
     ViewData["Title"] = "Edit Merchant";
@@ -10,7 +10,6 @@
     
     <form asp-action="Edit" method="post">
         <input type="hidden" asp-for="MerchantId" />
-        <input type="hidden" asp-for="Password" /> <!-- Assume password isn't updated here -->
 
         <div class="form-group">
             <label asp-for="ShopName">Shop Name *</label>

@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Security;
+using FastDrop.MVC.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace FastDrop.MVC.Services
@@ -26,14 +28,18 @@ namespace FastDrop.MVC.Services
 
         public async Task CreateEmployeeAsync(Employee employee)
         {
+            employee.Password = PasswordHashing.HashNewPassword(employee.Password);
             _context.Employees.Add(employee);
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateEmployeeAsync(Employee employee)
+        public async Task<bool> UpdateEmployeeAsync(EmployeeRoleEditViewModel model)
         {
-            _context.Employees.Update(employee);
+            var employee = await _context.Employees.FindAsync(model.EmployeeId);
+            if (employee == null) return false;
+            employee.RoleId = model.RoleId;
             await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task DeleteEmployeeAsync(int id)

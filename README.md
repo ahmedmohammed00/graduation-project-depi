@@ -129,6 +129,27 @@ reused. This change does not rotate secrets in an external deployment automatica
 
 ### 4. Run the application
 
+Before upgrading an existing database, stop other application instances, take a
+verified database backup, and run the explicit credential migration using that
+deployment's connection string and private JWT configuration:
+
+```bash
+dotnet run --project FastDrop.MVC --no-launch-profile -- --migrate-legacy-passwords
+```
+
+This command hashes legacy plaintext employee and merchant passwords in batches,
+preserves recognized hashes, and exits without starting the web server. It is
+idempotent and can be rerun after interruption. Credentials that resemble malformed
+or unsupported hashes are skipped and require a verified password reset; the
+command reports their count and returns exit code 2. It never prints credentials.
+The command is not run automatically on startup. Check the configured database
+before running it; do not run a database reset script to migrate passwords.
+
+Login accepts recognized hashes only. New credentials use bcrypt with SHA-384
+prehashing and the `bcrypt-sha384:` format tag, preserving the full input for the
+supported 8–100 character passwords. Existing standard bcrypt hashes remain
+valid. Merchant profile edits and employee role edits cannot change passwords.
+
 ```bash
 cd FastDrop.MVC
 dotnet run --launch-profile http

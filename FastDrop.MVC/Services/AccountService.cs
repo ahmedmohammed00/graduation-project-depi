@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using FastDrop.MVC.Models;
+using FastDrop.MVC.Security;
 using FastDrop.MVC.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,7 +43,7 @@ namespace FastDrop.MVC.Services
                 ShopName = model.ShopName,
                 ContactName = model.FullName,
                 Email = model.Email,
-                Password = BCrypt.Net.BCrypt.HashPassword(model.Password),
+                Password = PasswordHashing.HashNewPassword(model.Password),
                 Phone = model.Phone,
                 Status = "active"
             };
@@ -63,22 +64,7 @@ namespace FastDrop.MVC.Services
 
             if (employee != null)
             {
-                bool isValid = false;
-                try
-                {
-                    isValid = BCrypt.Net.BCrypt.Verify(model.Password, employee.Password);
-                }
-                catch (BCrypt.Net.SaltParseException)
-                {
-                    // Fallback to plain text check for legacy passwords
-                    if (employee.Password == model.Password)
-                    {
-                        isValid = true;
-                        // Seamless upgrade: Hash and save the password immediately
-                        employee.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
-                        await _context.SaveChangesAsync();
-                    }
-                }
+                bool isValid = PasswordHashing.Verify(model.Password, employee.Password);
 
                 if (isValid)
                 {
@@ -115,22 +101,7 @@ namespace FastDrop.MVC.Services
 
                 if (merchant != null)
                 {
-                    bool isValid = false;
-                    try
-                    {
-                        isValid = BCrypt.Net.BCrypt.Verify(model.Password, merchant.Password);
-                    }
-                    catch (BCrypt.Net.SaltParseException)
-                    {
-                        // Fallback to plain text check for legacy passwords
-                        if (merchant.Password == model.Password)
-                        {
-                            isValid = true;
-                            // Seamless upgrade: Hash and save the password immediately
-                            merchant.Password = BCrypt.Net.BCrypt.HashPassword(model.Password);
-                            await _context.SaveChangesAsync();
-                        }
-                    }
+                    bool isValid = PasswordHashing.Verify(model.Password, merchant.Password);
 
                     if (isValid)
                     {

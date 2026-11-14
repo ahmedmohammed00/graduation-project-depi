@@ -1,4 +1,4 @@
-@model FastDrop.MVC.Models.Employee
+@model FastDrop.MVC.ViewModels.EmployeeRoleEditViewModel
 
 @{
     ViewData["Title"] = "Edit Employee Role";
@@ -10,9 +10,6 @@
     
     <form asp-action="EditEmployee" method="post">
         <input type="hidden" asp-for="EmployeeId" />
-        <input type="hidden" asp-for="Password" />
-        <input type="hidden" asp-for="SupervisorId" />
-        <input type="hidden" asp-for="AccountStatus" />
 
         <div class="form-group">
             <label asp-for="Name">Full Name</label>
