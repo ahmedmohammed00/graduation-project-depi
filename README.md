@@ -97,7 +97,37 @@ dotnet ef database update
 sqlcmd -S "(localdb)\mssqllocaldb" -i DMS.sql
 ```
 
-### 3. Run the application
+### 3. Configure a private JWT signing key
+
+The application requires `JwtSettings:Key` to be a Base64-encoded, cryptographically
+random key containing at least 32 bytes. No signing key is included in source control.
+Startup fails if the key is missing, malformed, too short, or matches the previously
+published key.
+
+For local development, run the following PowerShell commands from the repository root
+to generate a key and save it in the development user-secrets store:
+
+```powershell
+$jwtKeyBytes = New-Object byte[] 32
+$jwtRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$jwtRng.GetBytes($jwtKeyBytes)
+$jwtRng.Dispose()
+$jwtSecret = [Convert]::ToBase64String($jwtKeyBytes)
+dotnet user-secrets set "JwtSettings:Key" $jwtSecret --project FastDrop.MVC
+Remove-Variable jwtSecret, jwtKeyBytes, jwtRng
+```
+
+For deployment, supply `JwtSettings__Key` through your hosting platform's secret
+configuration. Use a different key for each environment and share the appropriate
+key across instances in the same environment. Do not put keys in committed JSON,
+launch profiles, or scripts.
+
+Existing deployments must replace the previously published signing key with a new
+private key and restart every instance. This invalidates existing JWTs, so users
+must log in again. The previous key remains exposed in Git history and must not be
+reused. This change does not rotate secrets in an external deployment automatically.
+
+### 4. Run the application
 
 ```bash
 cd FastDrop.MVC

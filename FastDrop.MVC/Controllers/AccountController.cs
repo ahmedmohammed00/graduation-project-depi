@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
-using System.Text;
+using FastDrop.MVC.Security;
 using FastDrop.MVC.Models;
 using FastDrop.MVC.ViewModels;
 using FastDrop.MVC.Services;
@@ -14,12 +14,12 @@ namespace FastDrop.MVC.Controllers
     public class AccountController : Controller
     {
         private readonly IAccountService _accountService;
-        private readonly IConfiguration _configuration;
+        private readonly JwtSettings _jwtSettings;
 
-        public AccountController(IAccountService accountService, IConfiguration configuration)
+        public AccountController(IAccountService accountService, JwtSettings jwtSettings)
         {
             _accountService = accountService;
-            _configuration = configuration;
+            _jwtSettings = jwtSettings;
         }
 
         [HttpGet]
@@ -82,14 +82,13 @@ namespace FastDrop.MVC.Controllers
             if (claims != null)
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
-                var key = Encoding.UTF8.GetBytes(_configuration["JwtSettings:Key"]!);
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(claims),
                     Expires = DateTime.UtcNow.AddDays(7),
-                    Issuer = _configuration["JwtSettings:Issuer"],
-                    Audience = _configuration["JwtSettings:Audience"],
-                    SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                    Issuer = _jwtSettings.Issuer,
+                    Audience = _jwtSettings.Audience,
+                    SigningCredentials = new SigningCredentials(_jwtSettings.SigningKey, SecurityAlgorithms.HmacSha256Signature)
                 };
                 var token = tokenHandler.CreateToken(tokenDescriptor);
                 var jwtString = tokenHandler.WriteToken(token);

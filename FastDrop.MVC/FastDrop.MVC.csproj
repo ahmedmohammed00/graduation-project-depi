@@ -4,6 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>fastdrop-mvc-5a8693c9-57fa-4c15-96f1-e807687f234c</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
