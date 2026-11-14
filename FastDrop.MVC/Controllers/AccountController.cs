@@ -34,7 +34,7 @@ namespace FastDrop.MVC.Controllers
         [AllowAnonymous]
         public IActionResult Signup()
         {
-            return View();
+            return View(new SignupViewModel());
         }
 
         [HttpPost]
@@ -52,12 +52,6 @@ namespace FastDrop.MVC.Controllers
             if (emailExists)
             {
                 ModelState.AddModelError(string.Empty, "Email is already registered.");
-                return View(model);
-            }
-
-            if (model.Role == "merchant" && string.IsNullOrWhiteSpace(model.ShopName))
-            {
-                ModelState.AddModelError("ShopName", "Shop Name is required for merchants.");
                 return View(model);
             }
 

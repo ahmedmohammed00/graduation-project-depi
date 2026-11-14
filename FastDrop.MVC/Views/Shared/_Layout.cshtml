@@ -25,10 +25,14 @@
                         </li>
                         @if (User.Identity != null && User.Identity.IsAuthenticated)
                         {
-                            if (User.IsInRole("Employee"))
+                            if (User.IsInRole("SuperAdmin"))
                             {
                                 <li class="nav-item"><a class="nav-link text-dark" asp-controller="Invoices" asp-action="Index">Invoices</a></li>
                                 <li class="nav-item"><a class="nav-link text-dark" asp-controller="Drivers" asp-action="Index">Drivers</a></li>
+                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Routes" asp-action="Index">Routes</a></li>
+                            }
+                            if (User.IsInRole("Dispatcher"))
+                            {
                                 <li class="nav-item"><a class="nav-link text-dark" asp-controller="Routes" asp-action="Index">Routes</a></li>
                             }
                             if (User.IsInRole("Merchant"))

@@ -8,7 +8,7 @@ using FastDrop.MVC.Services;
 
 namespace FastDrop.MVC.Controllers
 {
-    [Authorize(Roles = "SuperAdmin,Employee")]
+    [Authorize(Roles = "SuperAdmin")]
     public class InvoicesController : Controller
     {
         private readonly IInvoiceService _invoiceService;

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.ComponentModel.DataAnnotations;
 using FastDrop.MVC.Models;
 using FastDrop.MVC.ViewModels;
 using Microsoft.EntityFrameworkCore;
@@ -26,50 +27,28 @@ namespace FastDrop.MVC.Services
 
         public async Task CreateUserAsync(SignupViewModel model)
         {
-            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(model.Password);
-
-            if (model.Role == "dispatcher" || model.Role == "driver")
+            // Enforce the public registration boundary even outside MVC validation.
+            if (model.Role != "merchant")
             {
-                var employee = new Employee
-                {
-                    Name = model.FullName,
-                    Email = model.Email,
-                    Password = hashedPassword,
-                    AccountStatus = "active"
-                };
-
-                _context.Employees.Add(employee);
-                await _context.SaveChangesAsync();
-
-                if (model.Role == "driver")
-                {
-                    var driver = new Driver
-                    {
-                        EmployeeId = employee.EmployeeId,
-                        Name = model.FullName,
-                        PhoneNumber = model.Phone,
-                        LicenseNumber = "PENDING-" + Guid.NewGuid().ToString().Substring(0, 8),
-                        CurrentStatus = "available"
-                    };
-                    _context.Drivers.Add(driver);
-                    await _context.SaveChangesAsync();
-                }
+                throw new ValidationException("Public signup is available for merchants only.");
             }
-            else if (model.Role == "merchant")
+            if (string.IsNullOrWhiteSpace(model.ShopName))
             {
-                var merchant = new Merchant
-                {
-                    ShopName = model.ShopName,
-                    ContactName = model.FullName,
-                    Email = model.Email,
-                    Password = hashedPassword,
-                    Phone = model.Phone,
-                    Status = "active"
-                };
-
-                _context.Merchants.Add(merchant);
-                await _context.SaveChangesAsync();
+                throw new ValidationException("Shop Name is required for merchants.");
             }
+
+            var merchant = new Merchant
+            {
+                ShopName = model.ShopName,
+                ContactName = model.FullName,
+                Email = model.Email,
+                Password = BCrypt.Net.BCrypt.HashPassword(model.Password),
+                Phone = model.Phone,
+                Status = "active"
+            };
+
+            _context.Merchants.Add(merchant);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<List<Claim>?> AuthenticateUserAsync(LoginViewModel model)
@@ -103,19 +82,25 @@ namespace FastDrop.MVC.Services
 
                 if (isValid)
                 {
-                    role = employee.Role?.RoleName ?? "Employee";
+                    var driver = await _context.Drivers
+                        .FirstOrDefaultAsync(d => d.EmployeeId == employee.EmployeeId);
+                    role = employee.Role?.RoleName;
+                    if (string.IsNullOrWhiteSpace(role))
+                    {
+                        if (driver == null) return null;
+                        role = "Driver";
+                    }
+                    if (role == "Driver" && driver == null) return null;
+
                     claims.Add(new Claim(ClaimTypes.NameIdentifier, employee.EmployeeId.ToString()));
                     claims.Add(new Claim(ClaimTypes.Name, employee.Name));
                     claims.Add(new Claim(ClaimTypes.Email, employee.Email));
                     claims.Add(new Claim(ClaimTypes.Role, role));
 
                     // Check if this employee is ALSO a driver
-                    var driver = await _context.Drivers
-                        .FirstOrDefaultAsync(d => d.EmployeeId == employee.EmployeeId);
-                    
                     if (driver != null)
                     {
-                        claims.Add(new Claim(ClaimTypes.Role, "Driver"));
+                        if (role != "Driver") claims.Add(new Claim(ClaimTypes.Role, "Driver"));
                         // Store DriverId in a custom claim so we can easily look it up
                         claims.Add(new Claim("DriverId", driver.DriverId.ToString()));
                     }

@@ -11,7 +11,7 @@ using FastDrop.MVC.Services;
 
 namespace FastDrop.MVC.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "SuperAdmin,Dispatcher,Merchant,Driver")]
     public class ShipmentsController : Controller
     {
         private readonly IShipmentService _shipmentService;
@@ -61,7 +61,7 @@ namespace FastDrop.MVC.Controllers
             return View(shipment);
         }
 
-        [Authorize(Roles = "SuperAdmin,Dispatcher,Employee,Merchant")]
+        [Authorize(Roles = "SuperAdmin,Dispatcher,Merchant")]
         public async Task<IActionResult> Create()
         {
             ViewData["AddressId"] = new SelectList(await _shipmentService.GetAddressesAsync(), "AddressId", "AddressId");
@@ -77,7 +77,7 @@ namespace FastDrop.MVC.Controllers
         // POST: Shipments/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SuperAdmin,Dispatcher,Employee,Merchant")]
+        [Authorize(Roles = "SuperAdmin,Dispatcher,Merchant")]
         public async Task<IActionResult> Create([Bind("ShipmentId,CreationDate,CodAmount,WeightKg,WarehouseId,MerchantId,RouteId,AddressId")] Shipment shipment)
         {
             int? merchantId = null;
@@ -107,7 +107,7 @@ namespace FastDrop.MVC.Controllers
             return View(shipment);
         }
 
-        [Authorize(Roles = "SuperAdmin,Dispatcher,Employee")]
+        [Authorize(Roles = "SuperAdmin,Dispatcher")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -129,7 +129,7 @@ namespace FastDrop.MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SuperAdmin,Dispatcher,Employee")]
+        [Authorize(Roles = "SuperAdmin,Dispatcher")]
         public async Task<IActionResult> Edit(int id, [Bind("ShipmentId,CreationDate,CodAmount,WeightKg,WarehouseId,MerchantId,RouteId,AddressId")] Shipment shipment)
         {
             if (id != shipment.ShipmentId)
@@ -163,7 +163,7 @@ namespace FastDrop.MVC.Controllers
             return View(shipment);
         }
 
-        [Authorize(Roles = "SuperAdmin,Dispatcher,Employee")]
+        [Authorize(Roles = "SuperAdmin,Dispatcher")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -182,7 +182,7 @@ namespace FastDrop.MVC.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SuperAdmin,Dispatcher,Employee")]
+        [Authorize(Roles = "SuperAdmin,Dispatcher")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             await _shipmentService.DeleteShipmentAsync(id);
@@ -197,7 +197,7 @@ namespace FastDrop.MVC.Controllers
         // POST: Shipments/UpdateStatus/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SuperAdmin,Dispatcher,Driver,Employee")]
+        [Authorize(Roles = "SuperAdmin,Dispatcher,Driver")]
         public async Task<IActionResult> UpdateStatus(int id, string status, string? comments = null)
         {
             string role = User.IsInRole("Driver") ? "Driver" : "Employee";

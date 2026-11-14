@@ -390,16 +390,11 @@
 
     <!-- Card header -->
     <div class="card-header">
-      <h1>Create your account</h1>
+      <h1>Create your merchant account</h1>
       <p>Join 10,000+ businesses optimizing their deliveries daily.</p>
     </div>
 
-    <!-- Role toggle -->
-    <div class="role-toggle" id="roleToggle">
-      <button class="role-btn active" data-role="dispatcher" onclick="setRole('dispatcher', this)">🚚 Dispatcher</button>
-      <button class="role-btn" data-role="driver" onclick="setRole('driver', this)">🧑‍✈️ Driver</button>
-      <button class="role-btn" data-role="merchant" onclick="setRole('merchant', this)">🏪 Merchant</button>
-    </div>
+    <p>Staff and driver accounts are managed by an administrator.</p>
 
     <!-- Social sign up -->
     <div class="social-row">
@@ -420,9 +415,9 @@
     </div>
 
     <!-- FORM -->
-    <div asp-validation-summary="ModelOnly" style="color:var(--error); font-size:13px; margin-bottom:10px;"></div>
+    <div asp-validation-summary="All" style="color:var(--error); font-size:13px; margin-bottom:10px;"></div>
     <form asp-action="Signup" method="post" id="signupForm" novalidate>
-      <input type="hidden" asp-for="Role" id="Role" value="dispatcher" />
+      <input type="hidden" name="Role" value="merchant" />
       <div class="form-row">
         <!-- Full Name -->
         <div class="field-group">
@@ -542,7 +537,7 @@
       </div>
 
       <!-- MERCHANT SECTION -->
-      <div class="merchant-section" id="merchantSection">
+      <div class="merchant-section open" id="merchantSection">
         <div class="merchant-divider">
           <div class="merchant-divider-line"></div>
           <div class="merchant-divider-text">🏪 Shop Details</div>
@@ -610,19 +605,6 @@
 </main>
 
 <script>
-  // ── ROLE TOGGLE ──
-  let currentRole = 'dispatcher';
-  function setRole(role, btn) {
-    currentRole = role;
-    document.getElementById('Role').value = role;
-    document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const ms = document.getElementById('merchantSection');
-    if (role === 'merchant') ms.classList.add('open');
-    else ms.classList.remove('open');
-  }
-
-  // ── PASSWORD TOGGLE ──
   function togglePwd(id, btn) {
     const inp = document.getElementById(id);
     const isText = inp.type === 'text';
@@ -810,7 +792,6 @@
   document.getElementById('shopName')?.addEventListener('blur', validateShopName);
   document.getElementById('shopAddress')?.addEventListener('blur', validateShopAddress);
   function validateShopName() {
-    if (currentRole !== 'merchant') return true;
     const v = document.getElementById('shopName').value.trim();
     if (!v) { setInvalid('shopName','shopNameStatus','shopNameError','Shop name is required'); return false; }
     setValid('shopName','shopNameStatus');
@@ -818,7 +799,6 @@
     return true;
   }
   function validateShopAddress() {
-    if (currentRole !== 'merchant') return true;
     const v = document.getElementById('shopAddress').value.trim();
     if (!v) { setInvalid('shopAddress','shopAddressStatus','shopAddressError','Shop address is required'); return false; }
     setValid('shopAddress','shopAddressStatus');
@@ -833,8 +813,8 @@
     const ph = validatePhone();
     const pw = validatePassword();
     const cp = validateConfirm();
-    const sn = currentRole === 'merchant' ? validateShopName() : true;
-    const sa = currentRole === 'merchant' ? validateShopAddress() : true;
+    const sn = validateShopName();
+    const sa = validateShopAddress();
     const terms = document.getElementById('terms').checked;
     
     if (!terms) {

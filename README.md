@@ -146,6 +146,18 @@ Management endpoints require authenticated access with these roles:
 |------------|---------------|
 | Drivers, DriverPayments, Products, Zones | SuperAdmin |
 | Routes, Performance | SuperAdmin, Dispatcher |
+| Invoices | SuperAdmin |
+
+Public signup creates merchant accounts only. Staff and driver access must be
+provisioned through an administrator-controlled process; selecting or submitting a
+staff role on the public signup endpoint is rejected. Employees without an assigned
+role or a driver record cannot log in. A driver record alone grants Driver access,
+not Employee privileges. The general Employee role does not grant invoice or
+shipment administration; shipment administration requires SuperAdmin or Dispatcher.
+
+For existing deployments, review accounts created through the old public staff
+signup, remove unapproved access, and rotate the signing key to invalidate existing
+tokens containing historical privileges.
 
 Merchants and drivers use their own portal routes for their data. New endpoints
 require authentication by default unless explicitly marked public. The landing

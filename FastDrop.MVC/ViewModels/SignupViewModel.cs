@@ -5,7 +5,8 @@ namespace FastDrop.MVC.ViewModels
     public class SignupViewModel
     {
         [Required]
-        public string Role { get; set; } = "dispatcher"; // dispatcher, driver, merchant
+        [AllowedValues("merchant", ErrorMessage = "Public signup is available for merchants only.")]
+        public string Role { get; set; } = "merchant";
 
         [Required]
         [Display(Name = "Full Name")]
@@ -30,8 +31,9 @@ namespace FastDrop.MVC.ViewModels
         [Compare("Password", ErrorMessage = "The passwords do not match.")]
         public string ConfirmPassword { get; set; } = null!;
 
+        [Required]
         [Display(Name = "Shop Name")]
-        public string? ShopName { get; set; }
+        public string ShopName { get; set; } = null!;
 
         [Display(Name = "Shop Address")]
         public string? ShopAddress { get; set; }

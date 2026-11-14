@@ -56,14 +56,14 @@
 </div>
 </div>
 <div>
-    @if (User.IsInRole("Employee"))
+    @if (User.IsInRole("SuperAdmin") || User.IsInRole("Dispatcher"))
     {
         <a asp-action="Edit" asp-route-id="@Model?.ShipmentId">Edit</a> <span>|</span>
     }
     <a asp-action="Index">Back to List</a>
 </div>
 
-@if (User.IsInRole("Driver") || User.IsInRole("Employee"))
+@if (User.IsInRole("Driver") || User.IsInRole("SuperAdmin") || User.IsInRole("Dispatcher"))
 {
     <hr />
     <div class="card mt-4">
