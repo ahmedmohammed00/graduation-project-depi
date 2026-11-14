@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
 using FastDrop.MVC.Services;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FastDrop.MVC.Controllers
 {
+    [Authorize(Roles = "SuperAdmin")]
     public class DriverPaymentsController : Controller
     {
         private readonly IDriverPaymentService _driverPaymentService;

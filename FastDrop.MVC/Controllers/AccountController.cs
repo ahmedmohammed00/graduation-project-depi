@@ -5,6 +5,7 @@ using FastDrop.MVC.Models;
 using FastDrop.MVC.ViewModels;
 using FastDrop.MVC.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -23,12 +24,14 @@ namespace FastDrop.MVC.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult Login()
         {
             return View();
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult Signup()
         {
             return View();
@@ -36,6 +39,7 @@ namespace FastDrop.MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> Signup(SignupViewModel model)
         {
             if (!ModelState.IsValid)
@@ -70,6 +74,7 @@ namespace FastDrop.MVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [AllowAnonymous]
         public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
         {
             if (!ModelState.IsValid)
@@ -128,6 +133,7 @@ namespace FastDrop.MVC.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public IActionResult AccessDenied()
         {
             return View();

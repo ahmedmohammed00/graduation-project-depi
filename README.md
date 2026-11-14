@@ -140,6 +140,17 @@ The app will be available at **http://localhost:5258**.
 
 ## Portal Entry Points
 
+Management endpoints require authenticated access with these roles:
+
+| Controller | Allowed roles |
+|------------|---------------|
+| Drivers, DriverPayments, Products, Zones | SuperAdmin |
+| Routes, Performance | SuperAdmin, Dispatcher |
+
+Merchants and drivers use their own portal routes for their data. New endpoints
+require authentication by default unless explicitly marked public. The landing
+pages, login/signup pages, access-denied page, and static assets remain public.
+
 | Portal | URL |
 |--------|-----|
 | Home / Landing | `/` |
@@ -152,6 +163,15 @@ The app will be available at **http://localhost:5258**.
 ---
 
 ## Documentation
+
+Run the automated regression tests from the repository root:
+
+```bash
+dotnet test FastDrop.sln
+```
+
+The authorization tests run the application in an isolated HTTP test host using
+temporary signing and Data Protection keys. They do not require a SQL database.
 
 For comprehensive project documentation covering architecture, requirements, database design, and more, see [`fastdrop_project_documentation.md`](fastdrop_project_documentation.md).
 

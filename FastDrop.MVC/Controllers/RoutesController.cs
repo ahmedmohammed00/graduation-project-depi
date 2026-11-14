@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FastDrop.MVC.Models;
 using FastDrop.MVC.Services;
+using Microsoft.AspNetCore.Authorization;
 using Route = FastDrop.MVC.Models.Route;
 
 namespace FastDrop.MVC.Controllers
 {
+    [Authorize(Roles = "SuperAdmin,Dispatcher")]
     public class RoutesController : Controller
     {
         private readonly IRouteService _routeService;
