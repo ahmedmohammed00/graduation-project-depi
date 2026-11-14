@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using FastDrop.MVC.Models;
 using Route = FastDrop.MVC.Models.Route;
@@ -9,6 +10,7 @@ namespace FastDrop.MVC.Services
     {
         Task<IEnumerable<Shipment>> GetShipmentsAsync(string role, int? merchantId, int? driverId);
         Task<Shipment?> GetShipmentByIdAsync(int id);
+        Task<Shipment?> GetVisibleShipmentByIdAsync(int id, ClaimsPrincipal user);
         Task<Shipment?> GetShipmentForDeleteAsync(int id);
         Task CreateShipmentAsync(Shipment shipment, int? merchantId);
         Task UpdateShipmentAsync(Shipment shipment);

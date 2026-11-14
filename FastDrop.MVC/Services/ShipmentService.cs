@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using FastDrop.MVC.Models;
 using Microsoft.EntityFrameworkCore;
@@ -49,7 +50,49 @@ namespace FastDrop.MVC.Services
 
         public async Task<Shipment?> GetShipmentByIdAsync(int id)
         {
-            return await _context.Shipments
+            return await ShipmentDetailsQuery().FirstOrDefaultAsync(s => s.ShipmentId == id);
+        }
+
+        public async Task<Shipment?> GetVisibleShipmentByIdAsync(int id, ClaimsPrincipal user)
+        {
+            if (id <= 0 || user.Identity?.IsAuthenticated != true) return null;
+
+            var query = ShipmentDetailsQuery().Where(s => s.ShipmentId == id);
+            if (user.IsInRole("SuperAdmin") || user.IsInRole("Dispatcher"))
+            {
+                return await query.AsNoTracking().FirstOrDefaultAsync();
+            }
+
+            if (user.IsInRole("Merchant"))
+            {
+                var merchantId = GetPositiveClaimId(user, "MerchantId");
+                if (!merchantId.HasValue) return null;
+                query = query.Where(s => s.MerchantId == merchantId.Value);
+            }
+            else if (user.IsInRole("Driver"))
+            {
+                var driverId = GetPositiveClaimId(user, "DriverId");
+                if (!driverId.HasValue) return null;
+                query = query.Where(s =>
+                    (!s.RouteId.HasValue && s.DriverId == driverId.Value) ||
+                    (s.RouteId.HasValue && _context.DriverRoutes.Any(dr =>
+                        dr.DriverId == driverId.Value && dr.RouteId == s.RouteId.Value)));
+            }
+            else
+            {
+                return null;
+            }
+
+            return await query.AsNoTracking().FirstOrDefaultAsync();
+        }
+
+        private static int? GetPositiveClaimId(ClaimsPrincipal user, string claimType)
+        {
+            var claims = user.FindAll(claimType).ToArray();
+            return claims.Length == 1 && int.TryParse(claims[0].Value, out var id) && id > 0 ? id : null;
+        }
+
+        private IQueryable<Shipment> ShipmentDetailsQuery() => _context.Shipments
                 .Include(s => s.Address)
                 .Include(s => s.Merchant)
                 .Include(s => s.Route)
@@ -58,9 +101,7 @@ namespace FastDrop.MVC.Services
                 .Include(s => s.ShipmentStatuses)
                 .Include(s => s.ShipmentAttempts)
                 .Include(s => s.ShipmentProducts)
-                    .ThenInclude(sp => sp.Product)
-                .FirstOrDefaultAsync(m => m.ShipmentId == id);
-        }
+                    .ThenInclude(sp => sp.Product);
 
         public async Task<Shipment?> GetShipmentForDeleteAsync(int id)
         {

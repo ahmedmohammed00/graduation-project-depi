@@ -52,7 +52,7 @@ namespace FastDrop.MVC.Controllers
                 return NotFound();
             }
 
-            var shipment = await _shipmentService.GetShipmentByIdAsync(id.Value);
+            var shipment = await _shipmentService.GetVisibleShipmentByIdAsync(id.Value, User);
             if (shipment == null)
             {
                 return NotFound();

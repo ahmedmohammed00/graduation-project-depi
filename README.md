@@ -184,6 +184,14 @@ Merchants and drivers use their own portal routes for their data. New endpoints
 require authentication by default unless explicitly marked public. The landing
 pages, login/signup pages, access-denied page, and static assets remain public.
 
+Shipment detail reads use a shared database query scoped to the authenticated
+caller. Merchants can read their own shipments; drivers can read shipments
+assigned directly to them or through their assigned route. If a shipment has a
+route, that route determines driver access. SuperAdmin and Dispatcher can read
+shipments across merchants for operations. Missing, invalid, nonpositive or
+duplicate ownership claims deny access. Inaccessible and nonexistent shipment
+IDs both return 404.
+
 | Portal | URL |
 |--------|-----|
 | Home / Landing | `/` |

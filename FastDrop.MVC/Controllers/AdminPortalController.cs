@@ -117,7 +117,7 @@ namespace FastDrop.MVC.Controllers
 
         public async Task<IActionResult> ShipmentDetails(int id)
         {
-            var shipment = await _shipmentService.GetShipmentByIdAsync(id);
+            var shipment = await _shipmentService.GetVisibleShipmentByIdAsync(id, User);
             if (shipment == null)
             {
                 return NotFound();

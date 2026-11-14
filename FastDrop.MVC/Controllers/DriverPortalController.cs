@@ -85,16 +85,8 @@ namespace FastDrop.MVC.Controllers
         [HttpGet]
         public async Task<IActionResult> UpdateStatus(int id)
         {
-            int driverId = GetDriverId();
-            var shipment = await _shipmentService.GetShipmentByIdAsync(id);
+            var shipment = await _shipmentService.GetVisibleShipmentByIdAsync(id, User);
             if (shipment == null) return NotFound();
-
-            // Verify driver can access
-            var allMyShipments = await _shipmentService.GetShipmentsAsync("Driver", null, driverId);
-            if (!allMyShipments.Any(s => s.ShipmentId == id))
-            {
-                return Forbid();
-            }
 
             return View(shipment);
         }
