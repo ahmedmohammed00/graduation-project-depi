@@ -171,6 +171,7 @@ namespace FastDrop.MVC.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkPaymentPaid(int id)
         {
             var payment = await _driverPaymentService.GetDriverPaymentByIdAsync(id);

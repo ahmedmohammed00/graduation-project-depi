@@ -9,6 +9,8 @@ namespace FastDrop.MVC.Models
         public DateTime CreationDate { get; set; } = DateTime.UtcNow;
         public decimal CodAmount { get; set; } = 0.00m;
         public decimal? WeightKg { get; set; }
+        public DateTime? DeliveryConfirmedAt { get; set; }
+        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
 
         public int? WarehouseId { get; set; }
         public Warehouse? Warehouse { get; set; }

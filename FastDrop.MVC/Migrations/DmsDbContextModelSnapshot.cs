@@ -128,7 +128,9 @@ namespace FastDrop.MVC.Migrations
 
                     b.HasIndex("DriverId");
 
-                    b.HasIndex("ShipmentId");
+                    b.HasIndex("ShipmentId")
+                        .IsUnique()
+                        .HasFilter("[ShipmentId] IS NOT NULL");
 
                     b.ToTable("Driver_Payment", (string)null);
                 });
@@ -192,6 +194,12 @@ namespace FastDrop.MVC.Migrations
 
                     b.Property<int?>("RoleId")
                         .HasColumnType("int");
+
+                    b.Property<Guid>("SecurityStamp")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<int?>("SupervisorId")
                         .HasColumnType("int");
@@ -300,6 +308,12 @@ namespace FastDrop.MVC.Migrations
 
                     b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("SecurityStamp")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NEWID()");
 
                     b.Property<string>("ShopName")
                         .IsRequired()
@@ -526,6 +540,9 @@ namespace FastDrop.MVC.Migrations
                     b.Property<DateTime>("CreationDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime?>("DeliveryConfirmedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("DriverId")
                         .HasColumnType("int");
 
@@ -535,6 +552,12 @@ namespace FastDrop.MVC.Migrations
 
                     b.Property<int?>("RouteId")
                         .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
 
                     b.Property<int?>("WarehouseId")
                         .HasColumnType("int");

@@ -11,7 +11,14 @@ var jwtSettings = JwtSettings.FromConfiguration(builder.Configuration);
 builder.Services.AddSingleton(jwtSettings);
 
 // Add services to the container.
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()));
+builder.Services.AddOptions<AccountThrottleOptions>().Bind(builder.Configuration.GetSection("AccountRateLimits"))
+    .Validate(o => o.LoginIpLimit > 0 && o.LoginAccountLimit > 0 && o.SignupIpLimit > 0 && o.SignupAccountLimit > 0,
+        "Account request limits must be positive.").ValidateOnStart();
+builder.Services.AddSingleton<AccountRequestThrottle>();
+builder.Services.AddScoped<IAccountThrottleKeyResolver, AccountThrottleKeyResolver>();
+builder.Services.AddScoped<IAccountSessionValidator, AccountSessionValidator>();
 builder.Services.AddAuthorization(options =>
 {
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
@@ -51,11 +58,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             ValidIssuer = jwtSettings.Issuer,
             ValidAudience = jwtSettings.Audience,
-            IssuerSigningKey = jwtSettings.SigningKey
+            IssuerSigningKey = jwtSettings.SigningKey,
+            ClockSkew = TimeSpan.FromSeconds(30)
         };
 
         options.Events = new JwtBearerEvents
         {
+            OnTokenValidated = async context =>
+            {
+                var sessions = context.HttpContext.RequestServices.GetRequiredService<IAccountSessionValidator>();
+                if (context.Principal == null || !await sessions.ValidateAsync(context.Principal, context.HttpContext.RequestAborted))
+                    context.Fail("The account session is no longer valid.");
+            },
             OnMessageReceived = context =>
             {
                 // Try to read the token from a cookie for Razor Pages integration
@@ -105,6 +119,11 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.Use(async (context, next) =>
+{
+    if (!AccountRequestThrottle.Applies(context) || await context.RequestServices.GetRequiredService<AccountRequestThrottle>().AllowAsync(context,
+        context.RequestServices.GetRequiredService<IAccountThrottleKeyResolver>())) await next(context);
+});
 
 app.MapStaticAssets().AllowAnonymous();
 

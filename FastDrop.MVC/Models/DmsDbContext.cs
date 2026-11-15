@@ -6,6 +6,31 @@ namespace FastDrop.MVC.Models
     {
         public DmsDbContext(DbContextOptions<DmsDbContext> options) : base(options) { }
 
+        public override int SaveChanges(bool acceptAllChangesOnSuccess)
+        {
+            RotateChangedCredentials();
+            return base.SaveChanges(acceptAllChangesOnSuccess);
+        }
+
+        public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+        {
+            RotateChangedCredentials();
+            return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        }
+
+        private void RotateChangedCredentials()
+        {
+            ChangeTracker.DetectChanges();
+            foreach (var entry in ChangeTracker.Entries<Employee>().Where(e => e.State == EntityState.Modified))
+                if (new[] { nameof(Employee.Password), nameof(Employee.Email), nameof(Employee.RoleId), nameof(Employee.AccountStatus) }
+                    .Any(p => entry.Property(p).IsModified && !Equals(entry.Property(p).OriginalValue, entry.Property(p).CurrentValue)))
+                    entry.Entity.SecurityStamp = Guid.NewGuid();
+            foreach (var entry in ChangeTracker.Entries<Merchant>().Where(e => e.State == EntityState.Modified))
+                if (new[] { nameof(Merchant.Password), nameof(Merchant.Email), nameof(Merchant.Status) }
+                    .Any(p => entry.Property(p).IsModified && !Equals(entry.Property(p).OriginalValue, entry.Property(p).CurrentValue)))
+                    entry.Entity.SecurityStamp = Guid.NewGuid();
+        }
+
         public DbSet<Role> Roles { get; set; }
         public DbSet<Employee> Employees { get; set; }
         public DbSet<Zone> Zones { get; set; }
@@ -93,6 +118,9 @@ namespace FastDrop.MVC.Models
             modelBuilder.Entity<Product>().Property(p => p.Price).IsConcurrencyToken();
             modelBuilder.Entity<Product>().Property(p => p.MerchantId).IsConcurrencyToken();
             modelBuilder.Entity<Shipment>().Property(s => s.MerchantId).IsConcurrencyToken();
+            modelBuilder.Entity<Shipment>().Property(s => s.RowVersion).IsRowVersion();
+            modelBuilder.Entity<Employee>().Property(e => e.SecurityStamp).HasDefaultValueSql("NEWID()").IsConcurrencyToken();
+            modelBuilder.Entity<Merchant>().Property(m => m.SecurityStamp).HasDefaultValueSql("NEWID()").IsConcurrencyToken();
             modelBuilder.Entity<Vehicle>().Property(v => v.MaxCapacityKg).HasColumnType("decimal(8,2)");
             modelBuilder.Entity<DriverRoute>().Property(dr => dr.RoutePay).HasColumnType("decimal(10,2)");
             modelBuilder.Entity<Shipment>().Property(s => s.CodAmount).HasColumnType("decimal(10,2)");
@@ -108,6 +136,7 @@ namespace FastDrop.MVC.Models
             modelBuilder.Entity<Employee>().HasIndex(e => e.Email).IsUnique();
             modelBuilder.Entity<Merchant>().HasIndex(m => m.Email).IsUnique();
             modelBuilder.Entity<Vehicle>().HasIndex(v => v.LicensePlate).IsUnique();
+            modelBuilder.Entity<DriverPayment>().HasIndex(p => p.ShipmentId).IsUnique().HasFilter("[ShipmentId] IS NOT NULL");
             
             // Avoid Cascade cycles
             modelBuilder.Entity<ShipmentAttempt>()

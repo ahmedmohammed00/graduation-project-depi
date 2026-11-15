@@ -89,7 +89,7 @@
                 <a class="sidebar-help" asp-controller="AdminPortal" asp-action="Index">@await Html.PartialAsync("_PortalIcon", "overview")<span>Back to admin workspace</span></a>
             }
             <a class="sidebar-help" asp-controller="Home" asp-action="Privacy">@await Html.PartialAsync("_PortalIcon", "help")<span>Privacy & account information</span></a>
-            <div class="sidebar-account"><a class="account-avatar" asp-controller="Profile" asp-action="Index" aria-label="My profile">@initial</a><div><a asp-controller="Profile" asp-action="Index" class="account-profile-link"><strong>@name</strong></a><span>@area account</span></div><a asp-controller="Account" asp-action="Logout" class="account-signout" aria-label="Sign out">@await Html.PartialAsync("_PortalIcon", "logout")</a></div>
+            <div class="sidebar-account"><a class="account-avatar" asp-controller="Profile" asp-action="Index" aria-label="My profile">@initial</a><div><a asp-controller="Profile" asp-action="Index" class="account-profile-link"><strong>@name</strong></a><span>@area account</span></div><form asp-controller="Account" asp-action="Logout" method="post" class="sidebar-signout"><button type="submit" class="account-signout" aria-label="Sign out">@await Html.PartialAsync("_PortalIcon", "logout")</button></form></div>
         </div>
     </aside>
     <div class="portal-main">

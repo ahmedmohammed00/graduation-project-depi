@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
@@ -167,9 +168,23 @@ public sealed class ManagementApplicationFactory : WebApplicationFactory<Program
         {
             // Keep antiforgery tests isolated from the developer's persisted keys.
             services.AddDataProtection().UseEphemeralDataProtectionProvider();
+            // Existing policy/resource tests use synthetic identities independently of account sessions.
+            // SessionSecurityTests explicitly restore the production validator and exercise real tokens/accounts.
+            services.RemoveAll<IAccountSessionValidator>();
+            services.AddSingleton<IAccountSessionValidator, SyntheticPolicyTestSessions>();
+            services.PostConfigure<AccountThrottleOptions>(options =>
+            {
+                options.LoginIpLimit = options.LoginAccountLimit = options.SignupIpLimit = options.SignupAccountLimit = 10000;
+            });
             services.AddControllers().AddApplicationPart(typeof(AuthorizationFallbackProbeController).Assembly);
         });
     }
+}
+
+internal sealed class SyntheticPolicyTestSessions : IAccountSessionValidator
+{
+    public Task<bool> ValidateAsync(ClaimsPrincipal user, CancellationToken cancellationToken = default) => Task.FromResult(true);
+    public Task RevokeAsync(ClaimsPrincipal user, CancellationToken cancellationToken = default) => Task.CompletedTask;
 }
 
 // Only registered by the test factory; intentionally has no authorization attribute.

@@ -12,6 +12,7 @@ namespace FastDrop.MVC.Models
         public string? ContactName { get; set; }
         public string? Phone { get; set; }
         public string Status { get; set; } = "active";
+        public Guid SecurityStamp { get; set; } = Guid.NewGuid();
 
         public int? AddressId { get; set; }
         public Address? Address { get; set; }

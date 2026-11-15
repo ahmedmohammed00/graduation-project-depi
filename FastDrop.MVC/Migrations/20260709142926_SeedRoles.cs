@@ -22,9 +22,8 @@ namespace FastDrop.MVC.Migrations
                     { 3, "General employee", "Employee" }
                 });
 
-            migrationBuilder.Sql("UPDATE Employee SET RoleId = 1 WHERE Email IN ('admin@test.com', 'ahmedmohammed227a@gmail.com')");
-            migrationBuilder.Sql("UPDATE Employee SET RoleId = 2 WHERE Email IN ('dispatcher@test.com', 'dispbatecher@test.com')");
-            migrationBuilder.Sql("UPDATE Employee SET RoleId = 3 WHERE RoleId IS NULL");
+            // Role definitions do not approve accounts. Assign roles only through an
+            // operator-approved provisioning process using verified employee IDs.
         }
 
         /// <inheritdoc />

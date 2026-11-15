@@ -16,11 +16,13 @@ namespace FastDrop.MVC.Controllers
     {
         private readonly IAccountService _accountService;
         private readonly JwtSettings _jwtSettings;
+        private readonly IAccountSessionValidator _sessions;
 
-        public AccountController(IAccountService accountService, JwtSettings jwtSettings)
+        public AccountController(IAccountService accountService, JwtSettings jwtSettings, IAccountSessionValidator sessions)
         {
             _accountService = accountService;
             _jwtSettings = jwtSettings;
+            _sessions = sessions;
         }
 
         [HttpGet]
@@ -81,10 +83,11 @@ namespace FastDrop.MVC.Controllers
             if (claims != null)
             {
                 var tokenHandler = new JwtSecurityTokenHandler();
+                var expires = DateTime.UtcNow.AddMinutes(30);
                 var tokenDescriptor = new SecurityTokenDescriptor
                 {
                     Subject = new ClaimsIdentity(claims),
-                    Expires = DateTime.UtcNow.AddDays(7),
+                    Expires = expires,
                     Issuer = _jwtSettings.Issuer,
                     Audience = _jwtSettings.Audience,
                     SigningCredentials = new SigningCredentials(_jwtSettings.SigningKey, SecurityAlgorithms.HmacSha256Signature)
@@ -97,7 +100,7 @@ namespace FastDrop.MVC.Controllers
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddDays(7)
+                    Expires = expires
                 });
 
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -119,9 +122,10 @@ namespace FastDrop.MVC.Controllers
             return View(model);
         }
 
-        [HttpGet]
-        public IActionResult Logout()
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
         {
+            await _sessions.RevokeAsync(User, HttpContext.RequestAborted);
             Response.Cookies.Delete("jwt");
             return RedirectToAction("Index", "Home");
         }

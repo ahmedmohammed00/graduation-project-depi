@@ -64,6 +64,7 @@ namespace FastDrop.MVC.Services
 
             if (employee != null)
             {
+                if (!AccountSessionValidator.Active(employee.AccountStatus)) return null;
                 bool isValid = PasswordHashing.Verify(model.Password, employee.Password);
 
                 if (isValid)
@@ -77,11 +78,14 @@ namespace FastDrop.MVC.Services
                         role = "Driver";
                     }
                     if (role == "Driver" && driver == null) return null;
+                    if (role is not ("SuperAdmin" or "Dispatcher" or "Employee" or "Driver")) return null;
 
                     claims.Add(new Claim(ClaimTypes.NameIdentifier, employee.EmployeeId.ToString()));
                     claims.Add(new Claim(ClaimTypes.Name, employee.Name));
                     claims.Add(new Claim(ClaimTypes.Email, employee.Email));
                     claims.Add(new Claim(ClaimTypes.Role, role));
+                    claims.Add(new Claim(AccountSessionValidator.TypeClaim, "Employee"));
+                    claims.Add(new Claim(AccountSessionValidator.StampClaim, employee.SecurityStamp.ToString("D")));
 
                     // Check if this employee is ALSO a driver
                     if (driver != null)
@@ -101,6 +105,7 @@ namespace FastDrop.MVC.Services
 
                 if (merchant != null)
                 {
+                    if (!AccountSessionValidator.Active(merchant.Status)) return null;
                     bool isValid = PasswordHashing.Verify(model.Password, merchant.Password);
 
                     if (isValid)
@@ -111,6 +116,8 @@ namespace FastDrop.MVC.Services
                         claims.Add(new Claim(ClaimTypes.Email, merchant.Email));
                         claims.Add(new Claim(ClaimTypes.Role, "Merchant"));
                         claims.Add(new Claim("MerchantId", merchant.MerchantId.ToString()));
+                        claims.Add(new Claim(AccountSessionValidator.TypeClaim, "Merchant"));
+                        claims.Add(new Claim(AccountSessionValidator.StampClaim, merchant.SecurityStamp.ToString("D")));
                     }
                 }
             }

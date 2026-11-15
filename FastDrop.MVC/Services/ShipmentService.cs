@@ -12,10 +12,12 @@ namespace FastDrop.MVC.Services
     public class ShipmentService : IShipmentService
     {
         private readonly DmsDbContext _context;
+        private readonly ILogger<ShipmentService>? _logger;
 
-        public ShipmentService(DmsDbContext context)
+        public ShipmentService(DmsDbContext context, ILogger<ShipmentService>? logger = null)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<IEnumerable<Shipment>> GetShipmentsAsync(string role, int? merchantId, int? driverId)
@@ -197,6 +199,9 @@ namespace FastDrop.MVC.Services
                 }
             }
 
+            if (shipment.DeliveryConfirmedAt.HasValue || await _context.ShipmentStatuses.AnyAsync(s => s.ShipmentId == id && s.Status == "Delivered"))
+                return status == "Delivered" ? (true, false) : (false, true);
+
             _context.ShipmentStatuses.Add(new ShipmentStatus
             {
                 Shipment = shipment,
@@ -206,6 +211,7 @@ namespace FastDrop.MVC.Services
 
             if (status == "Delivered")
             {
+                shipment.DeliveryConfirmedAt = DateTime.UtcNow;
                 var attempt = new ShipmentAttempt
                 {
                     Shipment = shipment,
@@ -231,88 +237,77 @@ namespace FastDrop.MVC.Services
 
         public async Task<(bool IsSuccess, string Message)> SubmitPodAsync(int shipmentId, int driverId, string otpCode, string? comments)
         {
+            if (driverId <= 0) return (false, "A valid driver identity is required.");
             var shipment = await _context.Shipments.FindAsync(shipmentId);
-            if (shipment == null)
-            {
-                return (false, "Shipment not found.");
-            }
+            if (shipment == null) return (false, "Shipment not found.");
+            if (!await AssignedToDriverAsync(shipment, driverId)) return (false, "You are not assigned to this shipment.");
 
-            bool isAssigned = false;
-            if (shipment.RouteId.HasValue)
-            {
-                isAssigned = await _context.DriverRoutes
-                    .AnyAsync(dr => dr.DriverId == driverId && dr.RouteId == shipment.RouteId);
-            }
-            else if (shipment.DriverId.HasValue)
-            {
-                isAssigned = shipment.DriverId == driverId;
-            }
-            
-            if (!isAssigned)
-            {
-                return (false, "You are not assigned to this shipment.");
-            }
+            var existing = await ExistingDeliveryAsync(shipment, driverId);
+            if (existing.HasValue) return existing.Value;
 
-            // Simulate OTP verification (any OTP is considered valid for simulation)
-            if (string.IsNullOrWhiteSpace(otpCode))
-            {
-                return (false, "OTP code is required.");
-            }
-
-            _context.ShipmentStatuses.Add(new ShipmentStatus
-            {
-                Shipment = shipment,
-                Status = "Delivered",
-                UpdatedAt = DateTime.UtcNow
-            });
-
+            // Real recipient OTP verification remains a separate S09 integration.
+            // This change enforces a single atomic delivery/payout event for the existing workflow.
+            if (string.IsNullOrWhiteSpace(otpCode) || otpCode.Length > 100) return (false, "OTP code is required.");
+            var fee = await _context.Addresses.Where(a => a.AddressId == shipment.AddressId)
+                .Select(a => a.Zone == null ? 0m : a.Zone.DeliveryFee ?? 0m).SingleOrDefaultAsync();
+            var payout = decimal.Round(fee > 0 ? fee * 0.5m : 15m, 2, MidpointRounding.AwayFromZero);
+            var attemptNumber = (await _context.ShipmentAttempts.Where(a => a.ShipmentId == shipmentId)
+                .MaxAsync(a => (int?)a.AttemptNumber) ?? 0) + 1;
+            var now = DateTime.UtcNow;
+            shipment.DeliveryConfirmedAt = now;
+            shipment.ShipmentStatuses.Add(new ShipmentStatus { Status = "Delivered", UpdatedAt = now });
             var attempt = new ShipmentAttempt
             {
-                Shipment = shipment,
-                DriverId = driverId,
-                AttemptNumber = 1,
-                Status = "Success",
-                OtpCode = otpCode,
-                AttemptTime = DateTime.UtcNow
+                Shipment = shipment, DriverId = driverId, AttemptNumber = attemptNumber,
+                Status = "Success", AttemptTime = now
             };
-
             _context.ShipmentAttempts.Add(attempt);
-
             _context.PodEvidences.Add(new PodEvidence
             {
-                ShipmentAttempt = attempt,
-                PhotoUrl = "/assets/simulated-pod.png", // Simulated POD
-                OtpVerified = true,
-                Notes = comments
+                ShipmentAttempt = attempt, PhotoUrl = "/assets/simulated-pod.png",
+                OtpVerified = true, Notes = comments
             });
-
-            // Calculate payout and insert DriverPayment
-            await _context.Entry(shipment).Reference(s => s.Address).LoadAsync();
-            decimal deliveryFee = 0;
-            if (shipment.Address != null)
-            {
-                await _context.Entry(shipment.Address).Reference(a => a.Zone).LoadAsync();
-                if (shipment.Address.Zone != null)
-                {
-                    deliveryFee = shipment.Address.Zone.DeliveryFee ?? 0;
-                }
-            }
-
-            // Driver gets 50% of the delivery fee, or minimum 15 EGP
-            decimal payout = deliveryFee > 0 ? deliveryFee * 0.5m : 15m;
-
             _context.DriverPayments.Add(new DriverPayment
             {
-                DriverId = driverId,
-                ShipmentId = shipmentId,
-                TotalPayout = payout,
-                DistanceKm = 0, // Distance API integration pending
-                PaymentStatus = "Pending",
-                CreatedAt = DateTime.UtcNow
+                DriverId = driverId, ShipmentId = shipmentId, TotalPayout = payout,
+                DistanceKm = 0, PaymentStatus = "Pending", CreatedAt = now
             });
+            try
+            {
+                // SQL rowversion plus the unique shipment payout index protect simultaneous retries.
+                // The delivery marker, status, attempt, evidence and payout commit together.
+                await _context.SaveChangesAsync();
+                return (true, "Delivery successful and POD captured.");
+            }
+            catch (DbUpdateException exception)
+            {
+                _context.ChangeTracker.Clear();
+                var stored = await _context.Shipments.AsNoTracking().SingleOrDefaultAsync(s => s.ShipmentId == shipmentId);
+                if (stored != null && await AssignedToDriverAsync(stored, driverId))
+                {
+                    var completed = await ExistingDeliveryAsync(stored, driverId);
+                    if (completed.HasValue && completed.Value.IsSuccess) return completed.Value;
+                }
+                _logger?.LogWarning(exception, "Delivery confirmation conflicted for shipment {ShipmentId}", shipmentId);
+                return (false, "Delivery could not be saved. Reload the shipment and try again.");
+            }
+        }
 
-            await _context.SaveChangesAsync();
-            return (true, "Delivery successful and POD captured.");
+        private Task<bool> AssignedToDriverAsync(Shipment shipment, int driverId) => shipment.RouteId.HasValue
+            ? _context.DriverRoutes.AnyAsync(dr => dr.RouteId == shipment.RouteId && dr.DriverId == driverId)
+            : Task.FromResult(shipment.DriverId == driverId);
+
+        private async Task<(bool IsSuccess, string Message)?> ExistingDeliveryAsync(Shipment shipment, int driverId)
+        {
+            var payments = await _context.DriverPayments.AsNoTracking().Where(p => p.ShipmentId == shipment.ShipmentId)
+                .Select(p => p.DriverId).ToListAsync();
+            var delivered = shipment.DeliveryConfirmedAt.HasValue || await _context.ShipmentStatuses
+                .AnyAsync(s => s.ShipmentId == shipment.ShipmentId && s.Status == "Delivered");
+            if (delivered && payments.Count == 1 && payments[0] == driverId)
+                return (true, "Delivery was already recorded. No additional payout was created.");
+            if (delivered || payments.Count > 0)
+                return (false, "This shipment already has delivery or payment records. Ask an administrator to review them.");
+            return null;
         }
 
         public async Task<IEnumerable<Address>> GetAddressesAsync()

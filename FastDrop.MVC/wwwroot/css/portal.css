@@ -1,4 +1,6 @@
 /* FastDrop workspace — shared tokens and components for every portal. */
+.sidebar-signout { margin-left: auto; }
+.sidebar-signout .account-signout { background: transparent; border: 0; padding: 0; }
 :root {
     --primary:#087f70;
     --primary-dark:#056558;

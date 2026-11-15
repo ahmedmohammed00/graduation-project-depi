@@ -11,14 +11,14 @@ using Xunit;
 
 namespace FastDrop.MVC.Tests;
 
-// These tests create and remove only uniquely named databases on a dedicated LocalDB instance.
+// These tests create and remove only uniquely named databases on an allowlisted LocalDB instance.
 // Ordinary runs skip them; see README for the explicit opt-in and instance setup.
 public sealed class LocalMerchantSqlFactAttribute : FactAttribute
 {
     public LocalMerchantSqlFactAttribute()
     {
         if (Environment.GetEnvironmentVariable("FASTDROP_RUN_SQL_TESTS") != "1")
-            Skip = "Set FASTDROP_RUN_SQL_TESTS=1 with the isolated FastDropSecurityAudit LocalDB instance running.";
+            Skip = "Set FASTDROP_RUN_SQL_TESTS=1 with an allowed local SQL test instance running; see README.";
     }
 }
 
@@ -99,13 +99,11 @@ public class MerchantWriteSqlTests
         legacy.ShipmentProducts.Add(new ShipmentProduct { ProductId = 1, Quantity = 1 });
         db.Shipments.Add(legacy); await db.SaveChangesAsync();
         await db.Database.ExecuteSqlRawAsync("ALTER TABLE [Shipment_Product] DROP COLUMN [UnitPrice]");
-        var history = db.GetService<IHistoryRepository>();
-        await db.Database.ExecuteSqlRawAsync(history.GetCreateScript());
-        var target = db.Database.GetMigrations().Last();
-        Assert.EndsWith("CaptureShipmentUnitPrices", target);
-        foreach (var applied in db.Database.GetMigrations().Where(m => m != target))
-            await db.Database.ExecuteSqlRawAsync(history.GetInsertScript(new HistoryRow(applied, "10.0.9")));
-        await db.GetService<IMigrator>().MigrateAsync(target);
+        var assembly = db.GetService<IMigrationsAssembly>();
+        var migrationType = assembly.Migrations.Single(m => m.Key.EndsWith("CaptureShipmentUnitPrices")).Value;
+        var migration = assembly.CreateMigration(migrationType, db.Database.ProviderName!);
+        foreach (var command in db.GetService<IMigrationsSqlGenerator>().Generate(migration.UpOperations, db.Model))
+            await db.Database.ExecuteSqlRawAsync(command.CommandText);
         db.ChangeTracker.Clear();
         Assert.Null((await db.ShipmentProducts.SingleAsync()).UnitPrice);
         Assert.False(db.Database.HasPendingModelChanges());
@@ -156,12 +154,22 @@ public class MerchantWriteSqlTests
         }
     }
 
-    private sealed class TestDatabase : IAsyncDisposable
+    internal sealed class TestDatabase : IAsyncDisposable
     {
         private readonly string name = "FastDrop_SecurityTests_" + Guid.NewGuid().ToString("N");
+        private static string Instance
+        {
+            get
+            {
+                var instance = Environment.GetEnvironmentVariable("FASTDROP_SQL_TEST_INSTANCE") ?? "FastDropSecurityAudit";
+                if (instance is not ("FastDropSecurityAudit" or "MSSQLLocalDB"))
+                    throw new InvalidOperationException("Only the dedicated or standard local LocalDB instance is permitted for these disposable tests.");
+                return instance;
+            }
+        }
         private string Connection => new SqlConnectionStringBuilder
         {
-            DataSource = @"(localdb)\FastDropSecurityAudit", InitialCatalog = name,
+            DataSource = @"(localdb)\" + Instance, InitialCatalog = name,
             IntegratedSecurity = true, TrustServerCertificate = true, Encrypt = false, ConnectTimeout = 15
         }.ConnectionString;
         public DmsDbContext Context(params IInterceptor[] interceptors) => new(new DbContextOptionsBuilder<DmsDbContext>()

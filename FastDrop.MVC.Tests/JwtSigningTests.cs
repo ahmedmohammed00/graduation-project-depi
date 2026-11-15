@@ -67,7 +67,7 @@ public class JwtSigningTests
     public async Task LoginTokenValidatesUsingTheConfiguredPrivateKey()
     {
         var settings = JwtSettings.FromConfiguration(Configuration(NewPrivateKey()));
-        var controller = new AccountController(new SuccessfulAccountService(), settings)
+        var controller = new AccountController(new SuccessfulAccountService(), settings, new SyntheticPolicyTestSessions())
         {
             ControllerContext = new ControllerContext { HttpContext = new DefaultHttpContext() }
         };

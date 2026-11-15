@@ -232,10 +232,54 @@ roles, account status and operational assignments remain administrator-managed.
 
 Changing an email requires the current password and checks both account tables for
 an existing address. Password changes require the current password and store a new
-salted hash. Both changes clear this browser's authentication cookie and redirect
-to login. Other already-issued JWTs retain their existing expiry; server-side token
-revocation remains a separate session-management requirement. Editing ordinary
-profile details refreshes the displayed account name without extending the JWT.
+salted hash. Both changes revoke existing account tokens, clear this browser's
+authentication cookie and redirect to login. Editing ordinary profile details
+refreshes the displayed account name without extending the JWT.
+
+### Account sessions and request protection
+
+JWTs expire after 30 minutes. Each authenticated request checks the account's
+current active status, roles, driver link and security stamp against the database.
+Application password, email, role and account-status changes rotate that stamp.
+Signing out uses an antiforgery-protected POST and revokes all existing tokens for
+that account, including tokens copied to another browser. Previously issued tokens
+without the stamp/type claims require a fresh login after upgrading. Schema
+changes must be applied before running this application version.
+
+Login and signup POSTs have separate per-source and per-account fixed-window
+budgets. Login defaults to 20 requests per source and 5 per account each minute;
+signup permits 3 per source and per account every 15 minutes. Existing account IDs
+are resolved using the database's email matching rules so alternate spellings that
+identify the same account share a budget. Limits return 429 with Retry-After; GET
+forms stay available. Non-form submissions are rejected. Configure positive limits
+under `AccountRateLimits` using `LoginIpLimit`, `LoginAccountLimit`, `SignupIpLimit`
+and `SignupAccountLimit`. These budgets are local to each application process;
+scaled deployments also need shared ingress limits and a reviewed trusted-proxy
+configuration. Arbitrary forwarding headers do not override the connection IP.
+
+Unsafe MVC requests validate antiforgery tokens by default, including payment
+mutations. Role migrations seed role definitions only; they no longer assign
+privileges by email or automatically approve employees without roles. For existing
+databases where the historical migration already ran, review prior staff grants
+against operator-approved employee IDs. Changing the migration source does not
+undo existing account approvals.
+
+### Delivery payout integrity
+
+Delivery confirmation records its marker, status, attempt, evidence and payout in
+one transaction. Shipment rowversion checks and a unique non-null shipment payout
+index prevent parallel retries from paying twice. Retries return the already
+recorded result, and delivered shipments cannot be reopened through generic status
+updates. Existing inconsistent delivery/payment records require administrator
+review. Recipient OTP verification and photo capture remain simulated (audit S09);
+this batch protects payout idempotency, not the authenticity of that proof.
+
+Apply **`20261115220909_ProtectSessionsAndDeliveryPayouts`** after the shipment-price
+migration. The migration assigns distinct security stamps to existing accounts and
+adds the delivery/concurrency fields. It stops with error 51001 if historical
+duplicate shipment payouts exist, before changing the schema; it does not delete
+financial records. Reconcile those records through the approved finance process
+before retrying. No application database migration is performed automatically.
 
 ---
 
@@ -250,12 +294,15 @@ dotnet test FastDrop.sln
 The authorization tests run the application in an isolated HTTP test host using
 temporary signing and Data Protection keys. They do not require a SQL database.
 
-Five additional merchant integration tests use SQL Server LocalDB to verify
-concurrent stock reservations, rollback, price snapshots, staff update compatibility
-and the additive migration. They are skipped by default. On Windows, create the
+Additional relational integration tests use SQL Server LocalDB to verify stock and
+delivery races, rollback, price snapshots, session stamps and migration behavior.
+They are skipped by default. On Windows, create the
 dedicated test instance with `SqlLocalDB create FastDropSecurityAudit -s`, set
 `FASTDROP_RUN_SQL_TESTS=1`, then run `dotnet test FastDrop.sln`. The tests create
-and delete uniquely named `FastDrop_SecurityTests_*` databases only on that instance.
+and delete uniquely named `FastDrop_SecurityTests_*` databases only. Alternatively,
+set `FASTDROP_SQL_TEST_INSTANCE=MSSQLLocalDB` to host these disposable databases on
+the standard local instance. Other server names and existing database names are
+not accepted by the test fixture.
 
 For comprehensive project documentation covering architecture, requirements, database design, and more, see [`fastdrop_project_documentation.md`](fastdrop_project_documentation.md).
 

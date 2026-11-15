@@ -10,6 +10,7 @@ namespace FastDrop.MVC.Models
         public string Email { get; set; } = null!;
         public string Password { get; set; } = null!;
         public string AccountStatus { get; set; } = "active";
+        public Guid SecurityStamp { get; set; } = Guid.NewGuid();
         
         public int? RoleId { get; set; }
         public Role? Role { get; set; }
