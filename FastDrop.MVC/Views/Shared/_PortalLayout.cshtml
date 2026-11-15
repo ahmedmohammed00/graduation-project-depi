@@ -1,0 +1,136 @@
+@{
+    var area = ViewData["PortalArea"]?.ToString() ?? (User.IsInRole("SuperAdmin") ? "Admin" : User.IsInRole("Dispatcher") ? "Dispatcher" : User.IsInRole("Merchant") ? "Merchant" : User.IsInRole("Driver") ? "Driver" : "Workspace");
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    var name = string.IsNullOrWhiteSpace(User.Identity?.Name) ? "Your account" : User.Identity!.Name!;
+    var initial = name[..1].ToUpperInvariant();
+    var home = area == "Workspace" ? "Home" : area + "Portal";
+    var title = ViewData["Title"]?.ToString() ?? "Overview";
+    var links = new List<(string Group, string Label, string Controller, string Action, string Icon, bool Active)>();
+    void Link(string group, string label, string target, string targetAction, string icon, params string[] related)
+    {
+        var active = controller == target && (action == targetAction || related.Contains(action));
+        links.Add((group, label, target, targetAction, icon, active));
+    }
+    Link("Workspace", "Overview", home, "Index", "overview");
+    if (area == "Admin")
+    {
+        Link("Workspace", "Dispatch desk", "DispatcherPortal", "Index", "route");
+        Link("Management", "Merchants", "AdminPortal", "Merchants", "store", "MerchantDetails");
+        Link("Management", "Team & roles", "AdminPortal", "Employees", "users", "EditEmployee");
+        Link("Management", "Inventory", "AdminPortal", "Inventory", "box");
+        Link("Management", "Products", "Products", "Index", "box", "Create", "Edit", "Details", "Delete");
+        Link("Finance", "Merchant invoices", "AdminPortal", "Invoices", "invoice");
+        Link("Finance", "Driver payments", "AdminPortal", "DriverPayments", "wallet");
+        Link("Network", "Drivers", "Drivers", "Index", "users", "Details", "Create", "Edit", "Delete");
+        Link("Network", "Vehicles", "Vehicles", "Index", "truck", "Create", "Edit", "Delete");
+        Link("Network", "Warehouses", "Warehouses", "Index", "warehouse", "Details", "Create", "Edit", "Delete");
+        Link("Network", "Delivery zones", "AdminPortal", "Zones", "pin", "CreateZone", "EditZone", "DeleteZone");
+    }
+    else if (area == "Merchant")
+    {
+        Link("Operations", "My shipments", "MerchantPortal", "Shipments", "truck", "AddShipment", "ShipmentDetails", "EditShipment", "DeleteShipment");
+        Link("Operations", "My products", "MerchantPortal", "Products", "box", "AddProduct", "EditProduct", "DeleteProduct");
+        Link("Finance", "My invoices", "MerchantPortal", "Invoices", "invoice", "InvoiceDetails");
+    }
+    else if (area == "Driver")
+    {
+        Link("Deliveries", "My routes", "DriverPortal", "Routes", "route");
+        Link("Deliveries", "My shipments", "DriverPortal", "Shipments", "truck", "UpdateStatus");
+        Link("Finance", "My earnings", "DriverPortal", "Payments", "wallet");
+    }
+    else if (area == "Dispatcher")
+    {
+        Link("Operations", "Routes", "Routes", "Index", "route", "Details", "Create", "Edit", "Delete");
+        Link("Operations", "Shipments", "Shipments", "Index", "truck", "Details", "Create", "Edit", "Delete");
+        Link("Operations", "Driver performance", "Performance", "Index", "chart", "Driver");
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f8f8" />
+    <title>@title · FastDrop</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/portal.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="portal-page" data-portal="@area.ToLowerInvariant()">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <button class="sidebar-backdrop" data-menu-close aria-label="Close navigation" tabindex="-1"></button>
+    <aside class="portal-sidebar" id="portal-sidebar" aria-label="Workspace navigation">
+        <a class="portal-brand" asp-controller="@home" asp-action="Index" aria-label="FastDrop overview">
+            <span class="brand-mark">@await Html.PartialAsync("_PortalIcon", "truck")</span>
+            <span>fastdrop<span class="brand-period">.</span></span>
+        </a>
+        <div class="workspace-label"><span class="workspace-symbol">@initial</span><div><strong>@area workspace</strong><span>Delivery management</span></div><span class="workspace-status" aria-hidden="true"></span></div>
+        <nav class="portal-nav">
+            @foreach (var group in links.GroupBy(l => l.Group))
+            {
+                <div class="nav-group"><p class="nav-group-label">@group.Key</p>
+                @foreach (var link in group)
+                {
+                    <a class="portal-nav-link @(link.Active ? "is-active" : "")" asp-controller="@link.Controller" asp-action="@link.Action" aria-current="@(link.Active ? "page" : null)">
+                        @await Html.PartialAsync("_PortalIcon", link.Icon)<span>@link.Label</span>
+                        @if (link.Active) { <span class="active-mark" aria-hidden="true"></span> }
+                    </a>
+                }
+                </div>
+            }
+        </nav>
+        <div class="sidebar-bottom">
+            @if (User.IsInRole("SuperAdmin") && area != "Admin")
+            {
+                <a class="sidebar-help" asp-controller="AdminPortal" asp-action="Index">@await Html.PartialAsync("_PortalIcon", "overview")<span>Back to admin workspace</span></a>
+            }
+            <a class="sidebar-help" asp-controller="Home" asp-action="Privacy">@await Html.PartialAsync("_PortalIcon", "help")<span>Privacy & account information</span></a>
+            <div class="sidebar-account"><span class="account-avatar">@initial</span><div><strong>@name</strong><span>@area account</span></div><a asp-controller="Account" asp-action="Logout" class="account-signout" aria-label="Sign out">@await Html.PartialAsync("_PortalIcon", "logout")</a></div>
+        </div>
+    </aside>
+    <div class="portal-main">
+        <header class="portal-topbar">
+            <div class="topbar-location"><button class="icon-button mobile-menu" data-menu-toggle aria-controls="portal-sidebar" aria-expanded="false" aria-label="Open navigation">@await Html.PartialAsync("_PortalIcon", "menu")</button><span class="breadcrumb-workspace">@area workspace</span><span class="breadcrumb-divider">/</span><span>@title</span></div>
+            <div class="topbar-tools">
+                <button class="workspace-search" data-command-open aria-haspopup="dialog" aria-label="Search workspace">@await Html.PartialAsync("_PortalIcon", "search")<span>Search workspace</span><kbd>Ctrl K</kbd></button>
+                <span class="topbar-avatar" title="@name">@initial</span>
+            </div>
+        </header>
+        <main id="main-content" class="portal-content" tabindex="-1">
+            @if (TempData["SuccessMessage"] is string success)
+            {
+                <div class="portal-alert alert-success" role="status">@await Html.PartialAsync("_PortalIcon", "check")<span>@success</span><button class="icon-button" data-dismiss-alert aria-label="Dismiss message">@await Html.PartialAsync("_PortalIcon", "close")</button></div>
+            }
+            @if (TempData["ErrorMessage"] is string error)
+            {
+                <div class="portal-alert alert-danger" role="alert">@await Html.PartialAsync("_PortalIcon", "help")<span>@error</span><button class="icon-button" data-dismiss-alert aria-label="Dismiss message">@await Html.PartialAsync("_PortalIcon", "close")</button></div>
+            }
+            @if (action != "Index" || controller != home)
+            {
+                <div class="portal-page-heading"><div><p class="eyebrow">@area workspace</p><h1>@title</h1>@if (ViewData["Subtitle"] != null) { <p class="page-description">@ViewData["Subtitle"]</p> }</div><a class="subtle-link" asp-controller="@home" asp-action="Index">Back to overview @await Html.PartialAsync("_PortalIcon", "arrow")</a></div>
+            }
+            @RenderBody()
+        </main>
+        <footer class="portal-footer"><span>FastDrop · Every delivery, connected.</span><span>Built to keep you moving <span class="footer-dot"></span></span></footer>
+    </div>
+    <dialog class="command-dialog" id="workspace-commands" aria-labelledby="command-title">
+        <div class="command-heading"><h2 id="command-title">Go to your workspace</h2><button class="icon-button" data-command-close aria-label="Close search">@await Html.PartialAsync("_PortalIcon", "close")</button></div>
+        <label class="command-search">@await Html.PartialAsync("_PortalIcon", "search")<input type="search" data-command-input placeholder="Find a page…" aria-label="Find a workspace page" autocomplete="off" /></label>
+        <div class="command-results">
+            @foreach (var link in links)
+            {
+                <a data-command-item asp-controller="@link.Controller" asp-action="@link.Action">@await Html.PartialAsync("_PortalIcon", link.Icon)<span>@link.Label<small>@link.Group</small></span>@await Html.PartialAsync("_PortalIcon", "arrow")</a>
+            }
+            <p class="command-empty" data-command-empty hidden>No pages found. Try a different name.</p>
+        </div>
+        <div class="command-footer"><span>Navigate with Tab · Open with Enter</span><kbd>Esc to close</kbd></div>
+    </dialog>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/portal.js" asp-append-version="true" defer></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

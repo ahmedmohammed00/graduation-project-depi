@@ -1,37 +1,17 @@
 @{
     Layout = "_MerchantLayout";
-    ViewData["Title"] = "Dashboard";
-    ViewData["Subtitle"] = "Overview of your shipments and invoices";
+    ViewData["Title"] = "Overview";
 }
-
-<div class="summary-strip">
-    <div class="strip-card" style="--sc-color:var(--primary)">
-        <div class="strip-icon" style="background:var(--primary-light)"><svg viewBox="0 0 24 24" style="width:24px; height:24px;" fill="var(--primary-dark)"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></div>
-        <div>
-            <div class="strip-val" style="color:var(--primary)">@ViewBag.TotalShipments</div>
-            <div class="strip-lbl">Total Shipments</div>
-        </div>
-    </div>
-    
-    <div class="strip-card" style="--sc-color:var(--success)">
-        <div class="strip-icon" style="background:var(--success-light)"><svg viewBox="0 0 24 24" style="width:24px; height:24px;" fill="var(--success)"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21V3h-3v2.16z"/></svg></div>
-        <div>
-            <div class="strip-val" style="color:var(--success)">@ViewBag.TotalCodAmount.ToString("C")</div>
-            <div class="strip-lbl">Total COD Amount</div>
-        </div>
-    </div>
-
-    <div class="strip-card" style="--sc-color:var(--warning)">
-        <div class="strip-icon" style="background:var(--warning-light)"><svg viewBox="0 0 24 24" style="width:24px; height:24px;" fill="var(--warning)"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 14h-4v-2h4v2zm0-4h-4v-2h4v2z"/></svg></div>
-        <div>
-            <div class="strip-val" style="color:var(--warning)">@ViewBag.PendingInvoicesCount</div>
-            <div class="strip-lbl">Unpaid Invoices</div>
-        </div>
-    </div>
-</div>
-
-<div class="table-wrap" style="margin-top: 24px; padding: 40px; text-align: center;">
-    <svg viewBox="0 0 24 24" style="width: 64px; height: 64px; fill: var(--border); margin: 0 auto 16px; display: block;"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/><path d="M7 12h2v5H7zm4-3h2v8h-2zm4-3h2v11h-2z"/></svg>
-    <h3 style="font-size: 18px; color: var(--text-dark); margin-bottom: 8px;">Welcome to your Dashboard</h3>
-    <p style="color: var(--text-muted); font-size: 14px;">Use the sidebar to manage your shipments and view your invoices.</p>
+<div class="overview-heading"><div><p class="eyebrow">Your merchant workspace</p><h1>Your store, in motion<span style="color:var(--primary)">.</span></h1><p class="page-description">Less time keeping track. More time growing your business.</p></div><a class="btn btn-primary" asp-action="AddShipment">@await Html.PartialAsync("_PortalIcon", "plus") New shipment</a></div>
+<section class="metric-grid three-columns" aria-label="Merchant summary">
+    <article class="metric-card is-featured"><div class="metric-topline"><span class="metric-label">Total shipments</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "truck")</span></div><div class="metric-value">@ViewBag.TotalShipments</div><p class="metric-footnote">Every order, in one place</p></article>
+    <article class="metric-card"><div class="metric-topline"><span class="metric-label">Total cash on delivery</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "wallet")</span></div><div class="metric-value" style="font-size:26px"><small style="font-size:11px;letter-spacing:0">EGP</small> @ViewBag.TotalCodAmount.ToString("N0")</div><p class="metric-footnote">COD value across your shipments</p></article>
+    <article class="metric-card"><div class="metric-topline"><span class="metric-label">Unpaid invoices</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "invoice")</span></div><div class="metric-value">@ViewBag.PendingInvoicesCount</div><p class="metric-footnote">Your outstanding invoice queue</p></article>
+</section>
+<section class="overview-banner" style="margin-bottom:30px;padding:30px"><div><p class="eyebrow">Ready when you are</p><h2>Your next delivery starts here.</h2><p>Create a shipment, choose your products and let your delivery journey begin.</p></div><a class="btn btn-primary" asp-action="AddShipment">Create a shipment @await Html.PartialAsync("_PortalIcon", "arrow")</a></section>
+<div class="section-label-row"><h2>A place for everything</h2><span>Keep your business moving</span></div>
+<div class="shortcut-grid">
+    <a class="shortcut-card" asp-action="Shipments"><span class="shortcut-icon">@await Html.PartialAsync("_PortalIcon", "truck")</span><div><h3>Track your shipments</h3><p>Find an order and follow its delivery history.</p></div>@await Html.PartialAsync("_PortalIcon", "external")</a>
+    <a class="shortcut-card" asp-action="Products"><span class="shortcut-icon">@await Html.PartialAsync("_PortalIcon", "box")</span><div><h3>Manage your products</h3><p>Keep your catalog and stock organized.</p></div>@await Html.PartialAsync("_PortalIcon", "external")</a>
+    <a class="shortcut-card" asp-action="Invoices"><span class="shortcut-icon">@await Html.PartialAsync("_PortalIcon", "invoice")</span><div><h3>Review your invoices</h3><p>Your statements and billing details together.</p></div>@await Html.PartialAsync("_PortalIcon", "external")</a>
 </div>

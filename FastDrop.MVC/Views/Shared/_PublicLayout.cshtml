@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] · FastDrop</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/portal.css" asp-append-version="true" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="portal-page">
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <header class="portal-topbar"><a class="portal-brand" style="padding:0" asp-controller="Home" asp-action="Index"><span class="brand-mark">@await Html.PartialAsync("_PortalIcon", "truck")</span><span>fastdrop<span class="brand-period">.</span></span></a><a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Login">Log in @await Html.PartialAsync("_PortalIcon", "arrow")</a></header>
+    <main class="portal-content" id="main-content" style="max-width:1000px">@RenderBody()</main>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

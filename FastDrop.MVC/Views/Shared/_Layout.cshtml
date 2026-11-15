@@ -1,86 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - FastDrop.MVC</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/FastDrop.MVC.styles.css" asp-append-version="true" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">FastDrop.MVC</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
-                        {
-                            if (User.IsInRole("SuperAdmin"))
-                            {
-                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Invoices" asp-action="Index">Invoices</a></li>
-                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Drivers" asp-action="Index">Drivers</a></li>
-                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Routes" asp-action="Index">Routes</a></li>
-                            }
-                            if (User.IsInRole("Dispatcher"))
-                            {
-                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Routes" asp-action="Index">Routes</a></li>
-                            }
-                            if (User.IsInRole("Merchant"))
-                            {
-                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Shipments" asp-action="Index">My Shipments</a></li>
-                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Products" asp-action="Index">My Products</a></li>
-                            }
-                            if (User.IsInRole("Driver"))
-                            {
-                                <li class="nav-item"><a class="nav-link text-dark" asp-controller="Shipments" asp-action="Index">My Route</a></li>
-                            }
-                        }
-                    </ul>
-                    <ul class="navbar-nav">
-                        @if (User.Identity != null && User.Identity.IsAuthenticated)
-                        {
-                            <li class="nav-item">
-                                <span class="nav-link text-dark">Hello, @User.Identity.Name! (@User.Claims.FirstOrDefault(c => c.Type == System.Security.Claims.ClaimTypes.Role)?.Value)</span>
-                            </li>
-                            <li class="nav-item">
-                                <a href="@Url.Action("Logout", "Account")" class="nav-link text-dark">Logout</a>
-                            </li>
-                        }
-                        else
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Login</a>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - FastDrop.MVC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
+@{
+    Layout = User.Identity?.IsAuthenticated == true ? "_PortalLayout" : "_PublicLayout";
+}
+@RenderBody()
+@section Styles {
+    @await RenderSectionAsync("Styles", required: false)
+}
+@section Scripts {
     @await RenderSectionAsync("Scripts", required: false)
-</body>
-</html>
+}

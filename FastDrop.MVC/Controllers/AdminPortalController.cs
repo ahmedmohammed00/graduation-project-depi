@@ -48,12 +48,18 @@ namespace FastDrop.MVC.Controllers
             var payments = await _driverPaymentService.GetDriverPaymentsAsync();
             var merchants = await _merchantService.GetMerchantsAsync();
 
-            ViewBag.EmployeeCount = employees.Count();
-            ViewBag.UnpaidInvoicesCount = invoices.Count(i => i.PaymentStatus != "Paid");
-            ViewBag.PendingPaymentsCount = payments.Count(p => p.PaymentStatus != "Paid");
-            ViewBag.MerchantCount = merchants.Count();
-
-            return View();
+            return View(new AdminDashboardViewModel
+            {
+                EmployeeCount = employees.Count(),
+                MerchantCount = merchants.Count(),
+                ActiveMerchantCount = merchants.Count(m => string.Equals(m.Status, "active", StringComparison.OrdinalIgnoreCase)),
+                UnpaidInvoiceCount = invoices.Count(i => i.PaymentStatus != "Paid"),
+                UnpaidInvoiceAmount = invoices.Where(i => i.PaymentStatus != "Paid").Sum(i => i.AmountDue),
+                PendingPaymentCount = payments.Count(p => p.PaymentStatus != "Paid"),
+                PendingPaymentAmount = payments.Where(p => p.PaymentStatus != "Paid").Sum(p => p.TotalPayout ?? 0m),
+                Merchants = merchants.OrderBy(m => m.ShopName).Take(5)
+                    .Select(m => new DashboardMerchant(m.MerchantId, m.ShopName, m.ContactName, m.Email, m.Status)).ToList()
+            });
         }
 
         // --- 1. Employees & Roles ---

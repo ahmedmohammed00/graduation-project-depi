@@ -1,67 +1,17 @@
 @{
     Layout = "_DriverLayout";
-    ViewData["Title"] = "Dashboard";
-    ViewData["Subtitle"] = "Overview of your assigned routes and shipments";
+    ViewData["Title"] = "Overview";
     var perf = ViewBag.DriverPerformance as FastDrop.MVC.Models.PerformanceScore;
-    var tier = perf?.Tier ?? "Unranked";
     var score = perf?.DailyScore ?? 0m;
-    var tierColor = tier == "Gold" ? "var(--warning)" : tier == "Silver" ? "#9ca3af" : tier == "Bronze" ? "#d97706" : "var(--text-muted)";
-    var tierBg = tier == "Gold" ? "var(--warning-light)" : tier == "Silver" ? "#f3f4f6" : tier == "Bronze" ? "#fef3c7" : "var(--border-light)";
+    var progress = Math.Clamp(score, 0m, 100m).ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
 }
-
-<div style="background: white; border-radius: 12px; padding: 16px 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-light); box-shadow: 0 2px 10px rgba(0,0,0,0.02);">
-    <div>
-        <div style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 4px;">My Performance</div>
-        <div style="font-size: 15px; color: var(--text-dark); font-weight: 700;">Current Rank & Score</div>
-    </div>
-    <div style="display: flex; align-items: center; gap: 12px;">
-        <span style="font-size: 15px; font-weight: 800; color: @tierColor; background: @tierBg; padding: 6px 14px; border-radius: 8px; border: 1.5px solid @tierColor;">
-            @tier Tier
-        </span>
-        <div style="text-align: right;">
-            <div style="font-size: 24px; font-weight: 900; color: var(--text-dark); line-height: 1;">@score</div>
-            <div style="font-size: 11px; color: var(--text-muted);">Points</div>
-        </div>
-    </div>
-</div>
-
-<div class="summary-strip">
-    <div class="strip-card" style="--sc-color:var(--info)">
-        <div class="strip-icon" style="background:var(--info-light)"><svg viewBox="0 0 24 24" fill="var(--info)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg></div>
-        <div>
-            <div class="strip-val" style="color:var(--info)">@ViewBag.ActiveRoutesCount</div>
-            <div class="strip-lbl">Active Routes</div>
-        </div>
-    </div>
-    
-    <div class="strip-card" style="--sc-color:var(--primary)">
-        <div class="strip-icon" style="background:var(--primary-light)"><svg viewBox="0 0 24 24" fill="var(--primary-dark)"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg></div>
-        <div>
-            <div class="strip-val" style="color:var(--primary)">@ViewBag.TotalShipments</div>
-            <div class="strip-lbl">Total Shipments</div>
-        </div>
-    </div>
-
-    <div class="strip-card" style="--sc-color:var(--success)">
-        <div class="strip-icon" style="background:var(--success-light)"><svg viewBox="0 0 24 24" fill="var(--success)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
-        <div>
-            <div class="strip-val" style="color:var(--success)">@ViewBag.DeliveredShipments</div>
-            <div class="strip-lbl">Delivered</div>
-        </div>
-    </div>
-
-    <div class="strip-card" style="--sc-color:var(--warning)">
-        <div class="strip-icon" style="background:var(--warning-light)"><svg viewBox="0 0 24 24" fill="var(--warning)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg></div>
-        <div>
-            <div class="strip-val" style="color:var(--warning)">@ViewBag.PendingShipments</div>
-            <div class="strip-lbl">Pending Delivery</div>
-        </div>
-    </div>
-</div>
-
-<div class="table-wrap" style="padding: 40px; text-align: center;">
-    <svg viewBox="0 0 24 24" style="width: 64px; height: 64px; fill: var(--border); margin: 0 auto 16px; display: block;"><path d="M20 8h-3V4H3c-1.1 0-2 .9-2 2v11h2c0 1.66 1.34 3 3 3s3-1.34 3-3h6c0 1.66 1.34 3 3 3s3-1.34 3-3h2v-5l-3-4z"/></svg>
-    <h3 style="font-size: 18px; color: var(--text-dark); margin-bottom: 8px;">Ready to deliver?</h3>
-    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 24px;">Check your routes and shipments to begin your deliveries for the day.</p>
-    <a href="@Url.Action("Routes", "DriverPortal")" class="btn btn-primary">View My Routes</a>
-</div>
+<div class="overview-heading"><div><p class="eyebrow">Your driver workspace</p><h1>Ready for the road<span style="color:var(--primary)">?</span></h1><p class="page-description">Your routes, deliveries and earnings. All in one clear view.</p></div><a class="btn btn-primary" asp-action="Shipments">My deliveries @await Html.PartialAsync("_PortalIcon", "arrow")</a></div>
+<section class="metric-grid" aria-label="Delivery summary">
+    <article class="metric-card"><div class="metric-topline"><span class="metric-label">Active routes</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "route")</span></div><div class="metric-value">@ViewBag.ActiveRoutesCount</div><p class="metric-footnote">Your assigned routes</p></article>
+    <article class="metric-card"><div class="metric-topline"><span class="metric-label">Assigned shipments</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "box")</span></div><div class="metric-value">@ViewBag.TotalShipments</div><p class="metric-footnote">Deliveries in your workspace</p></article>
+    <article class="metric-card is-featured"><div class="metric-topline"><span class="metric-label">Delivered</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "check")</span></div><div class="metric-value">@ViewBag.DeliveredShipments</div><p class="metric-footnote">Completed shipments</p></article>
+    <article class="metric-card"><div class="metric-topline"><span class="metric-label">Pending delivery</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "clock")</span></div><div class="metric-value">@ViewBag.PendingShipments</div><p class="metric-footnote">Still on your delivery list</p></article>
+</section>
+<div class="dashboard-grid"><section class="panel"><div class="panel-head"><h2 class="panel-title">Your next stop</h2><span class="s-badge sb-active">On the move</span></div><div class="panel-body"><p class="eyebrow">One delivery at a time</p><h2 style="font-size:23px;margin-bottom:12px">A good day starts with a clear route.</h2><p class="page-description" style="margin-bottom:24px">Check your assigned routes, review delivery addresses and keep your shipment status up to date.</p><a class="btn btn-primary" asp-action="Routes">View my routes @await Html.PartialAsync("_PortalIcon", "arrow")</a></div></section>
+<section class="panel"><div class="panel-head"><h2 class="panel-title">Your performance</h2><span class="s-badge sb-active">@(perf?.Tier ?? "Unranked")</span></div><div class="panel-body"><div class="performance-panel"><div><p class="page-description">Current score</p><div class="performance-score">@score.ToString("0.#")<small> / 100</small></div></div><span class="shortcut-icon">@await Html.PartialAsync("_PortalIcon", "chart")</span></div><div class="performance-track" role="meter" aria-label="Current performance score" aria-valuenow="@progress" aria-valuemin="0" aria-valuemax="100"><span style="width:@(progress)%"></span></div><p class="legend-caption">Calculated from your delivery and feedback history.</p></div></section></div>
+<div class="shortcut-grid"><a class="shortcut-card" asp-action="Routes"><span class="shortcut-icon">@await Html.PartialAsync("_PortalIcon", "route")</span><div><h3>Your routes</h3><p>See the stops assigned to you.</p></div>@await Html.PartialAsync("_PortalIcon", "external")</a><a class="shortcut-card" asp-action="Shipments"><span class="shortcut-icon">@await Html.PartialAsync("_PortalIcon", "truck")</span><div><h3>Your deliveries</h3><p>Review shipment and delivery details.</p></div>@await Html.PartialAsync("_PortalIcon", "external")</a><a class="shortcut-card" asp-action="Payments"><span class="shortcut-icon">@await Html.PartialAsync("_PortalIcon", "wallet")</span><div><h3>Your earnings</h3><p>Keep track of pending and paid earnings.</p></div>@await Html.PartialAsync("_PortalIcon", "external")</a></div>

@@ -1,38 +1,52 @@
+@model FastDrop.MVC.ViewModels.AdminDashboardViewModel
 @{
-    ViewData["Title"] = "Dashboard";
-    ViewData["Subtitle"] = "System Overview";
     Layout = "_AdminLayout";
+    ViewData["Title"] = "Overview";
+    var firstName = User.Identity?.Name?.Split(' ', StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "there";
+    var activePercent = Model.MerchantCount > 0 ? (int)Math.Round(Model.ActiveMerchantCount * 100m / Model.MerchantCount) : 0;
+    var merchantIndex = 0;
 }
-
-<div class="table-wrap" style="padding: 24px; background: white; border-radius: 16px; border: 1px solid var(--border-light); margin-bottom: 24px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;">
-    
-    <div style="background: var(--bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light);">
-        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Total Employees</div>
-        <div style="font-size: 28px; font-weight: 800; color: var(--text-dark);">@ViewBag.EmployeeCount</div>
-    </div>
-    
-    <div style="background: var(--bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border-light);">
-        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px;">Total Merchants</div>
-        <div style="font-size: 28px; font-weight: 800; color: var(--text-dark);">@ViewBag.MerchantCount</div>
-    </div>
-
-    <div style="background: var(--warning-light); padding: 20px; border-radius: 12px; border: 1px solid rgba(245,158,11,.2);">
-        <div style="font-size: 12px; font-weight: 700; color: var(--warning); text-transform: uppercase; margin-bottom: 8px;">Unpaid Invoices</div>
-        <div style="font-size: 28px; font-weight: 800; color: var(--warning);">@ViewBag.UnpaidInvoicesCount</div>
-    </div>
-
-    <div style="background: var(--info-light); padding: 20px; border-radius: 12px; border: 1px solid rgba(59,130,246,.2);">
-        <div style="font-size: 12px; font-weight: 700; color: var(--info); text-transform: uppercase; margin-bottom: 8px;">Pending Driver Payments</div>
-        <div style="font-size: 28px; font-weight: 800; color: var(--info);">@ViewBag.PendingPaymentsCount</div>
-    </div>
-
+<div class="overview-heading">
+    <div><p class="eyebrow">Your daily overview</p><h1>Good to see you, @firstName<span style="color:var(--primary)">.</span></h1><p class="page-description">A little clarity for everything you have moving.</p></div>
+    <div class="date-label">@await Html.PartialAsync("_PortalIcon", "calendar")<time data-current-date>Today</time></div>
 </div>
-
-<div class="table-wrap" style="padding: 24px; background: white; border-radius: 16px; border: 1px solid var(--border-light);">
-    <h2 class="table-title" style="margin-bottom: 16px;">Quick Actions</h2>
-    <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-        <a href="@Url.Action("Employees", "AdminPortal")" class="btn btn-secondary">Manage Users</a>
-        <a href="@Url.Action("Invoices", "AdminPortal")" class="btn btn-secondary">Generate Invoice</a>
-        <a href="@Url.Action("DriverPayments", "AdminPortal")" class="btn btn-secondary">Review Payments</a>
+<section class="metric-grid" aria-label="Workspace summary">
+    <article class="metric-card"><div class="metric-topline"><span class="metric-label">Team members</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "users")</span></div><div class="metric-value">@Model.EmployeeCount.ToString("N0")</div><p class="metric-footnote">People behind every delivery</p></article>
+    <article class="metric-card is-featured"><div class="metric-topline"><span class="metric-label">Total merchants</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "store")</span></div><div class="metric-value">@Model.MerchantCount.ToString("N0")</div><p class="metric-footnote"><strong>@Model.ActiveMerchantCount active</strong> across your network</p></article>
+    <article class="metric-card"><div class="metric-topline"><span class="metric-label">Unpaid invoices</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "invoice")</span></div><div class="metric-value">@Model.UnpaidInvoiceCount.ToString("N0")</div><p class="metric-footnote"><strong>EGP @Model.UnpaidInvoiceAmount.ToString("N0")</strong> outstanding</p></article>
+    <article class="metric-card"><div class="metric-topline"><span class="metric-label">Pending payouts</span><span class="metric-symbol">@await Html.PartialAsync("_PortalIcon", "wallet")</span></div><div class="metric-value">@Model.PendingPaymentCount.ToString("N0")</div><p class="metric-footnote"><strong>EGP @Model.PendingPaymentAmount.ToString("N0")</strong> to be settled</p></article>
+</section>
+<div class="dashboard-grid">
+    <section class="panel" aria-labelledby="merchant-overview-title">
+        <div class="panel-head"><div><h2 class="panel-title" id="merchant-overview-title">Your merchant network</h2><p class="panel-description">The businesses you keep moving.</p></div><a class="panel-link" asp-controller="AdminPortal" asp-action="Merchants">View all merchants @await Html.PartialAsync("_PortalIcon", "arrow")</a></div>
+        <table class="merchant-overview-table"><thead><tr><th scope="col">Merchant</th><th scope="col" class="table-contact">Contact</th><th scope="col">Status</th><th scope="col" aria-label="Open merchant"></th></tr></thead><tbody>
+        @foreach (var merchant in Model.Merchants)
+        {
+            var initial = string.IsNullOrWhiteSpace(merchant.ShopName) ? "M" : merchant.ShopName.Trim()[..1].ToUpperInvariant();
+            var active = string.Equals(merchant.Status, "active", StringComparison.OrdinalIgnoreCase);
+            <tr><td><div class="merchant-identity"><span class="merchant-monogram tone-@(merchantIndex++ % 4)">@initial</span><div><strong>@merchant.ShopName</strong><small>Merchant #@merchant.Id.ToString("D4")</small></div></div></td><td class="table-contact">@(string.IsNullOrWhiteSpace(merchant.ContactName) ? merchant.Email : merchant.ContactName)</td><td><span class="s-badge @(active ? "sb-active" : "sb-pending")">@(active ? "Active" : merchant.Status)</span></td><td><a class="table-action" asp-controller="AdminPortal" asp-action="MerchantDetails" asp-route-id="@merchant.Id" aria-label="View @merchant.ShopName">@await Html.PartialAsync("_PortalIcon", "external")</a></td></tr>
+        }
+        @if (Model.Merchants.Count == 0)
+        {
+            <tr><td colspan="4" class="table-empty">@await Html.PartialAsync("_PortalIcon", "store")<p>Your network starts with one merchant.</p><a class="btn btn-secondary btn-sm" asp-controller="Merchants" asp-action="Create">Add your first merchant</a></td></tr>
+        }
+        </tbody></table>
+        <div class="panel-bottom"><span>Showing @Model.Merchants.Count of @Model.MerchantCount merchants</span><a asp-controller="Merchants" asp-action="Create" class="subtle-link">@await Html.PartialAsync("_PortalIcon", "plus") Add merchant</a></div>
+    </section>
+    <div class="dashboard-aside" style="display:grid;gap:23px;align-content:start">
+        <section class="panel" aria-labelledby="attention-title"><div class="panel-head"><h2 class="panel-title" id="attention-title">On your radar</h2><span class="s-badge sb-pending">Finance</span></div><div class="panel-body">
+            <p class="queue-intro">A quick look at what needs a follow-up.</p>
+            <a class="queue-row" asp-controller="AdminPortal" asp-action="Invoices"><span class="queue-icon">@await Html.PartialAsync("_PortalIcon", "invoice")</span><div><strong>Merchant invoices</strong><small>Awaiting settlement</small></div><span class="queue-count">@Model.UnpaidInvoiceCount @await Html.PartialAsync("_PortalIcon", "chevron")</span></a>
+            <a class="queue-row" asp-controller="AdminPortal" asp-action="DriverPayments"><span class="queue-icon blue">@await Html.PartialAsync("_PortalIcon", "wallet")</span><div><strong>Driver payouts</strong><small>Ready for your review</small></div><span class="queue-count">@Model.PendingPaymentCount @await Html.PartialAsync("_PortalIcon", "chevron")</span></a>
+            <div class="queue-notice">@await Html.PartialAsync("_PortalIcon", "clock")<span>Open a queue to review the details before settling a payment.</span></div>
+        </div></section>
+        <section class="panel" aria-labelledby="network-health-title"><div class="panel-head"><h2 class="panel-title" id="network-health-title">Merchant activity</h2><span class="panel-description">Your network</span></div><div class="panel-body"><div class="status-overview"><div class="status-ring" style="--progress:@(activePercent)%" role="img" aria-label="@activePercent percent of merchants are active"><div class="ring-label"><strong>@activePercent<small style="font-size:12px">%</small></strong><span>active merchants</span></div></div><div class="status-legend"><div class="legend-row"><span class="legend-label"><i class="legend-dot"></i>Active</span><strong>@Model.ActiveMerchantCount</strong></div><div class="legend-row"><span class="legend-label"><i class="legend-dot neutral"></i>Other statuses</span><strong>@(Model.MerchantCount - Model.ActiveMerchantCount)</strong></div></div></div></div></section>
     </div>
 </div>
+<div class="section-label-row"><h2>Make your next move</h2><span>Your everyday shortcuts</span></div>
+<div class="shortcut-grid">
+    <a class="shortcut-card" asp-controller="DispatcherPortal" asp-action="Index"><span class="shortcut-icon">@await Html.PartialAsync("_PortalIcon", "route")</span><div><h3>Open the dispatch desk</h3><p>Connect shipments with the right drivers.</p></div>@await Html.PartialAsync("_PortalIcon", "external")</a>
+    <a class="shortcut-card" asp-controller="Drivers" asp-action="Index"><span class="shortcut-icon">@await Html.PartialAsync("_PortalIcon", "truck")</span><div><h3>Check in on your fleet</h3><p>Manage drivers, vehicles and availability.</p></div>@await Html.PartialAsync("_PortalIcon", "external")</a>
+    <a class="shortcut-card" asp-controller="AdminPortal" asp-action="Inventory"><span class="shortcut-icon">@await Html.PartialAsync("_PortalIcon", "warehouse")</span><div><h3>Keep inventory in view</h3><p>See stock across your warehouse network.</p></div>@await Html.PartialAsync("_PortalIcon", "external")</a>
+</div>
+<section class="overview-banner"><div><p class="eyebrow">One connected workspace</p><h2>From the first pickup to the last mile.</h2><p>Your team, merchants and deliveries. A little more in sync.</p></div><div class="banner-route" aria-hidden="true"><span class="route-point"></span><span class="route-dash"></span>@await Html.PartialAsync("_PortalIcon", "truck")<span class="route-dash"></span>@await Html.PartialAsync("_PortalIcon", "pin")</div></section>
