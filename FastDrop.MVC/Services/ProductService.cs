@@ -74,25 +74,15 @@ namespace FastDrop.MVC.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateMerchantProductAsync(Product product)
-        {
-            // Only update basic properties to avoid wiping out warehouses if they exist
-            var existing = await _context.Products.FindAsync(product.ProductId);
-            if (existing != null)
-            {
-                existing.Name = product.Name;
-                existing.Description = product.Description;
-                existing.Price = product.Price;
-                existing.StockQuantity = product.StockQuantity;
-                _context.Update(existing);
-                await _context.SaveChangesAsync();
-            }
-        }
-
         public async Task UpdateProductAsync(Product product, Dictionary<int, int> warehouseQuantities)
         {
-            product.StockQuantity = warehouseQuantities.Values.Sum();
-            _context.Update(product);
+            // Load original concurrency values before applying an administrator's changes.
+            var stored = await _context.Products.SingleAsync(p => p.ProductId == product.ProductId);
+            stored.Name = product.Name;
+            stored.Description = product.Description;
+            stored.Price = product.Price;
+            stored.MerchantId = product.MerchantId;
+            stored.StockQuantity = warehouseQuantities.Values.Sum();
 
             var existingMappings = await _context.ProductWarehouses
                 .Where(pw => pw.ProductId == product.ProductId)

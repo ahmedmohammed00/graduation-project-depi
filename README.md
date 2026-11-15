@@ -192,6 +192,28 @@ shipments across merchants for operations. Missing, invalid, nonpositive or
 duplicate ownership claims deny access. Inaccessible and nonexistent shipment
 IDs both return 404.
 
+Merchant shipment and product edits load the persisted resource within the signed-in
+merchant's scope. Owner IDs, assignment fields and entity graphs are not accepted by
+the edit forms. Shipment address changes create a separate address record so shared
+addresses belonging to another merchant, warehouse or route are preserved.
+
+Merchant shipment creation accepts destination details, product IDs and quantities.
+The server checks active zone pricing, product ownership and available stock, then
+calculates COD from stored prices. Stock reservations, shipment items, captured unit
+prices and the initial Pending status commit in one transaction. Optimistic stock,
+price and ownership checks reject concurrent stale writes. Invalid or conflicting
+requests leave no partial order; pending unassigned shipment deletion releases its
+new reservations. The legacy merchant `/Shipments/Create` form redirects to this
+workflow, and its POST is restricted to staff.
+
+Deployment requires the additive **`20261115104530_CaptureShipmentUnitPrices`**
+migration before running the updated application. Existing line prices remain null
+because their historical values cannot be reconstructed reliably. Merchants can
+update an older shipment's address within its current zone; zone changes for those
+shipments need staff review. New shipments use saved item prices when changing zones.
+The migration was tested as an upgrade from `AddDirectDriverToShipment` on an
+isolated SQL database; no existing application database was modified.
+
 | Portal | URL |
 |--------|-----|
 | Home / Landing | `/` |
@@ -227,6 +249,13 @@ dotnet test FastDrop.sln
 
 The authorization tests run the application in an isolated HTTP test host using
 temporary signing and Data Protection keys. They do not require a SQL database.
+
+Five additional merchant integration tests use SQL Server LocalDB to verify
+concurrent stock reservations, rollback, price snapshots, staff update compatibility
+and the additive migration. They are skipped by default. On Windows, create the
+dedicated test instance with `SqlLocalDB create FastDropSecurityAudit -s`, set
+`FASTDROP_RUN_SQL_TESTS=1`, then run `dotnet test FastDrop.sln`. The tests create
+and delete uniquely named `FastDrop_SecurityTests_*` databases only on that instance.
 
 For comprehensive project documentation covering architecture, requirements, database design, and more, see [`fastdrop_project_documentation.md`](fastdrop_project_documentation.md).
 

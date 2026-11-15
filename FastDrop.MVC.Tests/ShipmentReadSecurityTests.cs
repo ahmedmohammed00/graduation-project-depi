@@ -162,7 +162,7 @@ public sealed class ShipmentReadFixture : IAsyncLifetime
         if (role == null) return client;
         var claims = new List<Claim>
         {
-            new(ClaimTypes.Role, role), new(ClaimTypes.NameIdentifier, "fixture-user"), new(ClaimTypes.Name, "Fixture User")
+            new(ClaimTypes.Role, role), new(ClaimTypes.NameIdentifier, role == "Merchant" ? ownerId ?? "1" : "fixture-user"), new(ClaimTypes.Name, "Fixture User")
         };
         if (ownerId != null) claims.Add(new Claim(role == "Merchant" ? "MerchantId" : "DriverId", ownerId));
         claims.AddRange(additionalClaims);

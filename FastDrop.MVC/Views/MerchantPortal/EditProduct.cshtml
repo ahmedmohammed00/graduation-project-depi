@@ -1,4 +1,4 @@
-@model FastDrop.MVC.Models.Product
+@model FastDrop.MVC.ViewModels.MerchantProductEditViewModel
 
 @{
     Layout = "_MerchantLayout";
@@ -7,8 +7,9 @@
 
 <div class="table-wrap" style="padding: 24px; max-width: 600px; margin: 0 auto;">
     <h3 class="table-title">Edit Product</h3>
-    <form asp-action="EditProduct" method="post">
-        <input type="hidden" asp-for="ProductId" />
+    <form asp-action="EditProduct" asp-route-id="@Model.ProductId" method="post">
+        <input type="hidden" asp-for="OriginalStockQuantity" />
+        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
         @Html.AntiForgeryToken()
 
         <div class="form-group" style="margin-bottom: 15px;">
@@ -30,8 +31,8 @@
         </div>
 
         <div class="form-group" style="margin-bottom: 15px;">
-            <label>Initial Stock Quantity *</label>
-            <input asp-for="StockQuantity" type="number" class="form-control" value="0" required />
+            <label>Available Stock Quantity *</label>
+            <input asp-for="StockQuantity" type="number" class="form-control" min="0" required />
             <span asp-validation-for="StockQuantity" class="text-danger"></span>
         </div>
 

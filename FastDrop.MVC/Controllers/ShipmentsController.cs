@@ -64,6 +64,7 @@ namespace FastDrop.MVC.Controllers
         [Authorize(Roles = "SuperAdmin,Dispatcher,Merchant")]
         public async Task<IActionResult> Create()
         {
+            if (User.IsInRole("Merchant")) return RedirectToAction("AddShipment", "MerchantPortal");
             ViewData["AddressId"] = new SelectList(await _shipmentService.GetAddressesAsync(), "AddressId", "AddressId");
             if (!User.IsInRole("Merchant"))
             {
@@ -77,7 +78,7 @@ namespace FastDrop.MVC.Controllers
         // POST: Shipments/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "SuperAdmin,Dispatcher,Merchant")]
+        [Authorize(Roles = "SuperAdmin,Dispatcher")]
         public async Task<IActionResult> Create([Bind("ShipmentId,CreationDate,CodAmount,WeightKg,WarehouseId,MerchantId,RouteId,AddressId")] Shipment shipment)
         {
             int? merchantId = null;

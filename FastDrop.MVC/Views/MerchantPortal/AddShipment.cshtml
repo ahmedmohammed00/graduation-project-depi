@@ -20,7 +20,10 @@
 .field input:focus, .field select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,201,167,.1); }
 .field small { font-size: 11px; color: var(--text-muted); }
 
-.product-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-light); }
+.product-table-scroll { max-width: 100%; overflow-x: auto; }
+.product-table-hint { display: none; color: var(--text-muted); font-size: 12px; }
+@@media (max-width: 760px) { .product-table-hint { display: block; margin-bottom: 12px; } }
+.product-table { width: 100%; min-width: 520px; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-light); }
 .product-table thead th { padding: 10px 14px; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; background: var(--border-light); text-align: left; }
 .product-table tbody td { padding: 12px 14px; font-size: 13px; color: var(--text-mid); border-bottom: 1px solid var(--border-light); vertical-align: middle; }
 .product-table tbody tr:last-child td { border-bottom: none; }
@@ -41,6 +44,7 @@
 <form asp-action="AddShipment" method="post">
     @Html.AntiForgeryToken()
     <div class="ship-form">
+        <div asp-validation-summary="All" class="text-danger" role="alert"></div>
 
         <!-- Step 1: Destination -->
         <div class="step">
@@ -70,7 +74,7 @@
                         {
                             foreach(var zone in ViewBag.Zones)
                             {
-                                <option value="@zone.ZoneId">@zone.Name — Delivery fee: @zone.DeliveryFee.ToString("C")</option>
+                                <option value="@zone.ZoneId">@zone.Name — Delivery fee: @((zone.DeliveryFee ?? 0m).ToString("N2")) EGP</option>
                             }
                         }
                     </select>
@@ -91,6 +95,8 @@
 
             @if (Model.SelectedProducts != null && Model.SelectedProducts.Any())
             {
+                <p class="product-table-hint">Swipe the table to view unit prices and quantities.</p>
+                <div class="product-table-scroll" tabindex="0" role="region" aria-label="Product selection. Scroll horizontally on smaller screens.">
                 <table class="product-table">
                     <thead>
                         <tr>
@@ -106,19 +112,18 @@
                             <tr>
                                 <td style="text-align:center;">
                                     <input type="hidden" asp-for="SelectedProducts[i].ProductId" />
-                                    <input type="hidden" asp-for="SelectedProducts[i].ProductName" />
-                                    <input type="hidden" asp-for="SelectedProducts[i].Price" />
-                                    <input type="checkbox" asp-for="SelectedProducts[i].IsSelected" class="product-check" />
+                                    <input type="checkbox" asp-for="SelectedProducts[i].IsSelected" class="product-check" disabled="@(Model.SelectedProducts[i].StockQuantity <= 0)" />
                                 </td>
-                                <td style="font-weight:600; color:var(--text-dark);">@Model.SelectedProducts[i].ProductName</td>
-                                <td>@Model.SelectedProducts[i].Price.ToString("C")</td>
+                                <td style="font-weight:600; color:var(--text-dark);">@Model.SelectedProducts[i].ProductName <small style="display:block;color:var(--text-muted)">@Model.SelectedProducts[i].StockQuantity available</small></td>
+                                <td>@Model.SelectedProducts[i].Price.ToString("N2") EGP</td>
                                 <td>
-                                    <input type="number" asp-for="SelectedProducts[i].Quantity" class="field product-qty" min="1" max="@Model.SelectedProducts[i].StockQuantity" />
+                                    <input type="number" asp-for="SelectedProducts[i].Quantity" class="field product-qty" min="1" max="@Model.SelectedProducts[i].StockQuantity" disabled="@(Model.SelectedProducts[i].StockQuantity <= 0)" />
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
+                </div>
             }
             else
             {

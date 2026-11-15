@@ -26,6 +26,7 @@ builder.Services.AddScoped<IPerformanceCalculationService, PerformanceCalculatio
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<IMerchantOperationsService, MerchantOperationsService>();
 builder.Services.AddScoped<CredentialMigrationService>();
 builder.Services.AddScoped<IShipmentService, ShipmentService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();

@@ -380,6 +380,7 @@ namespace FastDrop.MVC.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("MerchantId")
+                        .IsConcurrencyToken()
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -387,9 +388,11 @@ namespace FastDrop.MVC.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Price")
+                        .IsConcurrencyToken()
                         .HasColumnType("decimal(10,2)");
 
                     b.Property<int>("StockQuantity")
+                        .IsConcurrencyToken()
                         .HasColumnType("int");
 
                     b.HasKey("ProductId");
@@ -527,6 +530,7 @@ namespace FastDrop.MVC.Migrations
                         .HasColumnType("int");
 
                     b.Property<int?>("MerchantId")
+                        .IsConcurrencyToken()
                         .HasColumnType("int");
 
                     b.Property<int?>("RouteId")
@@ -604,6 +608,9 @@ namespace FastDrop.MVC.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
+
+                    b.Property<decimal?>("UnitPrice")
+                        .HasColumnType("decimal(10,2)");
 
                     b.HasKey("ShipmentId", "ProductId");
 

@@ -117,7 +117,7 @@ namespace FastDrop.MVC.Services
         {
             if (merchantId.HasValue)
             {
-                shipment.MerchantId = merchantId.Value;
+                throw new InvalidOperationException("Merchant creation must use the validated merchant order workflow.");
             }
 
             _context.Add(shipment);
@@ -135,15 +135,31 @@ namespace FastDrop.MVC.Services
 
         public async Task UpdateShipmentAsync(Shipment shipment)
         {
-            _context.Update(shipment);
+            // Preserve the stored owner as the concurrency value, including when staff transfer ownership.
+            var stored = await _context.Shipments.SingleAsync(s => s.ShipmentId == shipment.ShipmentId);
+            stored.CreationDate = shipment.CreationDate;
+            stored.CodAmount = shipment.CodAmount;
+            stored.WeightKg = shipment.WeightKg;
+            stored.WarehouseId = shipment.WarehouseId;
+            stored.MerchantId = shipment.MerchantId;
+            stored.RouteId = shipment.RouteId;
+            stored.AddressId = shipment.AddressId;
             await _context.SaveChangesAsync();
         }
 
         public async Task DeleteShipmentAsync(int id)
         {
-            var shipment = await _context.Shipments.FindAsync(id);
+            var shipment = await _context.Shipments
+                .Include(s => s.ShipmentProducts).ThenInclude(p => p.Product)
+                .Include(s => s.ShipmentStatuses).Include(s => s.ShipmentAttempts)
+                .FirstOrDefaultAsync(s => s.ShipmentId == id);
             if (shipment != null)
             {
+                var pending = !shipment.RouteId.HasValue && !shipment.DriverId.HasValue &&
+                    shipment.ShipmentAttempts.Count == 0 && shipment.ShipmentStatuses.All(s => s.Status == "Pending");
+                if (pending)
+                    foreach (var item in shipment.ShipmentProducts.Where(p => p.UnitPrice.HasValue))
+                        item.Product.StockQuantity = checked(item.Product.StockQuantity + item.Quantity);
                 _context.Shipments.Remove(shipment);
                 await _context.SaveChangesAsync();
             }

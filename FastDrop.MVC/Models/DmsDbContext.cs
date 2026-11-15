@@ -88,6 +88,11 @@ namespace FastDrop.MVC.Models
             modelBuilder.Entity<Address>().Property(a => a.Latitude).HasColumnType("decimal(10,8)");
             modelBuilder.Entity<Address>().Property(a => a.Longitude).HasColumnType("decimal(11,8)");
             modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(10,2)");
+            modelBuilder.Entity<ShipmentProduct>().Property(p => p.UnitPrice).HasColumnType("decimal(10,2)");
+            modelBuilder.Entity<Product>().Property(p => p.StockQuantity).IsConcurrencyToken();
+            modelBuilder.Entity<Product>().Property(p => p.Price).IsConcurrencyToken();
+            modelBuilder.Entity<Product>().Property(p => p.MerchantId).IsConcurrencyToken();
+            modelBuilder.Entity<Shipment>().Property(s => s.MerchantId).IsConcurrencyToken();
             modelBuilder.Entity<Vehicle>().Property(v => v.MaxCapacityKg).HasColumnType("decimal(8,2)");
             modelBuilder.Entity<DriverRoute>().Property(dr => dr.RoutePay).HasColumnType("decimal(10,2)");
             modelBuilder.Entity<Shipment>().Property(s => s.CodAmount).HasColumnType("decimal(10,2)");

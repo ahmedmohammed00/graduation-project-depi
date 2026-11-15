@@ -12,7 +12,6 @@ namespace FastDrop.MVC.Services
         Task<Product?> GetProductForDeleteAsync(int id);
         Task CreateProductAsync(Product product, Dictionary<int, int> warehouseQuantities);
         Task CreateMerchantProductAsync(Product product);
-        Task UpdateMerchantProductAsync(Product product);
         Task UpdateProductAsync(Product product, Dictionary<int, int> warehouseQuantities);
         Task DeleteProductAsync(int id);
         bool ProductExists(int id);

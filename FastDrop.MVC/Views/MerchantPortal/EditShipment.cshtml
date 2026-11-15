@@ -1,4 +1,4 @@
-@model FastDrop.MVC.Models.Shipment
+@model FastDrop.MVC.ViewModels.MerchantShipmentEditViewModel
 
 @{
     Layout = "_MerchantLayout";
@@ -22,11 +22,9 @@
 .form-actions { display: flex; align-items: center; gap: 12px; padding-top: 8px; }
 </style>
 
-<form asp-action="EditShipment" method="post">
+<form asp-action="EditShipment" asp-route-id="@Model.ShipmentId" method="post">
     @Html.AntiForgeryToken()
-    <input type="hidden" asp-for="ShipmentId" />
-    <input type="hidden" asp-for="MerchantId" />
-    <input type="hidden" asp-for="CreationDate" />
+    <div asp-validation-summary="All" class="text-danger" role="alert"></div>
 
     <div class="ship-form">
         <div class="step">

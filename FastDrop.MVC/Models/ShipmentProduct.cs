@@ -12,5 +12,7 @@ namespace FastDrop.MVC.Models
         public Product Product { get; set; } = null!;
 
         public int Quantity { get; set; } = 1;
+        // Historical shipments predate price capture; never invent a price for those rows.
+        public decimal? UnitPrice { get; set; }
     }
 }

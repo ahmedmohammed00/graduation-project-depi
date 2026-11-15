@@ -8,6 +8,7 @@ using FastDrop.MVC.Models;
 using FastDrop.MVC.Services;
 using FastDrop.MVC.ViewModels;
 using System.Security.Claims;
+using FastDrop.MVC.Security;
 
 namespace FastDrop.MVC.Controllers
 {
@@ -18,27 +19,39 @@ namespace FastDrop.MVC.Controllers
         private readonly IInvoiceService _invoiceService;
         private readonly IZoneService _zoneService;
         private readonly IProductService _productService;
+        private readonly IMerchantOperationsService _merchantOperations;
 
         public MerchantPortalController(
             IShipmentService shipmentService, 
             IInvoiceService invoiceService, 
             IZoneService zoneService,
-            IProductService productService)
+            IProductService productService,
+            IMerchantOperationsService merchantOperations)
         {
             _shipmentService = shipmentService;
             _invoiceService = invoiceService;
             _zoneService = zoneService;
             _productService = productService;
+            _merchantOperations = merchantOperations;
         }
 
-        private int GetMerchantId()
+        private int GetMerchantId() => MerchantIdentity.GetId(User) ?? 0;
+
+        private async Task PopulateShipmentFormAsync(AddShipmentViewModel model)
         {
-            var claim = User.FindFirst("MerchantId");
-            if (claim != null && int.TryParse(claim.Value, out int merchantId))
+            ViewBag.Zones = (await _zoneService.GetZonesAsync()).Where(z => z.ActiveStatus);
+            var submitted = (model.SelectedProducts ?? new()).GroupBy(p => p.ProductId)
+                .ToDictionary(g => g.Key, g => g.First());
+            var products = await _productService.GetProductsByMerchantIdAsync(GetMerchantId());
+            model.SelectedProducts = products.OrderBy(p => p.ProductId).Select(p => new SelectedProduct
             {
-                return merchantId;
-            }
-            return 0;
+                ProductId = p.ProductId, ProductName = p.Name, Price = p.Price, StockQuantity = p.StockQuantity,
+                IsSelected = submitted.TryGetValue(p.ProductId, out var selected) && selected.IsSelected,
+                Quantity = submitted.TryGetValue(p.ProductId, out var item) ? item.Quantity : 1
+            }).ToList();
+            // Rebuilt row indices and catalog fields must come from the server, including after a forged POST.
+            foreach (var key in ModelState.Keys.Where(k => k.StartsWith("SelectedProducts[", StringComparison.Ordinal)).ToList())
+                ModelState.Remove(key);
         }
 
         // GET: MerchantPortal/Index
@@ -68,24 +81,10 @@ namespace FastDrop.MVC.Controllers
         // GET: MerchantPortal/AddShipment
         public async Task<IActionResult> AddShipment()
         {
-            int merchantId = GetMerchantId();
-            ViewBag.Zones = await _zoneService.GetZonesAsync();
-            var products = await _productService.GetProductsByMerchantIdAsync(merchantId);
-            
-            var vm = new AddShipmentViewModel
-            {
-                SelectedProducts = products.Select(p => new SelectedProduct
-                {
-                    ProductId = p.ProductId,
-                    ProductName = p.Name,
-                    Price = p.Price,
-                    StockQuantity = p.StockQuantity,
-                    IsSelected = false,
-                    Quantity = 1
-                }).ToList()
-            };
-            
-            return View(vm);
+            if (GetMerchantId() == 0) return NotFound();
+            var model = new AddShipmentViewModel();
+            await PopulateShipmentFormAsync(model);
+            return View(model);
         }
 
         [HttpGet]
@@ -102,91 +101,45 @@ namespace FastDrop.MVC.Controllers
         }
 
         // POST: MerchantPortal/AddShipment
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddShipment(AddShipmentViewModel vm)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddShipment(AddShipmentViewModel model)
         {
-            int merchantId = GetMerchantId();
-            
-            if (ModelState.IsValid)
-            {
-                decimal totalProductPrice = 0;
-                
-                // Add selected products to the shipment
-                foreach (var sp in vm.SelectedProducts.Where(p => p.IsSelected))
-                {
-                    vm.Shipment.ShipmentProducts.Add(new ShipmentProduct
-                    {
-                        ProductId = sp.ProductId,
-                        Quantity = sp.Quantity
-                    });
-                    
-                    totalProductPrice += sp.Price * sp.Quantity;
-                }
-
-                if (vm.Shipment.Address != null && vm.Shipment.Address.ZoneId.HasValue)
-                {
-                    var zone = await _zoneService.GetZoneByIdAsync(vm.Shipment.Address.ZoneId.Value);
-                    if (zone != null)
-                    {
-                        // New formula: Zone COD + Total Products Price
-                        vm.Shipment.CodAmount = zone.CodAmount + totalProductPrice;
-                    }
-                }
-                
-                await _shipmentService.CreateShipmentAsync(vm.Shipment, merchantId);
-                return RedirectToAction(nameof(Shipments));
-            }
-
-            ViewBag.Zones = await _zoneService.GetZonesAsync();
-            return View(vm);
+            if (GetMerchantId() == 0) return NotFound();
+            var result = ModelState.IsValid
+                ? await _merchantOperations.CreateShipmentAsync(model, User)
+                : MerchantWriteResult.Invalid("Review the delivery details and selected product quantities.");
+            if (result.StatusCode == 404) return NotFound();
+            if (result.StatusCode == 200) return RedirectToAction(nameof(Shipments));
+            ModelState.AddModelError(string.Empty, result.Error!);
+            Response.StatusCode = result.StatusCode;
+            model.Shipment ??= new();
+            await PopulateShipmentFormAsync(model);
+            return View(model);
         }
 
         // GET: MerchantPortal/EditShipment/5
         public async Task<IActionResult> EditShipment(int id)
         {
-            int merchantId = GetMerchantId();
-            var shipment = await _shipmentService.GetShipmentByIdAsync(id);
-            
-            if (shipment == null || shipment.MerchantId != merchantId)
-            {
-                return NotFound();
-            }
-
-            ViewBag.Zones = await _zoneService.GetZonesAsync();
-            return View(shipment);
+            var model = await _merchantOperations.GetShipmentEditAsync(id, User);
+            if (model == null) return NotFound();
+            ViewBag.Zones = (await _zoneService.GetZonesAsync()).Where(z => z.ActiveStatus);
+            return View(model);
         }
 
-        // POST: MerchantPortal/EditShipment/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditShipment(int id, Shipment shipment)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditShipment(int id, MerchantShipmentEditViewModel model)
         {
-            int merchantId = GetMerchantId();
-            if (id != shipment.ShipmentId || shipment.MerchantId != merchantId) return NotFound();
-
-            if (ModelState.IsValid)
-            {
-                var existingShipment = await _shipmentService.GetShipmentByIdAsync(id);
-                if (existingShipment == null) return NotFound();
-
-                if (shipment.Address != null && shipment.Address.ZoneId.HasValue)
-                {
-                    existingShipment.Address.Street = shipment.Address.Street;
-                    existingShipment.Address.District = shipment.Address.District;
-                    existingShipment.Address.ZoneId = shipment.Address.ZoneId;
-
-                    // Note: Recalculating COD on edit is skipped for simplicity unless requested
-                }
-
-                existingShipment.WeightKg = shipment.WeightKg;
-                
-                await _shipmentService.UpdateShipmentAsync(existingShipment);
-                return RedirectToAction(nameof(Shipments));
-            }
-            
-            ViewBag.Zones = await _zoneService.GetZonesAsync();
-            return View(shipment);
+            if (await _merchantOperations.GetShipmentEditAsync(id, User) == null) return NotFound();
+            var result = ModelState.IsValid
+                ? await _merchantOperations.EditShipmentAsync(id, model, User)
+                : MerchantWriteResult.Invalid("Review the delivery address, zone and weight.");
+            if (result.StatusCode == 404) return NotFound();
+            if (result.StatusCode == 200) return RedirectToAction(nameof(Shipments));
+            ModelState.AddModelError(string.Empty, result.Error!);
+            Response.StatusCode = result.StatusCode;
+            model.ShipmentId = id;
+            ViewBag.Zones = (await _zoneService.GetZonesAsync()).Where(z => z.ActiveStatus);
+            return View(model);
         }
 
         // GET: MerchantPortal/DeleteShipment/5
@@ -272,30 +225,23 @@ namespace FastDrop.MVC.Controllers
         // GET: MerchantPortal/EditProduct/5
         public async Task<IActionResult> EditProduct(int id)
         {
-            var product = await _productService.GetProductByIdAsync(id);
-            if (product == null || product.MerchantId != GetMerchantId())
-            {
-                return NotFound();
-            }
-            return View(product);
+            var model = await _merchantOperations.GetProductEditAsync(id, User);
+            return model == null ? NotFound() : View(model);
         }
 
-        // POST: MerchantPortal/EditProduct/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditProduct(int id, [Bind("ProductId,Name,Description,Price,StockQuantity,MerchantId")] Product product)
+        [HttpPost, ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditProduct(int id, MerchantProductEditViewModel model)
         {
-            if (id != product.ProductId || product.MerchantId != GetMerchantId())
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                await _productService.UpdateMerchantProductAsync(product);
-                return RedirectToAction(nameof(Products));
-            }
-            return View(product);
+            if (await _merchantOperations.GetProductEditAsync(id, User) == null) return NotFound();
+            var result = ModelState.IsValid
+                ? await _merchantOperations.EditProductAsync(id, model, User)
+                : MerchantWriteResult.Invalid("Review the product details, price and stock.");
+            if (result.StatusCode == 404) return NotFound();
+            if (result.StatusCode == 200) return RedirectToAction(nameof(Products));
+            ModelState.AddModelError(string.Empty, result.Error!);
+            Response.StatusCode = result.StatusCode;
+            model.ProductId = id;
+            return View(model);
         }
 
         // GET: MerchantPortal/DeleteProduct/5
