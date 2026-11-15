@@ -417,6 +417,10 @@
     <h2>Welcome back</h2>
     <p class="card-sub">Please enter your details to sign in.</p>
 
+    @if (TempData["ProfileSignInMessage"] is string profileMessage)
+    {
+        <p role="status" style="padding:12px 14px;border:1px solid #bddbca;border-radius:10px;background:#eef7f1;color:#285e47;font-size:13px;line-height:1.6;">@profileMessage</p>
+    }
     <div asp-validation-summary="ModelOnly" style="color:var(--error); font-size:13px; margin-bottom:10px;"></div>
 
     <form asp-action="Login" method="post">

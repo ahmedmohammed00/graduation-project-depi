@@ -1,0 +1,57 @@
+@model FastDrop.MVC.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "My profile";
+    ViewData["Subtitle"] = "Your details, your account. Keep everything up to date.";
+    var initial = string.IsNullOrWhiteSpace(Model.DisplayName) ? "A" : Model.DisplayName.Trim()[..1].ToUpperInvariant();
+    var roleLabel = Model.Role == "SuperAdmin" ? "Administrator" : Model.Role;
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/profile.css" asp-append-version="true" />
+}
+<div asp-validation-summary="All" class="profile-errors" role="alert" aria-label="Please review your changes"></div>
+<div class="profile-grid">
+    <aside class="panel profile-summary" aria-label="Account overview">
+        <div class="profile-cover" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div class="profile-summary-body">
+            <span class="profile-avatar" aria-hidden="true">@initial</span>
+            <h2>@Model.DisplayName</h2>
+            <p class="profile-email">@Model.Details.Email</p>
+            <span class="profile-role">@await Html.PartialAsync("_PortalIcon", "users") @roleLabel</span>
+            <dl class="profile-facts"><div><dt>Account status</dt><dd>@Model.Status</dd></div><div><dt>Workspace</dt><dd>@(Model.IsMerchant ? "Merchant" : Model.IsDriver ? "Driver" : "Staff")</dd></div></dl>
+            <div class="profile-note">@await Html.PartialAsync("_PortalIcon", "shield")<p>Your account details are private. Your role and work assignments are managed by your administrator.</p></div>
+        </div>
+    </aside>
+    <div class="profile-sections">
+        <section class="panel" aria-labelledby="details-title">
+            <div class="panel-head"><div><p class="eyebrow">Make it yours</p><h2 class="panel-title" id="details-title">@(Model.IsMerchant ? "Business & contact details" : "Personal details")</h2><p class="panel-description">These details identify your account across FastDrop.</p></div><span class="profile-section-icon">@await Html.PartialAsync("_PortalIcon", Model.IsMerchant ? "store" : "user")</span></div>
+            <form asp-action="Edit" method="post" class="profile-form">
+                <div class="profile-fields">
+                    <div class="form-group"><label asp-for="Details.Name">@(Model.IsMerchant ? "Shop name" : "Full name") <span aria-hidden="true">*</span></label><input asp-for="Details.Name" class="form-control" autocomplete="@(Model.IsMerchant ? "organization" : "name")" required /><span asp-validation-for="Details.Name"></span></div>
+                    @if (Model.IsMerchant)
+                    {
+                        <div class="form-group"><label asp-for="Details.ContactName"></label><input asp-for="Details.ContactName" class="form-control" autocomplete="name" /><span asp-validation-for="Details.ContactName"></span></div>
+                    }
+                    <div class="form-group"><label asp-for="Details.Email">Email address <span aria-hidden="true">*</span></label><input asp-for="Details.Email" class="form-control" autocomplete="email" required /><span asp-validation-for="Details.Email"></span></div>
+                    @if (Model.IsMerchant || Model.IsDriver)
+                    {
+                        <div class="form-group"><label asp-for="Details.Phone"></label><input asp-for="Details.Phone" type="tel" class="form-control" autocomplete="tel" /><span asp-validation-for="Details.Phone"></span></div>
+                    }
+                </div>
+                <div class="profile-email-confirm"><div><h3>Changing your email?</h3><p id="email-change-note">Enter your current password below only if you change your email. You will sign in again with the new address.</p></div><div class="form-group"><label asp-for="Details.CurrentPassword"></label><input asp-for="Details.CurrentPassword" class="form-control" autocomplete="current-password" aria-describedby="email-change-note" /><span asp-validation-for="Details.CurrentPassword"></span></div></div>
+                <div class="profile-form-actions"><span>Required fields are marked *</span><button class="btn btn-primary" type="submit">@await Html.PartialAsync("_PortalIcon", "check") Save changes</button></div>
+            </form>
+        </section>
+        <section class="panel" aria-labelledby="password-title">
+            <div class="panel-head"><div><p class="eyebrow">Account security</p><h2 class="panel-title" id="password-title">Change password</h2><p class="panel-description">Choose a password with 8 to 100 characters.</p></div><span class="profile-section-icon">@await Html.PartialAsync("_PortalIcon", "shield")</span></div>
+            <form asp-action="ChangePassword" method="post" class="profile-form">
+                <div class="form-group"><label asp-for="Password.CurrentPassword"></label><input asp-for="Password.CurrentPassword" class="form-control" autocomplete="current-password" required /><span asp-validation-for="Password.CurrentPassword"></span></div>
+                <div class="profile-fields"><div class="form-group"><label asp-for="Password.NewPassword"></label><input asp-for="Password.NewPassword" class="form-control" autocomplete="new-password" aria-describedby="password-note" required /><span asp-validation-for="Password.NewPassword"></span></div><div class="form-group"><label asp-for="Password.ConfirmPassword"></label><input asp-for="Password.ConfirmPassword" class="form-control" autocomplete="new-password" required /><span asp-validation-for="Password.ConfirmPassword"></span></div></div>
+                <p class="profile-password-note" id="password-note">@await Html.PartialAsync("_PortalIcon", "help") After saving, sign in again using your new password.</p>
+                <div class="profile-form-actions"><span>Keep your password private.</span><button type="submit" class="btn btn-secondary">Update password @await Html.PartialAsync("_PortalIcon", "arrow")</button></div>
+            </form>
+        </section>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

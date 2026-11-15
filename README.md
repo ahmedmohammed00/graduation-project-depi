@@ -196,10 +196,24 @@ IDs both return 404.
 |--------|-----|
 | Home / Landing | `/` |
 | Login | `/Account/Login` |
+| My profile | `/Profile` |
 | Admin Dashboard | `/AdminPortal/Dashboard` |
 | Merchant Dashboard | `/MerchantPortal/Dashboard` |
 | Dispatcher Dashboard | `/DispatcherPortal/Dashboard` |
 | Driver Dashboard | `/DriverPortal/Dashboard` |
+
+Signed-in users can open **My profile** from the sidebar or their avatar. Staff can
+edit their name and email; linked drivers can also edit their phone number.
+Merchants can edit their shop name, contact name, phone and email. Profile updates
+resolve the account from the signed-in identity, never from a submitted account ID;
+roles, account status and operational assignments remain administrator-managed.
+
+Changing an email requires the current password and checks both account tables for
+an existing address. Password changes require the current password and store a new
+salted hash. Both changes clear this browser's authentication cookie and redirect
+to login. Other already-issued JWTs retain their existing expiry; server-side token
+revocation remains a separate session-management requirement. Editing ordinary
+profile details refreshes the displayed account name without extending the JWT.
 
 ---
 

@@ -25,6 +25,7 @@ builder.Services.AddDbContext<DmsDbContext>(options =>
 builder.Services.AddScoped<IPerformanceCalculationService, PerformanceCalculationService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<CredentialMigrationService>();
 builder.Services.AddScoped<IShipmentService, ShipmentService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();

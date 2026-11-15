@@ -45,6 +45,7 @@
         Link("Operations", "Shipments", "Shipments", "Index", "truck", "Details", "Create", "Edit", "Delete");
         Link("Operations", "Driver performance", "Performance", "Index", "chart", "Driver");
     }
+    Link("Account", "My profile", "Profile", "Index", "user", "Edit", "ChangePassword");
 }
 <!DOCTYPE html>
 <html lang="en">
@@ -88,7 +89,7 @@
                 <a class="sidebar-help" asp-controller="AdminPortal" asp-action="Index">@await Html.PartialAsync("_PortalIcon", "overview")<span>Back to admin workspace</span></a>
             }
             <a class="sidebar-help" asp-controller="Home" asp-action="Privacy">@await Html.PartialAsync("_PortalIcon", "help")<span>Privacy & account information</span></a>
-            <div class="sidebar-account"><span class="account-avatar">@initial</span><div><strong>@name</strong><span>@area account</span></div><a asp-controller="Account" asp-action="Logout" class="account-signout" aria-label="Sign out">@await Html.PartialAsync("_PortalIcon", "logout")</a></div>
+            <div class="sidebar-account"><a class="account-avatar" asp-controller="Profile" asp-action="Index" aria-label="My profile">@initial</a><div><a asp-controller="Profile" asp-action="Index" class="account-profile-link"><strong>@name</strong></a><span>@area account</span></div><a asp-controller="Account" asp-action="Logout" class="account-signout" aria-label="Sign out">@await Html.PartialAsync("_PortalIcon", "logout")</a></div>
         </div>
     </aside>
     <div class="portal-main">
@@ -96,7 +97,7 @@
             <div class="topbar-location"><button class="icon-button mobile-menu" data-menu-toggle aria-controls="portal-sidebar" aria-expanded="false" aria-label="Open navigation">@await Html.PartialAsync("_PortalIcon", "menu")</button><span class="breadcrumb-workspace">@area workspace</span><span class="breadcrumb-divider">/</span><span>@title</span></div>
             <div class="topbar-tools">
                 <button class="workspace-search" data-command-open aria-haspopup="dialog" aria-label="Search workspace">@await Html.PartialAsync("_PortalIcon", "search")<span>Search workspace</span><kbd>Ctrl K</kbd></button>
-                <span class="topbar-avatar" title="@name">@initial</span>
+                <a class="topbar-avatar" asp-controller="Profile" asp-action="Index" aria-label="My profile" title="My profile">@initial</a>
             </div>
         </header>
         <main id="main-content" class="portal-content" tabindex="-1">
